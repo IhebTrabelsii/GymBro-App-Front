@@ -1,36 +1,40 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-
-const NEON_GREEN = '#00ff6a';
-const INACTIVE_GRAY = '#666';
-const TAB_BAR_BG = '#121212';
+import TabBarBackground from "@/components/ui/TabBarBackground";
+import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import React from "react";
+import { Platform } from "react-native";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 export default function TabLayout() {
+  const { theme } = useSimpleTheme();
+  const currentColors = Colors[theme];
+  const backgroundColor = useThemeColor({}, "background");
+  const tabBarActive = useThemeColor({}, "primary");
+  const tabBarInactive = useThemeColor({ light: "#fff", dark: "#000" }, "text");
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: NEON_GREEN,
-        tabBarInactiveTintColor: NEON_GREEN ,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: {
-          backgroundColor: TAB_BAR_BG,
+          backgroundColor: currentColors.background,
           borderTopWidth: 0,
-          shadowColor: NEON_GREEN,
-          shadowOpacity: 0.3,
-          shadowRadius: 10,
           elevation: 10,
-          position: Platform.OS === 'ios' ? 'absolute' : 'relative',
+          shadowOpacity: 0.1,
           height: 60,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+          paddingBottom: Platform.OS === "ios" ? 20 : 10,
         },
+        tabBarBackground: () => (
+          <TabBarBackground
+            style={{ backgroundColor: currentColors.background }}
+          />
+        ),
+        headerShown: false,
+        tabBarActiveTintColor: currentColors.primary,
+        tabBarInactiveTintColor: theme === "dark" ? "#888" : "#666",
         tabBarLabelStyle: {
-          fontWeight: '700',
+          fontWeight: "700",
           fontSize: 13,
           marginBottom: 6,
         },
@@ -42,35 +46,39 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="house.fill" color={color} />
+            <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
-<Tabs.Screen
-  name="calculator"
-  options={{
-    title: 'Calculator',
-    tabBarIcon: () => (
-      <IconSymbol size={24} name="house.fill" color="#00ff6a" />
-    ),
-  }}
-/>
-
-
-
+      <Tabs.Screen
+        name="calculator"
+        options={{
+          title: "Calculator",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calculator" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="workout"
         options={{
-          title: 'Workout',
-     tabBarIcon: ({ color }) => (  // <-- No colon here!
-  <IconSymbol size={24} name="house.fill" color={color} />
-),
-
+          title: "Workout",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="barbell" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="news" // ✅ FIXED - changed from "tabs/news"
+        options={{
+          title: "Gym News",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
 }
-  
