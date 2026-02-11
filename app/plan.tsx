@@ -1,8 +1,9 @@
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
+  Animated,
   Dimensions,
   Platform,
   ScrollView,
@@ -22,6 +23,25 @@ export default function PlanScreen() {
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const plan = typeof type === "string" ? type : "";
 
   const workoutPlans = {
@@ -38,6 +58,8 @@ export default function PlanScreen() {
           "Weekend: Rest + High Carb Meals",
         ],
         tips: "Eat every 3 hours, focus on compound lifts, minimum 8 hours sleep",
+        color: "#39FF14",
+        icon: "leaf",
       },
       {
         title: "Strength & Power (3 Day)",
@@ -49,6 +71,8 @@ export default function PlanScreen() {
           "Rest Days: Active recovery, mobility work",
         ],
         tips: "Heavy weights, long rest periods (3-5 min), progressive overload weekly",
+        color: "#00D9FF",
+        icon: "barbell",
       },
     ],
 
@@ -66,6 +90,8 @@ export default function PlanScreen() {
           "Sunday: Active Recovery",
         ],
         tips: "45-60 min sessions, moderate cardio 3x week, balanced macros",
+        color: "#39FF14",
+        icon: "fitness",
       },
       {
         title: "Upper/Lower Split (4 Day)",
@@ -78,6 +104,8 @@ export default function PlanScreen() {
           "Off Days: 30 min cardio or sports",
         ],
         tips: "Alternate heavy/light weeks, track progress, 1.6g protein/kg bodyweight",
+        color: "#FF10F0",
+        icon: "arm-flex",
       },
     ],
 
@@ -94,6 +122,8 @@ export default function PlanScreen() {
           "Weekend: 1 hour low intensity cardio",
         ],
         tips: "Keep rest short (30-60 sec), focus on compound movements, intermittent fasting",
+        color: "#FF10F0",
+        icon: "run-fast",
       },
       {
         title: "Strength & Conditioning (3 Day)",
@@ -105,24 +135,41 @@ export default function PlanScreen() {
           "Other Days: 45 min steady cardio, core work",
         ],
         tips: "Lift heavy but keep workouts under 60 min, prioritize protein, limit processed carbs",
+        color: "#00D9FF",
+        icon: "flash",
       },
     ],
   };
 
   const plans = workoutPlans[plan as keyof typeof workoutPlans] || [];
 
+  const getPlanTypeIcon = (planName: string) => {
+    if (planName === "Ectomorph") return "leaf";
+    if (planName === "Mesomorph") return "arm-flex";
+    return "run";
+  };
+
+  const getPlanTypeColor = (planName: string) => {
+    if (planName === "Ectomorph") return "#39FF14";
+    if (planName === "Mesomorph") return "#00F0FF";
+    return "#FF10F0";
+  };
+
   return (
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
+      {/* Enhanced Top Bar */}
       <View
         style={[
           styles.topBar,
           {
-            backgroundColor: isDark ? currentColors.background : "#FFFFFF",
+            backgroundColor: isDark
+              ? "rgba(18, 18, 18, 0.98)"
+              : "rgba(255, 255, 255, 0.98)",
             borderBottomColor: isDark
-              ? currentColors.border
-              : "rgba(57, 255, 20, 0.15)",
+              ? "rgba(57, 255, 20, 0.15)"
+              : "rgba(57, 255, 20, 0.1)",
           },
         ]}
       >
@@ -131,11 +178,22 @@ export default function PlanScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.logoContainer}>
-            <MaterialCommunityIcons
-              name="dumbbell"
-              size={28}
-              color={currentColors.primary}
-            />
+            <View
+              style={[
+                styles.logoIconWrapper,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(57, 255, 20, 0.15)"
+                    : "rgba(57, 255, 20, 0.1)",
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="dumbbell"
+                size={24}
+                color={currentColors.primary}
+              />
+            </View>
             <Text style={[styles.logo, { color: currentColors.primary }]}>
               GymBro
             </Text>
@@ -148,18 +206,18 @@ export default function PlanScreen() {
             style={[
               styles.backButton,
               {
-                backgroundColor: isDark ? currentColors.card : "#F5F5F5",
+                backgroundColor: isDark
+                  ? "rgba(57, 255, 20, 0.12)"
+                  : "rgba(57, 255, 20, 0.06)",
                 borderWidth: 1.5,
-                borderColor: currentColors.primary,
+                borderColor: isDark
+                  ? "rgba(57, 255, 20, 0.3)"
+                  : "rgba(57, 255, 20, 0.25)",
               },
             ]}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="arrow-back"
-              size={18}
-              color={currentColors.primary}
-            />
+            <Ionicons name="arrow-back" size={18} color={currentColors.primary} />
             <Text style={[styles.backText, { color: currentColors.primary }]}>
               Back
             </Text>
@@ -191,40 +249,67 @@ export default function PlanScreen() {
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        {/* Hero Section */}
-        <View>
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          {/* Enhanced Hero Section with Gradient Effect */}
           <View
             style={[
               styles.heroCard,
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? currentColors.primary
-                  : "rgba(57, 255, 20, 0.2)",
-                shadowColor: isDark ? currentColors.primary : "#000",
+                  ? "rgba(57, 255, 20, 0.2)"
+                  : "rgba(57, 255, 20, 0.15)",
+                shadowColor: currentColors.primary,
               },
             ]}
           >
+            {/* Decorative Circles */}
+            <View
+              style={[
+                styles.decorCircle,
+                styles.decorCircle1,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(57, 255, 20, 0.04)"
+                    : "rgba(57, 255, 20, 0.025)",
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.decorCircle,
+                styles.decorCircle2,
+                {
+                  backgroundColor: isDark
+                    ? getPlanTypeColor(plan) + "10"
+                    : getPlanTypeColor(plan) + "08",
+                },
+              ]}
+            />
+
             <View style={styles.heroContent}>
               <View
                 style={[
                   styles.iconCircle,
                   {
                     backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.2)"
-                      : "rgba(57, 255, 20, 0.1)",
+                      ? "rgba(57, 255, 20, 0.15)"
+                      : "rgba(57, 255, 20, 0.08)",
+                    borderWidth: 3,
+                    borderColor: isDark
+                      ? "rgba(57, 255, 20, 0.25)"
+                      : "rgba(57, 255, 20, 0.15)",
                   },
                 ]}
               >
                 <MaterialCommunityIcons
-                  name={
-                    plan === "Ectomorph"
-                      ? "leaf"
-                      : plan === "Mesomorph"
-                        ? "arm-flex"
-                        : "run"
-                  }
-                  size={40}
+                  name={getPlanTypeIcon(plan) as any}
+                  size={46}
                   color={currentColors.primary}
                 />
               </View>
@@ -235,188 +320,393 @@ export default function PlanScreen() {
                 style={[
                   styles.heroSubtitle,
                   {
-                    color: isDark ? currentColors.text : "#666",
+                    color: isDark
+                      ? "rgba(255, 255, 255, 0.65)"
+                      : "rgba(0, 0, 0, 0.6)",
                   },
                 ]}
               >
                 Customized training programs for your body type
               </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Plan Count Badge */}
-        <View>
-          <View
-            style={[
-              styles.countBadge,
-              {
-                backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.3)"
-                  : "rgba(57, 255, 20, 0.15)",
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.badgeIcon,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.2)"
-                    : "rgba(57, 255, 20, 0.1)",
-                },
-              ]}
-            >
-              <Ionicons name="list" size={20} color={currentColors.primary} />
-            </View>
-            <Text style={[styles.badgeText, { color: currentColors.text }]}>
-              {plans.length} Available Plans
-            </Text>
-          </View>
-        </View>
-
-        {/* Plans Grid */}
-        <View style={styles.plansContainer}>
-          {plans.map((planItem, index) => (
-            <View key={index}>
               <View
                 style={[
-                  styles.planCard,
+                  styles.heroBadge,
                   {
-                    backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                    borderColor: isDark
-                      ? "rgba(57, 255, 20, 0.3)"
-                      : "rgba(57, 255, 20, 0.15)",
-                    shadowColor: isDark ? currentColors.primary : "#000",
+                    backgroundColor: isDark
+                      ? "rgba(57, 255, 20, 0.12)"
+                      : "rgba(57, 255, 20, 0.08)",
                   },
                 ]}
               >
-                <View style={styles.planHeader}>
-                  <View style={styles.planTitleContainer}>
+                <Ionicons name="calendar" size={14} color={currentColors.primary} />
+                <Text
+                  style={[styles.heroBadgeText, { color: currentColors.primary }]}
+                >
+                  {plans.length} Available Plans
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Creative Plan Cards with Staggered Layout */}
+          <View style={styles.plansContainer}>
+            {plans.map((planItem, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.planCardWrapper,
+                  {
+                    marginLeft: index % 2 === 0 ? 0 : 16,
+                    marginRight: index % 2 === 0 ? 16 : 0,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.planCard,
+                    {
+                      backgroundColor: isDark ? currentColors.card : "#FFFFFF",
+                      borderColor: planItem.color + (isDark ? "40" : "30"),
+                      shadowColor: planItem.color,
+                    },
+                  ]}
+                >
+                  {/* Accent Bar on Side */}
+                  <View
+                    style={[
+                      styles.accentBar,
+                      { backgroundColor: planItem.color },
+                    ]}
+                  />
+
+                  {/* Plan Number Badge */}
+                  <View
+                    style={[
+                      styles.planNumber,
+                      {
+                        backgroundColor: planItem.color + (isDark ? "20" : "15"),
+                        borderColor: planItem.color + (isDark ? "40" : "30"),
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.planNumberText, { color: planItem.color }]}
+                    >
+                      #{index + 1}
+                    </Text>
+                  </View>
+
+                  {/* Plan Header */}
+                  <View style={styles.planHeader}>
                     <View
                       style={[
-                        styles.planIcon,
+                        styles.planIconLarge,
                         {
-                          backgroundColor: isDark
-                            ? "rgba(57, 255, 20, 0.2)"
-                            : "rgba(57, 255, 20, 0.1)",
+                          backgroundColor: planItem.color + (isDark ? "20" : "10"),
+                          borderWidth: 2,
+                          borderColor: planItem.color + (isDark ? "40" : "30"),
                         },
                       ]}
                     >
-                      <Ionicons
-                        name="barbell"
-                        size={18}
-                        color={currentColors.primary}
+                      <MaterialCommunityIcons
+                        name={planItem.icon as any}
+                        size={28}
+                        color={planItem.color}
                       />
                     </View>
-                    <Text
-                      style={[
-                        styles.planTitle,
-                        { color: currentColors.primary },
-                      ]}
-                    >
-                      {planItem.title}
-                    </Text>
-                  </View>
-                </View>
-
-                <View
-                  style={[
-                    styles.cardDivider,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(57, 255, 20, 0.2)"
-                        : "rgba(57, 255, 20, 0.1)",
-                    },
-                  ]}
-                />
-
-                <View style={styles.focusContainer}>
-                  <Ionicons name="flame" size={16} color="#FF6B6B" />
-                  <Text
-                    style={[
-                      styles.planFocus,
-                      { color: isDark ? currentColors.text : "#666" },
-                    ]}
-                  >
-                    {planItem.focus}
-                  </Text>
-                </View>
-
-                <View style={styles.daysContainer}>
-                  {planItem.days.map((day, dayIndex) => (
-                    <View key={dayIndex} style={styles.dayItem}>
+                    <View style={styles.planTitleContainer}>
+                      <Text
+                        style={[styles.planTitle, { color: currentColors.text }]}
+                      >
+                        {planItem.title}
+                      </Text>
                       <View
                         style={[
-                          styles.dayIcon,
+                          styles.focusBadge,
                           {
                             backgroundColor: isDark
-                              ? "rgba(57, 255, 20, 0.2)"
+                              ? "rgba(255, 107, 107, 0.15)"
+                              : "rgba(255, 107, 107, 0.08)",
+                          },
+                        ]}
+                      >
+                        <Ionicons name="flame" size={12} color="#FF6B6B" />
+                        <Text
+                          style={[
+                            styles.planFocus,
+                            {
+                              color: isDark
+                                ? "rgba(255, 255, 255, 0.8)"
+                                : "rgba(0, 0, 0, 0.7)",
+                            },
+                          ]}
+                        >
+                          {planItem.focus}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Divider */}
+                  <View
+                    style={[
+                      styles.cardDivider,
+                      { backgroundColor: planItem.color + (isDark ? "20" : "15") },
+                    ]}
+                  />
+
+                  {/* Days Section with Enhanced Design */}
+                  <View style={styles.daysSection}>
+                    <View style={styles.daysSectionHeader}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={16}
+                        color={currentColors.primary}
+                      />
+                      <Text
+                        style={[
+                          styles.daysSectionTitle,
+                          { color: currentColors.text },
+                        ]}
+                      >
+                        Training Schedule
+                      </Text>
+                      <View
+                        style={[
+                          styles.daysCount,
+                          {
+                            backgroundColor: isDark
+                              ? "rgba(57, 255, 20, 0.15)"
                               : "rgba(57, 255, 20, 0.1)",
                           },
                         ]}
                       >
-                        <Ionicons
-                          name="calendar-outline"
-                          size={14}
-                          color={currentColors.primary}
-                        />
+                        <Text
+                          style={[
+                            styles.daysCountText,
+                            { color: currentColors.primary },
+                          ]}
+                        >
+                          {planItem.days.length}
+                        </Text>
                       </View>
+                    </View>
+
+                    <View style={styles.daysContainer}>
+                      {planItem.days.map((day, dayIndex) => (
+                        <View key={dayIndex} style={styles.dayItem}>
+                          <View
+                            style={[
+                              styles.dayDot,
+                              { backgroundColor: planItem.color },
+                            ]}
+                          />
+                          <View style={styles.dayContent}>
+                            <Text
+                              style={[
+                                styles.dayText,
+                                {
+                                  color: isDark
+                                    ? "rgba(255, 255, 255, 0.9)"
+                                    : "rgba(0, 0, 0, 0.8)",
+                                },
+                              ]}
+                            >
+                              {day}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Tips Section with Enhanced Design */}
+                  <View
+                    style={[
+                      styles.tipsContainer,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(255, 193, 7, 0.1)"
+                          : "rgba(255, 193, 7, 0.05)",
+                        borderColor: isDark
+                          ? "rgba(255, 193, 7, 0.25)"
+                          : "rgba(255, 193, 7, 0.15)",
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.tipIconWrapper,
+                        {
+                          backgroundColor: isDark
+                            ? "rgba(255, 193, 7, 0.2)"
+                            : "rgba(255, 193, 7, 0.15)",
+                        },
+                      ]}
+                    >
+                      <Ionicons name="bulb" size={18} color="#FFC107" />
+                    </View>
+                    <View style={styles.tipsContent}>
                       <Text
                         style={[
-                          styles.dayText,
+                          styles.tipsLabel,
                           {
-                            color: isDark ? currentColors.text : "#333",
+                            color: isDark
+                              ? "rgba(255, 193, 7, 0.9)"
+                              : "rgba(255, 193, 7, 0.8)",
                           },
                         ]}
                       >
-                        {day}
+                        Pro Tips
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tipsText,
+                          {
+                            color: isDark
+                              ? "rgba(255, 255, 255, 0.8)"
+                              : "rgba(0, 0, 0, 0.7)",
+                          },
+                        ]}
+                      >
+                        {planItem.tips}
                       </Text>
                     </View>
-                  ))}
+                  </View>
                 </View>
+              </View>
+            ))}
+          </View>
 
-                <View
+          {/* Enhanced Info Card */}
+          <View
+            style={[
+              styles.infoCard,
+              {
+                backgroundColor: isDark ? currentColors.card : "#FFFFFF",
+                borderColor: isDark
+                  ? "rgba(57, 255, 20, 0.2)"
+                  : "rgba(57, 255, 20, 0.12)",
+                shadowColor: currentColors.primary,
+              },
+            ]}
+          >
+            <View style={styles.infoHeader}>
+              <View
+                style={[
+                  styles.infoIconWrapper,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(57, 255, 20, 0.15)"
+                      : "rgba(57, 255, 20, 0.08)",
+                    borderWidth: 2,
+                    borderColor: isDark
+                      ? "rgba(57, 255, 20, 0.25)"
+                      : "rgba(57, 255, 20, 0.15)",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="information-circle"
+                  size={22}
+                  color={currentColors.primary}
+                />
+              </View>
+              <View style={styles.infoHeaderText}>
+                <Text style={[styles.infoTitle, { color: currentColors.text }]}>
+                  Important Guidelines
+                </Text>
+                <Text
                   style={[
-                    styles.tipsContainer,
+                    styles.infoSubtitle,
                     {
-                      backgroundColor: isDark
-                        ? "rgba(57, 255, 20, 0.1)"
-                        : "rgba(57, 255, 20, 0.05)",
+                      color: isDark
+                        ? "rgba(255, 255, 255, 0.5)"
+                        : "rgba(0, 0, 0, 0.45)",
                     },
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.tipIcon,
-                      {
-                        backgroundColor: isDark
-                          ? "rgba(255, 193, 7, 0.2)"
-                          : "rgba(255, 193, 7, 0.1)",
-                      },
-                    ]}
-                  >
-                    <Ionicons name="bulb-outline" size={16} color="#FFC107" />
-                  </View>
-                  <Text
-                    style={[
-                      styles.tipsText,
-                      {
-                        color: isDark ? currentColors.text : "#333",
-                      },
-                    ]}
-                  >
-                    {planItem.tips}
-                  </Text>
-                </View>
+                  Read before starting
+                </Text>
               </View>
             </View>
-          ))}
-        </View>
 
-        {/* Action Buttons */}
-        <View>
+            <View
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(57, 255, 20, 0.15)"
+                    : "rgba(57, 255, 20, 0.08)",
+                },
+              ]}
+            />
+
+            <View style={styles.guidelinesList}>
+              <View style={styles.guidelineItem}>
+                <View
+                  style={[
+                    styles.guidelineDot,
+                    { backgroundColor: currentColors.primary },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: isDark
+                        ? "rgba(255, 255, 255, 0.8)"
+                        : "rgba(0, 0, 0, 0.7)",
+                    },
+                  ]}
+                >
+                  Follow your chosen plan consistently for 6-8 weeks
+                </Text>
+              </View>
+              <View style={styles.guidelineItem}>
+                <View
+                  style={[
+                    styles.guidelineDot,
+                    { backgroundColor: currentColors.primary },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: isDark
+                        ? "rgba(255, 255, 255, 0.8)"
+                        : "rgba(0, 0, 0, 0.7)",
+                    },
+                  ]}
+                >
+                  Track your progress and adjust weights progressively
+                </Text>
+              </View>
+              <View style={styles.guidelineItem}>
+                <View
+                  style={[
+                    styles.guidelineDot,
+                    { backgroundColor: currentColors.primary },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: isDark
+                        ? "rgba(255, 255, 255, 0.8)"
+                        : "rgba(0, 0, 0, 0.7)",
+                    },
+                  ]}
+                >
+                  Ensure proper nutrition and recovery for best results
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[
@@ -424,18 +714,29 @@ export default function PlanScreen() {
                 {
                   backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                   borderColor: isDark
-                    ? "rgba(57, 255, 20, 0.3)"
+                    ? "rgba(57, 255, 20, 0.25)"
                     : "rgba(57, 255, 20, 0.2)",
                 },
               ]}
               activeOpacity={0.8}
               onPress={() => router.push("/workout")}
             >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={currentColors.primary}
-              />
+              <View
+                style={[
+                  styles.secondaryButtonIcon,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(57, 255, 20, 0.12)"
+                      : "rgba(57, 255, 20, 0.08)",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={18}
+                  color={currentColors.primary}
+                />
+              </View>
               <Text
                 style={[
                   styles.secondaryButtonText,
@@ -472,71 +773,14 @@ export default function PlanScreen() {
               >
                 Back to Home
               </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={20}
+                color={isDark ? currentColors.background : "#FFFFFF"}
+              />
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Info Card */}
-        <View>
-          <View
-            style={[
-              styles.infoCard,
-              {
-                backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                borderColor: isDark
-                  ? currentColors.primary + "40"
-                  : "rgba(57, 255, 20, 0.15)",
-                shadowColor: isDark ? currentColors.primary : "#000",
-              },
-            ]}
-          >
-            <View style={styles.infoHeader}>
-              <View
-                style={[
-                  styles.infoIcon,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.2)"
-                      : "rgba(57, 255, 20, 0.1)",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="information-circle"
-                  size={20}
-                  color={currentColors.primary}
-                />
-              </View>
-              <Text style={[styles.infoTitle, { color: currentColors.text }]}>
-                Plan Instructions
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.divider,
-                {
-                  backgroundColor: isDark
-                    ? currentColors.primary + "20"
-                    : "rgba(57, 255, 20, 0.1)",
-                },
-              ]}
-            />
-
-            <Text
-              style={[
-                styles.infoText,
-                {
-                  color: isDark ? currentColors.text : "#666",
-                },
-              ]}
-            >
-              Follow your chosen plan consistently for 6-8 weeks. Track your
-              progress, adjust weights as needed, and ensure proper nutrition
-              and recovery for best results.
-            </Text>
-          </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -552,48 +796,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: Platform.OS === "ios" ? 50 : 40,
-    paddingBottom: 16,
+    paddingBottom: 18,
     borderBottomWidth: 1,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+  },
+  logoIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   logo: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 0.5,
   },
   themeToggle: {
     position: "absolute",
     top: Platform.OS === "ios" ? 50 : 40,
     right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 5,
       },
     }),
   },
@@ -601,18 +852,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginRight: 52,
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
     gap: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   backText: {
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 14,
   },
   scrollContainer: {
@@ -621,14 +884,255 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
+    borderRadius: 28,
+    padding: 36,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    position: "relative",
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  decorCircle: {
+    position: "absolute",
+    borderRadius: 1000,
+  },
+  decorCircle1: {
+    width: 220,
+    height: 220,
+    top: -60,
+    right: -60,
+  },
+  decorCircle2: {
+    width: 160,
+    height: 160,
+    bottom: -50,
+    left: -50,
+  },
+  heroContent: {
+    alignItems: "center",
+    zIndex: 1,
+  },
+  iconCircle: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    marginBottom: 10,
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 18,
+    lineHeight: 22,
+  },
+  heroBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 20,
+  },
+  heroBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  plansContainer: {
+    gap: 20,
+    marginBottom: 24,
+  },
+  planCardWrapper: {
+    position: "relative",
+  },
+  planCard: {
     borderRadius: 24,
-    padding: 28,
+    padding: 24,
+    borderWidth: 2,
+    position: "relative",
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  accentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 24,
+    borderBottomLeftRadius: 24,
+  },
+  planNumber: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  planNumberText: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  planHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 18,
+  },
+  planIconLarge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  planTitleContainer: {
+    flex: 1,
+    paddingRight: 40,
+  },
+  planTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+    marginBottom: 8,
+    lineHeight: 26,
+  },
+  focusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+  },
+  planFocus: {
+    fontSize: 12,
+    fontWeight: "600",
+    fontStyle: "italic",
+  },
+  cardDivider: {
+    height: 2,
+    borderRadius: 1,
+    marginBottom: 20,
+  },
+  daysSection: {
+    marginBottom: 18,
+  },
+  daysSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+  },
+  daysSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  daysCount: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  daysCountText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  daysContainer: {
+    gap: 14,
+  },
+  dayItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  dayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 6,
+  },
+  dayContent: {
+    flex: 1,
+  },
+  dayText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
+  },
+  tipsContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 16,
+    borderRadius: 14,
+    gap: 12,
+    borderWidth: 1.5,
+  },
+  tipIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tipsContent: {
+    flex: 1,
+  },
+  tipsLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  tipsText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
+  },
+  infoCard: {
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 20,
     borderWidth: 1.5,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.1,
         shadowRadius: 12,
       },
       android: {
@@ -636,176 +1140,72 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  heroContent: {
+  infoHeader: {
+    flexDirection: "row",
     alignItems: "center",
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    gap: 14,
     marginBottom: 16,
   },
-  heroTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    marginBottom: 8,
-    letterSpacing: 0.3,
-    textAlign: "center",
-  },
-  heroSubtitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    opacity: 0.8,
-    textAlign: "center",
-  },
-  countBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    marginBottom: 20,
-    alignSelf: "center",
-  },
-  badgeIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  badgeText: {
-    fontSize: 15,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
-  plansContainer: {
-    gap: 16,
-    marginBottom: 20,
-  },
-  planCard: {
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  planHeader: {
-    marginBottom: 12,
-  },
-  planTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  planIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  infoIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  planTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+  infoHeaderText: {
     flex: 1,
   },
-  cardDivider: {
-    height: 2,
+  infoTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  infoSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    marginTop: 3,
+  },
+  divider: {
+    height: 1.5,
     borderRadius: 1,
-    marginBottom: 14,
+    marginBottom: 20,
   },
-  focusContainer: {
+  guidelinesList: {
+    gap: 14,
+  },
+  guidelineItem: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 107, 107, 0.05)",
+    alignItems: "flex-start",
+    gap: 12,
   },
-  planFocus: {
+  guidelineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 7,
+  },
+  infoText: {
     fontSize: 14,
+    lineHeight: 22,
     fontWeight: "500",
-    fontStyle: "italic",
-    flex: 1,
-  },
-  daysContainer: {
-    gap: 12,
-    marginBottom: 16,
-  },
-  dayItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  dayIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 1,
-  },
-  dayText: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "500",
-    flex: 1,
-  },
-  tipsContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    borderRadius: 12,
-    gap: 12,
-  },
-  tipIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 1,
-  },
-  tipsText: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "500",
-    fontStyle: "italic",
     flex: 1,
   },
   actionButtons: {
     gap: 12,
-    marginBottom: 20,
   },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 10,
+    paddingVertical: 18,
+    borderRadius: 20,
+    gap: 12,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.3,
-        shadowRadius: 10,
+        shadowRadius: 14,
       },
       android: {
         elevation: 6,
@@ -813,76 +1213,39 @@ const styles = StyleSheet.create({
     }),
   },
   primaryButtonText: {
-    fontSize: 17,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
   secondaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 16,
+    borderRadius: 18,
     borderWidth: 1.5,
-    gap: 8,
+    gap: 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  infoCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 8,
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
       },
       android: {
         elevation: 2,
       },
     }),
   },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
-  },
-  infoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  secondaryButtonIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: "center",
     alignItems: "center",
   },
-  infoTitle: {
-    fontSize: 16,
+  secondaryButtonText: {
+    fontSize: 15,
     fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  divider: {
-    height: 2,
-    borderRadius: 1,
-    marginBottom: 16,
-  },
-  infoText: {
-    fontSize: 14,
-    lineHeight: 22,
-    fontWeight: "500",
   },
 });

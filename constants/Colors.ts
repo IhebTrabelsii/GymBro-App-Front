@@ -1,17 +1,26 @@
 export const Colors = {
-light: {
-  background: '#FAF7F2',      // Soft beige background
-  card: '#F8F4E9',           // Slightly darker beige for cards
-  text: '#2D2D2D',           // Dark text for contrast
-  border: '#E8E0D5',         // Beige border
-  primary: '#381cc2ff',        // Keep green accent
-  notification: '#FF6B6B',
-},
+  light: {
+    background: '#F8F9FA',      // Clean light gray background
+    card: '#FFFFFF',            // Pure white cards
+    text: '#0A0A0A',            // Deep black text
+    border: '#E5E5E5',          // Subtle gray border
+    primary: '#00FF41',         // Vibrant neon green
+    notification: '#FF6B6B',
+    secondary: '#F0F0F0',       // Light gray
+    accent: '#7FFF00',          // Bright lime accent
+    gradient1: '#00FF41',       // Gradient start
+    gradient2: '#7FFF00',       // Gradient end
+  },
   dark: {
-    background: '#000000', // Pure BLACK
-    text: '#FFFFFF',       // Pure WHITE  
-    primary: '#39FF14',    // Neon green
-    card: '#121212',       // Dark gray card
-    border: '#333333',     // Dark border
+    background: '#000000',      // Pure black background
+    text: '#FFFFFF',            // Pure white text
+    primary: '#00FF41',         // Vibrant neon green
+    card: '#0A0A0A',            // Almost black cards
+    border: '#1A1A1A',          // Subtle dark border
+    secondary: '#151515',       // Slightly lighter black
+    accent: '#7FFF00',          // Bright lime accent
+    gradient1: '#00FF41',       // Gradient start
+    gradient2: '#7FFF00',       // Gradient end
+    glow: 'rgba(0, 255, 65, 0.3)', // Neon glow effect
   },
 };

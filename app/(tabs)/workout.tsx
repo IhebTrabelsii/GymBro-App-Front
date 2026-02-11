@@ -87,9 +87,10 @@ export default function WorkoutScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
+      {/* Improved Top Bar */}
       <View style={[styles.topBar, { 
-        backgroundColor: isDark ? 'rgba(18, 18, 18, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-        borderBottomColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.15)',
+        backgroundColor: isDark ? 'rgba(18, 18, 18, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+        borderBottomColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.1)',
       }]}>
         <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
           <View style={styles.logoContainer}>
@@ -108,9 +109,11 @@ export default function WorkoutScreen() {
           <TouchableOpacity 
             onPress={() => router.back()}
             style={[styles.backButton, { 
-              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.15)' : '#F5F5F5',
+              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.12)' : 'rgba(57, 255, 20, 0.06)',
               borderWidth: 1.5,
-              borderColor: currentColors.primary,
+              borderColor: isDark 
+                ? 'rgba(57, 255, 20, 0.3)' 
+                : 'rgba(57, 255, 20, 0.25)',
             }]}
             activeOpacity={0.8}
           >
@@ -139,42 +142,46 @@ export default function WorkoutScreen() {
 
       <ScrollView
         style={{ backgroundColor: currentColors.background }} 
-        contentContainerStyle={[styles.scrollContainer]}
+        contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
-          {/* Hero Section */}
+          {/* Improved Hero Section */}
           <View style={[styles.heroCard, { 
             backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-            borderColor: currentColors.primary,
+            borderColor: isDark 
+              ? 'rgba(57, 255, 20, 0.2)' 
+              : 'rgba(57, 255, 20, 0.15)',
             shadowColor: currentColors.primary,
           }]}>
             <View style={[styles.decorCircle, styles.decorCircle1, {
-              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.05)' : 'rgba(57, 255, 20, 0.03)',
+              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.04)' : 'rgba(57, 255, 20, 0.025)',
             }]} />
             <View style={[styles.decorCircle, styles.decorCircle2, {
-              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.08)' : 'rgba(57, 255, 20, 0.05)',
+              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.06)' : 'rgba(57, 255, 20, 0.04)',
             }]} />
             
             <View style={styles.heroContent}>
               <View style={[styles.iconCircle, { 
-                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)',
+                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.08)',
                 borderWidth: 3,
-                borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.2)',
+                borderColor: isDark ? 'rgba(57, 255, 20, 0.25)' : 'rgba(57, 255, 20, 0.15)',
               }]}>
-                <MaterialCommunityIcons name="human" size={44} color={currentColors.primary} />
+                <MaterialCommunityIcons name="human" size={46} color={currentColors.primary} />
               </View>
               <Text style={[styles.heroTitle, { color: currentColors.text }]}>
                 Discover Your Body Type
               </Text>
               <Text style={[styles.heroSubtitle, { 
-                color: isDark ? currentColors.text : '#666' 
+                color: isDark 
+                  ? 'rgba(255, 255, 255, 0.65)' 
+                  : 'rgba(0, 0, 0, 0.6)',
               }]}>
                 Choose the right training plan for your genetics
               </Text>
               <View style={[styles.heroBadge, {
-                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.1)',
+                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.12)' : 'rgba(57, 255, 20, 0.08)',
               }]}>
                 <Ionicons name="body" size={14} color={currentColors.primary} />
                 <Text style={[styles.heroBadgeText, { color: currentColors.primary }]}>
@@ -184,16 +191,24 @@ export default function WorkoutScreen() {
             </View>
           </View>
 
-          {/* Section Title */}
+          {/* Improved Section Title */}
           <View style={styles.sectionTitleContainer}>
-            <View style={[styles.sectionTitleLine, { backgroundColor: currentColors.primary }]} />
+            <View style={[styles.sectionTitleLine, { 
+              backgroundColor: isDark 
+                ? 'rgba(57, 255, 20, 0.3)' 
+                : 'rgba(57, 255, 20, 0.25)',
+            }]} />
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>
               SELECT YOUR TYPE
             </Text>
-            <View style={[styles.sectionTitleLine, { backgroundColor: currentColors.primary }]} />
+            <View style={[styles.sectionTitleLine, { 
+              backgroundColor: isDark 
+                ? 'rgba(57, 255, 20, 0.3)' 
+                : 'rgba(57, 255, 20, 0.25)',
+            }]} />
           </View>
           
-          {/* Body Types Cards */}
+          {/* Improved Body Types Cards */}
           <FlatList
             data={bodyTypes}
             keyExtractor={(item) => item.id}
@@ -206,17 +221,22 @@ export default function WorkoutScreen() {
               >
                 <View style={[styles.card, { 
                   backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-                  borderColor: item.color,
+                  borderColor: isDark 
+                    ? item.color + '40' 
+                    : item.color + '30',
                   shadowColor: item.color,
                 }]}>
-                  {/* Glow Effect */}
-                  <View style={[styles.cardGlow, { backgroundColor: item.color }]} />
+                  {/* Subtle Glow Effect */}
+                  <View style={[styles.cardGlow, { 
+                    backgroundColor: item.color,
+                    opacity: isDark ? 0.025 : 0.015,
+                  }]} />
                   
                   <View style={styles.cardHeader}>
                     <View style={[styles.cardIconContainer, { 
                       backgroundColor: isDark ? item.color + '20' : item.color + '10',
                       borderWidth: 2,
-                      borderColor: item.color + '40',
+                      borderColor: isDark ? item.color + '40' : item.color + '30',
                     }]}>
                       <Ionicons name={item.icon as any} size={26} color={item.color} />
                     </View>
@@ -228,31 +248,37 @@ export default function WorkoutScreen() {
                         backgroundColor: savedPlans.includes(item.name) 
                           ? item.color + '20' 
                           : 'transparent',
+                        borderWidth: savedPlans.includes(item.name) ? 0 : 1.5,
+                        borderColor: savedPlans.includes(item.name) 
+                          ? 'transparent' 
+                          : item.color + '30',
                       }]}
                       onPress={() => toggleSavePlan(item.name)}
                       activeOpacity={0.7}
                     >
                       <Ionicons
                         name={savedPlans.includes(item.name) ? 'bookmark' : 'bookmark-outline'}
-                        size={22}
+                        size={20}
                         color={item.color}
                       />
                     </TouchableOpacity>
                   </View>
                   
-                  {/* Characteristics Grid */}
+                  {/* Improved Characteristics Grid */}
                   <View style={styles.characteristicsRow}>
                     {item.characteristics.map((char, index) => (
                       <View key={index} style={styles.characteristicItem}>
                         <View style={[styles.charIconContainer, { 
-                          backgroundColor: isDark ? item.color + '20' : item.color + '10',
-                          borderWidth: 1,
-                          borderColor: item.color + '30',
+                          backgroundColor: isDark ? item.color + '18' : item.color + '0D',
+                          borderWidth: 1.5,
+                          borderColor: isDark ? item.color + '30' : item.color + '25',
                         }]}>
                           <MaterialCommunityIcons name={char.icon as any} size={20} color={item.color} />
                         </View>
                         <Text style={[styles.charText, { 
-                          color: isDark ? currentColors.text : '#333' 
+                          color: isDark 
+                            ? 'rgba(255, 255, 255, 0.85)' 
+                            : 'rgba(0, 0, 0, 0.75)',
                         }]}>
                           {char.label}
                         </Text>
@@ -260,10 +286,14 @@ export default function WorkoutScreen() {
                     ))}
                   </View>
                   
-                  <View style={[styles.cardDivider, { backgroundColor: item.color + '20' }]} />
+                  <View style={[styles.cardDivider, { 
+                    backgroundColor: isDark ? item.color + '20' : item.color + '15',
+                  }]} />
                   
                   <Text style={[styles.cardDesc, { 
-                    color: isDark ? currentColors.text : '#333' 
+                    color: isDark 
+                      ? 'rgba(255, 255, 255, 0.8)' 
+                      : 'rgba(0, 0, 0, 0.7)',
                   }]}>
                     {item.desc}
                   </Text>
@@ -271,6 +301,17 @@ export default function WorkoutScreen() {
                   <TouchableOpacity 
                     style={[styles.cardButton, { 
                       backgroundColor: item.color,
+                      ...Platform.select({
+                        ios: {
+                          shadowColor: item.color,
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 8,
+                        },
+                        android: {
+                          elevation: 4,
+                        },
+                      }),
                     }]}
                     onPress={() => handleSelect(item.name)}
                     activeOpacity={0.85}
@@ -283,18 +324,20 @@ export default function WorkoutScreen() {
             )}
           />
 
-          {/* Saved Plans Section */}
+          {/* Improved Saved Plans Section */}
           {savedPlans.length > 0 && (
             <View style={[styles.savedSection, { 
               backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-              borderColor: currentColors.primary,
+              borderColor: isDark 
+                ? 'rgba(57, 255, 20, 0.2)' 
+                : 'rgba(57, 255, 20, 0.12)',
               shadowColor: currentColors.primary,
             }]}>
               <View style={styles.savedHeader}>
                 <View style={[styles.savedIconWrapper, { 
-                  backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)',
+                  backgroundColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.08)',
                   borderWidth: 2,
-                  borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.2)',
+                  borderColor: isDark ? 'rgba(57, 255, 20, 0.25)' : 'rgba(57, 255, 20, 0.15)',
                 }]}>
                   <Ionicons name="bookmark" size={22} color={currentColors.primary} />
                 </View>
@@ -303,7 +346,9 @@ export default function WorkoutScreen() {
                     Saved Plans
                   </Text>
                   <Text style={[styles.savedSubtitle, {
-                    color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#999',
+                    color: isDark 
+                      ? 'rgba(255, 255, 255, 0.5)' 
+                      : 'rgba(0, 0, 0, 0.45)',
                   }]}>
                     {savedPlans.length} plan{savedPlans.length > 1 ? 's' : ''} saved
                   </Text>
@@ -311,7 +356,9 @@ export default function WorkoutScreen() {
               </View>
               
               <View style={[styles.divider, { 
-                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.15)' 
+                backgroundColor: isDark 
+                  ? 'rgba(57, 255, 20, 0.15)' 
+                  : 'rgba(57, 255, 20, 0.08)',
               }]} />
               
               {savedPlans.map((plan, index) => {
@@ -321,7 +368,9 @@ export default function WorkoutScreen() {
                     key={plan}
                     style={[styles.savedItem, {
                       borderBottomWidth: index === savedPlans.length - 1 ? 0 : 1,
-                      borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                      borderBottomColor: isDark 
+                        ? 'rgba(255, 255, 255, 0.04)' 
+                        : 'rgba(0, 0, 0, 0.04)',
                     }]}
                     onPress={() => handleSelect(plan)}
                     activeOpacity={0.7}
@@ -329,6 +378,8 @@ export default function WorkoutScreen() {
                     <View style={styles.savedItemLeft}>
                       <View style={[styles.savedItemIcon, {
                         backgroundColor: planData?.color + '20',
+                        borderWidth: 1.5,
+                        borderColor: planData?.color + '30',
                       }]}>
                         <Ionicons name={planData?.icon as any} size={20} color={planData?.color} />
                       </View>
@@ -337,7 +388,9 @@ export default function WorkoutScreen() {
                       </Text>
                     </View>
                     <View style={[styles.savedChevron, {
-                      backgroundColor: isDark ? 'rgba(57, 255, 20, 0.1)' : 'rgba(57, 255, 20, 0.08)',
+                      backgroundColor: isDark 
+                        ? 'rgba(57, 255, 20, 0.1)' 
+                        : 'rgba(57, 255, 20, 0.06)',
                     }]}>
                       <Ionicons name="chevron-forward" size={18} color={currentColors.primary} />
                     </View>
@@ -347,17 +400,19 @@ export default function WorkoutScreen() {
             </View>
           )}
 
-          {/* Info Card */}
+          {/* Improved Info Card */}
           <View style={[styles.infoCard, { 
             backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-            borderColor: currentColors.primary,
+            borderColor: isDark 
+              ? 'rgba(57, 255, 20, 0.2)' 
+              : 'rgba(57, 255, 20, 0.12)',
             shadowColor: currentColors.primary,
           }]}>
             <View style={styles.infoHeader}>
               <View style={[styles.infoIconWrapper, { 
-                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)',
+                backgroundColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.08)',
                 borderWidth: 2,
-                borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.2)',
+                borderColor: isDark ? 'rgba(57, 255, 20, 0.25)' : 'rgba(57, 255, 20, 0.15)',
               }]}>
                 <Ionicons name="information-circle" size={22} color={currentColors.primary} />
               </View>
@@ -366,7 +421,9 @@ export default function WorkoutScreen() {
                   Body Type Guide
                 </Text>
                 <Text style={[styles.infoSubtitle, {
-                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#999',
+                  color: isDark 
+                    ? 'rgba(255, 255, 255, 0.5)' 
+                    : 'rgba(0, 0, 0, 0.45)',
                 }]}>
                   Understanding genetics
                 </Text>
@@ -374,36 +431,64 @@ export default function WorkoutScreen() {
             </View>
             
             <View style={[styles.divider, { 
-              backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.15)' 
+              backgroundColor: isDark 
+                ? 'rgba(57, 255, 20, 0.15)' 
+                : 'rgba(57, 255, 20, 0.08)',
             }]} />
             
             <Text style={[styles.infoText, { 
-              color: isDark ? currentColors.text : '#666' 
+              color: isDark 
+                ? 'rgba(255, 255, 255, 0.8)' 
+                : 'rgba(0, 0, 0, 0.65)',
             }]}>
               Each body type responds differently to training and nutrition. Select your type to get a personalized workout plan designed for optimal results.
             </Text>
             
             <View style={styles.infoBenefits}>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                <View style={[styles.benefitIconWrapper, {
+                  backgroundColor: isDark 
+                    ? 'rgba(57, 255, 20, 0.1)' 
+                    : 'rgba(57, 255, 20, 0.06)',
+                }]}>
+                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                </View>
                 <Text style={[styles.benefitText, { 
-                  color: isDark ? currentColors.text : '#666' 
+                  color: isDark 
+                    ? 'rgba(255, 255, 255, 0.8)' 
+                    : 'rgba(0, 0, 0, 0.65)',
                 }]}>
                   Customized workout plans
                 </Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                <View style={[styles.benefitIconWrapper, {
+                  backgroundColor: isDark 
+                    ? 'rgba(57, 255, 20, 0.1)' 
+                    : 'rgba(57, 255, 20, 0.06)',
+                }]}>
+                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                </View>
                 <Text style={[styles.benefitText, { 
-                  color: isDark ? currentColors.text : '#666' 
+                  color: isDark 
+                    ? 'rgba(255, 255, 255, 0.8)' 
+                    : 'rgba(0, 0, 0, 0.65)',
                 }]}>
                   Nutrition guidance
                 </Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                <View style={[styles.benefitIconWrapper, {
+                  backgroundColor: isDark 
+                    ? 'rgba(57, 255, 20, 0.1)' 
+                    : 'rgba(57, 255, 20, 0.06)',
+                }]}>
+                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
+                </View>
                 <Text style={[styles.benefitText, { 
-                  color: isDark ? currentColors.text : '#666' 
+                  color: isDark 
+                    ? 'rgba(255, 255, 255, 0.8)' 
+                    : 'rgba(0, 0, 0, 0.65)',
                 }]}>
                   Optimized for your genetics
                 </Text>
@@ -411,7 +496,7 @@ export default function WorkoutScreen() {
             </View>
           </View>
 
-          {/* Action Button */}
+          {/* Improved Action Button */}
           <TouchableOpacity 
             style={[styles.primaryButton, { 
               backgroundColor: currentColors.primary,
@@ -420,13 +505,21 @@ export default function WorkoutScreen() {
             activeOpacity={0.85}
             onPress={() => router.push('/')}
           >
-            <MaterialCommunityIcons name="home" size={24} color={isDark ? currentColors.background : '#FFFFFF'} />
+            <MaterialCommunityIcons 
+              name="home" 
+              size={24} 
+              color={isDark ? currentColors.background : '#FFFFFF'} 
+            />
             <Text style={[styles.primaryButtonText, { 
               color: isDark ? currentColors.background : '#FFFFFF' 
             }]}>
               Back to Home
             </Text>
-            <Ionicons name="arrow-forward" size={20} color={isDark ? currentColors.background : '#FFFFFF'} />
+            <Ionicons 
+              name="arrow-forward" 
+              size={20} 
+              color={isDark ? currentColors.background : '#FFFFFF'} 
+            />
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
@@ -444,17 +537,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 16,
+    paddingBottom: 18,
     borderBottomWidth: 1,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.06,
         shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     }),
   },
@@ -488,11 +581,11 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.3,
         shadowRadius: 8,
       },
       android: {
-        elevation: 6,
+        elevation: 5,
       },
     }),
   },
@@ -500,6 +593,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 52,
   },
   backButton: {
     flexDirection: 'row',
@@ -509,31 +603,42 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     gap: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   backText: {
     fontWeight: '700',
     fontSize: 14,
   },
   scrollContainer: {
-    paddingTop: 24,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
   heroCard: {
     borderRadius: 28,
-    padding: 32,
-    marginBottom: 28,
-    borderWidth: 2,
+    padding: 36,
+    marginBottom: 24,
+    borderWidth: 1.5,
     position: 'relative',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
       },
     }),
   },
@@ -542,25 +647,25 @@ const styles = StyleSheet.create({
     borderRadius: 1000,
   },
   decorCircle1: {
-    width: 200,
-    height: 200,
-    top: -50,
-    right: -50,
+    width: 220,
+    height: 220,
+    top: -60,
+    right: -60,
   },
   decorCircle2: {
-    width: 150,
-    height: 150,
-    bottom: -40,
-    left: -40,
+    width: 160,
+    height: 160,
+    bottom: -50,
+    left: -50,
   },
   heroContent: {
     alignItems: 'center',
     zIndex: 1,
   },
   iconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -568,23 +673,23 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 28,
     fontWeight: '800',
-    marginBottom: 8,
+    marginBottom: 10,
     letterSpacing: 0.5,
     textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 15,
     fontWeight: '500',
-    opacity: 0.8,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
+    lineHeight: 22,
   },
   heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
     borderRadius: 20,
   },
   heroBadgeText: {
@@ -604,28 +709,28 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   grid: {
-    gap: 20,
-    marginBottom: 24,
+    gap: 18,
+    marginBottom: 20,
   },
   card: {
     borderRadius: 24,
     padding: 24,
-    borderWidth: 2,
+    borderWidth: 1.5,
     position: 'relative',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 5,
+        elevation: 4,
       },
     }),
   },
@@ -635,19 +740,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.03,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 18,
+    marginBottom: 20,
     zIndex: 1,
   },
   cardIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -658,53 +762,65 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   saveButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   characteristicsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 18,
-    gap: 8,
+    marginBottom: 20,
+    gap: 10,
   },
   characteristicItem: {
     alignItems: 'center',
     flex: 1,
   },
   charIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   charText: {
     fontSize: 11,
     fontWeight: '700',
     textAlign: 'center',
     letterSpacing: 0.3,
+    lineHeight: 16,
   },
   cardDivider: {
-    height: 2,
+    height: 1.5,
     borderRadius: 1,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   cardDesc: {
     fontSize: 14,
     lineHeight: 22,
     fontWeight: '500',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   cardButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 16,
+    paddingVertical: 15,
+    borderRadius: 18,
     gap: 8,
   },
   cardButtonText: {
@@ -716,16 +832,16 @@ const styles = StyleSheet.create({
   savedSection: {
     borderRadius: 24,
     padding: 24,
-    marginBottom: 20,
-    borderWidth: 2,
+    marginBottom: 18,
+    borderWidth: 1.5,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     }),
   },
@@ -753,12 +869,12 @@ const styles = StyleSheet.create({
   savedSubtitle: {
     fontSize: 13,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 3,
   },
   divider: {
-    height: 2,
+    height: 1.5,
     borderRadius: 1,
-    marginBottom: 18,
+    marginBottom: 20,
   },
   savedItem: {
     flexDirection: 'row',
@@ -773,9 +889,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   savedItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -785,9 +901,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   savedChevron: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -797,17 +913,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 18,
     borderRadius: 20,
-    marginTop: 8,
+    marginTop: 6,
     marginBottom: 20,
     gap: 12,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 14,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
       },
     }),
   },
@@ -819,16 +935,16 @@ const styles = StyleSheet.create({
   infoCard: {
     borderRadius: 24,
     padding: 24,
-    marginTop: 4,
-    borderWidth: 2,
+    marginTop: 2,
+    borderWidth: 1.5,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     }),
   },
@@ -856,25 +972,34 @@ const styles = StyleSheet.create({
   infoSubtitle: {
     fontSize: 13,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 3,
   },
   infoText: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 23,
     fontWeight: '500',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   infoBenefits: {
-    gap: 12,
+    gap: 14,
   },
   benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+  },
+  benefitIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   benefitText: {
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
+    lineHeight: 20,
   },
 });

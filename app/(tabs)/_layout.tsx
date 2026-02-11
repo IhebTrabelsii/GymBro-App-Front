@@ -5,7 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
-import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import {
+  useSimpleTheme,
+} from "../../context/SimpleThemeContext";
 
 export default function TabLayout() {
   const { theme } = useSimpleTheme();
@@ -67,6 +69,15 @@ export default function TabLayout() {
           title: "Workout",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="barbell" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="food"
+        options={{
+          title: "Food",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="restaurant" size={size} color={color} />
           ),
         }}
       />

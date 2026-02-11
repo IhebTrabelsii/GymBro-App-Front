@@ -34,6 +34,42 @@ export default function CalculatorScreen() {
 
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.9));
+  const [pulseAnim] = useState(new Animated.Value(1));
+  const [glowAnim] = useState(new Animated.Value(0));
+
+  React.useEffect(() => {
+    // Continuous pulse animation for calculate button
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.03,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Continuous glow animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   const calculate = () => {
     const ageNum = parseInt(age);
@@ -70,7 +106,7 @@ export default function CalculatorScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -93,17 +129,17 @@ export default function CalculatorScreen() {
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* Enhanced Header */}
+      {/* Premium Header */}
       <View
         style={[
           styles.header,
           {
             backgroundColor: isDark
-              ? "rgba(18, 18, 18, 0.95)"
-              : "rgba(255, 255, 255, 0.95)",
+              ? "rgba(10, 10, 10, 0.98)"
+              : "rgba(255, 255, 255, 0.98)",
             borderBottomColor: isDark
-              ? "rgba(57, 255, 20, 0.2)"
-              : "rgba(57, 255, 20, 0.15)",
+              ? currentColors.primary
+              : "rgba(0, 255, 65, 0.15)",
           },
         ]}
       >
@@ -113,8 +149,10 @@ export default function CalculatorScreen() {
               styles.headerIconWrapper,
               {
                 backgroundColor: isDark
-                  ? "rgba(57, 255, 20, 0.15)"
-                  : "rgba(57, 255, 20, 0.1)",
+                  ? "rgba(0, 255, 65, 0.2)"
+                  : "rgba(0, 255, 65, 0.1)",
+                borderWidth: 2,
+                borderColor: currentColors.primary,
               },
             ]}
           >
@@ -146,7 +184,7 @@ export default function CalculatorScreen() {
             <Ionicons
               name={isDark ? "sunny" : "moon"}
               size={20}
-              color={isDark ? currentColors.background : "#FFFFFF"}
+              color={isDark ? currentColors.background : "#000000"}
             />
           </TouchableOpacity>
         </View>
@@ -156,13 +194,14 @@ export default function CalculatorScreen() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Info Card */}
+        {/* Premium Info Card */}
         <View
           style={[
             styles.infoCard,
             {
               backgroundColor: isDark ? currentColors.card : "#FFFFFF",
               borderColor: currentColors.primary,
+              shadowColor: isDark ? currentColors.primary : "#000",
             },
           ]}
         >
@@ -171,8 +210,10 @@ export default function CalculatorScreen() {
               styles.infoIconWrapper,
               {
                 backgroundColor: isDark
-                  ? "rgba(57, 255, 20, 0.15)"
-                  : "rgba(57, 255, 20, 0.1)",
+                  ? "rgba(0, 255, 65, 0.2)"
+                  : "rgba(0, 255, 65, 0.1)",
+                borderWidth: 2,
+                borderColor: currentColors.primary,
               },
             ]}
           >
@@ -190,7 +231,7 @@ export default function CalculatorScreen() {
               style={[
                 styles.infoSubtitle,
                 {
-                  color: isDark ? "rgba(255, 255, 255, 0.6)" : "#666",
+                  color: isDark ? "rgba(255, 255, 255, 0.7)" : "#666",
                 },
               ]}
             >
@@ -210,8 +251,8 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(0, 0, 0, 0.1)",
+                  ? currentColors.primary
+                  : "rgba(0, 255, 65, 0.2)",
               },
             ]}
           >
@@ -220,8 +261,8 @@ export default function CalculatorScreen() {
                 styles.inputIconWrapper,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.08)",
+                    ? "rgba(0, 255, 65, 0.15)"
+                    : "rgba(0, 255, 65, 0.08)",
                 },
               ]}
             >
@@ -234,7 +275,7 @@ export default function CalculatorScreen() {
             <TextInput
               style={[styles.input, { color: currentColors.text }]}
               placeholder="Enter your age"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={isDark ? "#666" : "#999"}
               keyboardType="numeric"
               value={age}
               onChangeText={setAge}
@@ -258,8 +299,8 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(0, 0, 0, 0.1)",
+                  ? currentColors.primary
+                  : "rgba(0, 255, 65, 0.2)",
               },
             ]}
           >
@@ -268,8 +309,8 @@ export default function CalculatorScreen() {
                 styles.inputIconWrapper,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.08)",
+                    ? "rgba(0, 255, 65, 0.15)"
+                    : "rgba(0, 255, 65, 0.08)",
                 },
               ]}
             >
@@ -302,8 +343,8 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(0, 0, 0, 0.1)",
+                  ? currentColors.primary
+                  : "rgba(0, 255, 65, 0.2)",
               },
             ]}
           >
@@ -312,8 +353,8 @@ export default function CalculatorScreen() {
                 styles.inputIconWrapper,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.08)",
+                    ? "rgba(0, 255, 65, 0.15)"
+                    : "rgba(0, 255, 65, 0.08)",
                 },
               ]}
             >
@@ -326,7 +367,7 @@ export default function CalculatorScreen() {
             <TextInput
               style={[styles.input, { color: currentColors.text }]}
               placeholder="Enter your weight"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={isDark ? "#666" : "#999"}
               keyboardType="numeric"
               value={weight}
               onChangeText={setWeight}
@@ -350,8 +391,8 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(0, 0, 0, 0.1)",
+                  ? currentColors.primary
+                  : "rgba(0, 255, 65, 0.2)",
               },
             ]}
           >
@@ -360,8 +401,8 @@ export default function CalculatorScreen() {
                 styles.inputIconWrapper,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.08)",
+                    ? "rgba(0, 255, 65, 0.15)"
+                    : "rgba(0, 255, 65, 0.08)",
                 },
               ]}
             >
@@ -374,7 +415,7 @@ export default function CalculatorScreen() {
             <TextInput
               style={[styles.input, { color: currentColors.text }]}
               placeholder="Enter your height"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={isDark ? "#666" : "#999"}
               keyboardType="numeric"
               value={height}
               onChangeText={setHeight}
@@ -398,8 +439,8 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(0, 0, 0, 0.1)",
+                  ? currentColors.primary
+                  : "rgba(0, 255, 65, 0.2)",
               },
             ]}
           >
@@ -408,8 +449,8 @@ export default function CalculatorScreen() {
                 styles.inputIconWrapper,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.08)",
+                    ? "rgba(0, 255, 65, 0.15)"
+                    : "rgba(0, 255, 65, 0.08)",
                 },
               ]}
             >
@@ -434,41 +475,59 @@ export default function CalculatorScreen() {
           </View>
         </View>
 
-        {/* Calculate Button */}
-        <TouchableOpacity
-          style={[
-            styles.button,
-            {
-              backgroundColor: currentColors.primary,
-              shadowColor: currentColors.primary,
-            },
-          ]}
-          onPress={calculate}
-          activeOpacity={0.85}
+        {/* Premium Animated Calculate Button */}
+        <Animated.View
+          style={{
+            transform: [{ scale: pulseAnim }],
+          }}
         >
-          <MaterialCommunityIcons
-            name="calculator-variant"
-            size={24}
-            color={isDark ? currentColors.background : "#FFFFFF"}
-          />
-          <Text
+          <TouchableOpacity
             style={[
-              styles.buttonText,
+              styles.button,
               {
-                color: isDark ? currentColors.background : "#FFFFFF",
+                backgroundColor: currentColors.primary,
+                shadowColor: currentColors.primary,
               },
             ]}
+            onPress={calculate}
+            activeOpacity={0.85}
           >
-            Calculate Metrics
-          </Text>
-          <Ionicons
-            name="arrow-forward"
-            size={20}
-            color={isDark ? currentColors.background : "#FFFFFF"}
-          />
-        </TouchableOpacity>
+            <Animated.View
+              style={[
+                styles.buttonGlow,
+                {
+                  backgroundColor: currentColors.primary,
+                  opacity: glowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.2, 0.4],
+                  }),
+                },
+              ]}
+            />
+            <MaterialCommunityIcons
+              name="calculator-variant"
+              size={24}
+              color={isDark ? currentColors.background : "#000000"}
+            />
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: isDark ? currentColors.background : "#000000",
+                },
+              ]}
+            >
+              Calculate Metrics
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={20}
+              color={isDark ? currentColors.background : "#000000"}
+            />
+          </TouchableOpacity>
+        </Animated.View>
 
-        {/* Enhanced Results */}
+        {/* Premium Results */}
         {results.bmi && (
           <Animated.View
             style={[
@@ -476,7 +535,7 @@ export default function CalculatorScreen() {
               {
                 backgroundColor: isDark ? currentColors.card : "#FFFFFF",
                 borderColor: currentColors.primary,
-                shadowColor: currentColors.primary,
+                shadowColor: isDark ? currentColors.primary : "#000",
                 opacity: fadeAnim,
                 transform: [{ scale: scaleAnim }],
               },
@@ -488,8 +547,10 @@ export default function CalculatorScreen() {
                   styles.resultHeaderIcon,
                   {
                     backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.15)"
-                      : "rgba(57, 255, 20, 0.1)",
+                      ? "rgba(0, 255, 65, 0.2)"
+                      : "rgba(0, 255, 65, 0.1)",
+                    borderWidth: 2,
+                    borderColor: currentColors.primary,
                   },
                 ]}
               >
@@ -509,7 +570,7 @@ export default function CalculatorScreen() {
                   style={[
                     styles.resultSubtitle,
                     {
-                      color: isDark ? "rgba(255, 255, 255, 0.5)" : "#999",
+                      color: isDark ? "rgba(255, 255, 255, 0.6)" : "#999",
                     },
                   ]}
                 >
@@ -523,8 +584,8 @@ export default function CalculatorScreen() {
                 styles.divider,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.2)"
-                    : "rgba(57, 255, 20, 0.15)",
+                    ? "rgba(0, 255, 65, 0.3)"
+                    : "rgba(0, 255, 65, 0.15)",
                 },
               ]}
             />
@@ -535,8 +596,8 @@ export default function CalculatorScreen() {
                 styles.metricCard,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.05)"
-                    : "rgba(57, 255, 20, 0.03)",
+                    ? "rgba(0, 255, 65, 0.08)"
+                    : "rgba(0, 255, 65, 0.03)",
                   borderColor: getBMICategory(results.bmi!).color,
                 },
               ]}
@@ -547,8 +608,10 @@ export default function CalculatorScreen() {
                     styles.metricIconWrapper,
                     {
                       backgroundColor: isDark
-                        ? "rgba(57, 255, 20, 0.15)"
-                        : "rgba(57, 255, 20, 0.1)",
+                        ? "rgba(0, 255, 65, 0.2)"
+                        : "rgba(0, 255, 65, 0.1)",
+                      borderWidth: 2,
+                      borderColor: currentColors.primary,
                     },
                   ]}
                 >
@@ -601,9 +664,9 @@ export default function CalculatorScreen() {
                 styles.metricCard,
                 {
                   backgroundColor: isDark
-                    ? "rgba(255, 107, 107, 0.05)"
+                    ? "rgba(255, 107, 107, 0.08)"
                     : "rgba(255, 107, 107, 0.03)",
-                  borderColor: "rgba(255, 107, 107, 0.3)",
+                  borderColor: "#FF6B6B",
                 },
               ]}
             >
@@ -612,7 +675,9 @@ export default function CalculatorScreen() {
                   style={[
                     styles.metricIconWrapper,
                     {
-                      backgroundColor: "rgba(255, 107, 107, 0.15)",
+                      backgroundColor: "rgba(255, 107, 107, 0.2)",
+                      borderWidth: 2,
+                      borderColor: "#FF6B6B",
                     },
                   ]}
                 >
@@ -639,7 +704,7 @@ export default function CalculatorScreen() {
                     style={[
                       styles.metricDescription,
                       {
-                        color: isDark ? "rgba(255, 255, 255, 0.5)" : "#999",
+                        color: isDark ? "rgba(255, 255, 255, 0.6)" : "#999",
                       },
                     ]}
                   >
@@ -655,9 +720,9 @@ export default function CalculatorScreen() {
                 styles.metricCard,
                 {
                   backgroundColor: isDark
-                    ? "rgba(255, 193, 7, 0.05)"
+                    ? "rgba(255, 193, 7, 0.08)"
                     : "rgba(255, 193, 7, 0.03)",
-                  borderColor: "rgba(255, 193, 7, 0.3)",
+                  borderColor: "#FFC107",
                 },
               ]}
             >
@@ -666,7 +731,9 @@ export default function CalculatorScreen() {
                   style={[
                     styles.metricIconWrapper,
                     {
-                      backgroundColor: "rgba(255, 193, 7, 0.15)",
+                      backgroundColor: "rgba(255, 193, 7, 0.2)",
+                      borderWidth: 2,
+                      borderColor: "#FFC107",
                     },
                   ]}
                 >
@@ -697,7 +764,7 @@ export default function CalculatorScreen() {
                     style={[
                       styles.metricDescription,
                       {
-                        color: isDark ? "rgba(255, 255, 255, 0.5)" : "#999",
+                        color: isDark ? "rgba(255, 255, 255, 0.6)" : "#999",
                       },
                     ]}
                   >
@@ -707,14 +774,18 @@ export default function CalculatorScreen() {
               </View>
             </View>
 
-            {/* Info Footer */}
+            {/* Premium Info Footer */}
             <View
               style={[
                 styles.infoFooter,
                 {
                   backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.08)"
-                    : "rgba(57, 255, 20, 0.05)",
+                    ? "rgba(0, 255, 65, 0.1)"
+                    : "rgba(0, 255, 65, 0.05)",
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(0, 255, 65, 0.2)"
+                    : "rgba(0, 255, 65, 0.1)",
                 },
               ]}
             >
@@ -753,16 +824,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === "ios" ? 50 : 40,
     paddingBottom: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
       },
       android: {
-        elevation: 4,
+        elevation: 5,
       },
     }),
   },
@@ -795,9 +866,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.4,
-        shadowRadius: 8,
+        shadowRadius: 10,
       },
       android: {
         elevation: 6,
@@ -811,20 +882,19 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: 18,
     borderRadius: 20,
     marginBottom: 24,
-    borderWidth: 1.5,
+    borderWidth: 2,
     gap: 14,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
@@ -864,16 +934,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 4,
-    borderWidth: 1.5,
+    borderWidth: 2,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
@@ -903,16 +973,16 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 8,
     overflow: "hidden",
-    borderWidth: 1.5,
+    borderWidth: 2,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
@@ -929,16 +999,25 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 32,
     gap: 12,
+    position: "relative",
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.4,
-        shadowRadius: 16,
+        shadowRadius: 20,
       },
       android: {
         elevation: 8,
       },
     }),
+  },
+  buttonGlow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   buttonText: {
     fontWeight: "800",
@@ -951,12 +1030,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.2,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
     }),
   },
@@ -992,16 +1071,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     marginBottom: 16,
-    borderWidth: 1.5,
+    borderWidth: 2,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 1,
+        elevation: 2,
       },
     }),
   },

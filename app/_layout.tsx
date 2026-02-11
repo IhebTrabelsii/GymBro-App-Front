@@ -5,7 +5,7 @@ import React from 'react';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 import { SimpleThemeProvider } from '../context/SimpleThemeContext';
-import { ThemeProvider } from '../context/ThemeContext'; // Import added
+import { ThemeProvider } from '../context/ThemeContext';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -18,7 +18,7 @@ export default function RootLayout() {
 
   return (
     <SimpleThemeProvider>
-      <ThemeProvider> {/* ← ADD THIS WRAPPER */}
+      <ThemeProvider> 
         <View style={{ flex: 1 }}>
           <Stack screenOptions={{}}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -26,7 +26,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </View>
-      </ThemeProvider> {/* ← CLOSE THE WRAPPER */}
+      </ThemeProvider>
     </SimpleThemeProvider>
   );
 }
