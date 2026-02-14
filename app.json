@@ -8,8 +8,9 @@
     "scheme": "gymbro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "backgroundColor": "#ffffff",             
+    "backgroundColor": "#ffffff",
     "ios": {
+      "usesAppleSignIn": true,
       "supportsTablet": true
     },
     "android": {
@@ -25,6 +26,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-apple-authentication",
       "expo-router",
       [
         "expo-splash-screen",

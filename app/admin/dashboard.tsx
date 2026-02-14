@@ -57,19 +57,33 @@ export default function AdminDashboard() {
       console.error("Error loading user data:", error);
     }
   };
+// Define the type for your dashboard response
 type DashboardResponse = {
-  users?: number;
-  workouts?: number;
-  news?: number;
+  users: number;
+  workouts: number;
+  news: number;
   error?: string;
 };
 
 const fetchStats = async () => {
   try {
-    const response = await fetch("http://localhost:3000/api/admin/dashboard");
+    const token = await AsyncStorage.getItem("userToken");
+    
+    if (!token) {
+      setError("No authentication token found");
+      setLoading(false);
+      return;
+    }
 
-    // ✅ Fix TS unknown issue
-    const data = (await response.json()) as DashboardResponse;
+    const response = await fetch("http://localhost:3000/api/admin/dashboard", {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Type assertion here
+    const data = await response.json() as DashboardResponse;
 
     if (response.ok) {
       setStats({
@@ -77,10 +91,15 @@ const fetchStats = async () => {
         workouts: data.workouts ?? 0,
         news: data.news ?? 0,
       });
-
       console.log("DASHBOARD STATS:", data);
     } else {
       setError(data.error || "Failed to fetch dashboard");
+      
+      if (response.status === 401) {
+        Alert.alert("Session Expired", "Please login again");
+        await AsyncStorage.multiRemove(["userToken", "username", "userRole"]);
+        router.replace("/login");
+      }
     }
   } catch (error) {
     console.error("DASHBOARD ERROR:", error);
@@ -89,7 +108,6 @@ const fetchStats = async () => {
     setLoading(false);
   }
 };
-
 
 const handleLogout = async () => {
   try {

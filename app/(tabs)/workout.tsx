@@ -1,8 +1,11 @@
+
 import { Colors } from '@/constants/Colors';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     Animated,
     Dimensions,
     FlatList,
@@ -12,49 +15,38 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Alert,
 } from 'react-native';
 import { useSimpleTheme } from '../../context/SimpleThemeContext';
 
 const { width } = Dimensions.get('window');
 
-const bodyTypes = [
-  {
-    id: '1',
-    name: 'Ectomorph',
-    desc: 'Lean, fast metabolism. Focus on heavy weights + carbs.',
-    icon: 'leaf-outline',
-    color: '#39FF14',
-    characteristics: [
-      { icon: 'weight', label: 'Heavy Weights' },
-      { icon: 'food-apple', label: 'High Carbs' },
-      { icon: 'dumbbell', label: 'Strength' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Mesomorph',
-    desc: 'Naturally muscular. Balanced strength/cardio works best.',
-    icon: 'fitness-outline',
-    color: '#00F0FF',
-    characteristics: [
-      { icon: 'weight', label: 'Balanced' },
-      { icon: 'food-apple', label: 'Balanced' },
-      { icon: 'dumbbell', label: 'Hybrid' },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Endomorph',
-    desc: 'Gains fat easily. Prioritize cardio + circuit training.',
-    icon: 'flash-outline',
-    color: '#FF10F0',
-    characteristics: [
-      { icon: 'weight', label: 'Cardio Focus' },
-      { icon: 'food-apple', label: 'Low Carbs' },
-      { icon: 'dumbbell', label: 'Endurance' },
-    ],
-  },
-];
+// Types
+type BodyType = {
+  id: string;
+  name: 'Ectomorph' | 'Mesomorph' | 'Endomorph';
+  desc: string;
+  icon: string;
+  color: string;
+  characteristics: Array<{ icon: string; label: string }>;
+  planCount?: number;
+};
+
+type Plan = {
+  _id: string;
+  title: string;
+  description: string;
+  bodyType: 'Ectomorph' | 'Mesomorph' | 'Endomorph';
+  focus: string;
+  days: string[];
+  tips: string;
+  icon: string;
+};
+
+type PlansResponse = {
+  success: boolean;
+  data: Plan[];
+};
 
 export default function WorkoutScreen() {
   const router = useRouter();
@@ -63,31 +55,144 @@ export default function WorkoutScreen() {
   const isDark = theme === 'dark';
   
   const [savedPlans, setSavedPlans] = useState<string[]>([]);
+  const [bodyTypes, setBodyTypes] = useState<BodyType[]>([
+    // Initialize with basic structure, counts will be updated from API
+    {
+      id: '1',
+      name: 'Ectomorph',
+      desc: 'Lean, fast metabolism. Focus on heavy weights + carbs.',
+      icon: 'leaf-outline',
+      color: '#39FF14',
+      characteristics: [
+        { icon: 'weight', label: 'Heavy Weights' },
+        { icon: 'food-apple', label: 'High Carbs' },
+        { icon: 'dumbbell', label: 'Strength' },
+      ],
+      planCount: 0,
+    },
+    {
+      id: '2',
+      name: 'Mesomorph',
+      desc: 'Naturally muscular. Balanced strength/cardio works best.',
+      icon: 'fitness-outline',
+      color: '#00F0FF',
+      characteristics: [
+        { icon: 'weight', label: 'Balanced' },
+        { icon: 'food-apple', label: 'Balanced' },
+        { icon: 'dumbbell', label: 'Hybrid' },
+      ],
+      planCount: 0,
+    },
+    {
+      id: '3',
+      name: 'Endomorph',
+      desc: 'Gains fat easily. Prioritize cardio + circuit training.',
+      icon: 'flash-outline',
+      color: '#FF10F0',
+      characteristics: [
+        { icon: 'weight', label: 'Cardio Focus' },
+        { icon: 'food-apple', label: 'Low Carbs' },
+        { icon: 'dumbbell', label: 'Endurance' },
+      ],
+      planCount: 0,
+    },
+  ]);
+  
+  const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [fadeAnim] = useState(new Animated.Value(0));
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
     }).start();
+    
+    fetchPlans();
+    loadSavedPlans();
   }, []);
 
-  const handleSelect = (type: string) => {
-    router.push({ pathname: '/plan', params: { type } });
-  };
+  const fetchPlans = async () => {
+    try {
+      const response = await fetch("http://192.168.100.143:3000/api/plans");
+      const data = (await response.json()) as PlansResponse;
 
-  const toggleSavePlan = (plan: string) => {
-    if (savedPlans.includes(plan)) {
-      setSavedPlans(savedPlans.filter(item => item !== plan));
-    } else {
-      setSavedPlans([...savedPlans, plan]);
+      if (response.ok && data.success) {
+        setPlans(data.data);
+        
+        // Update plan counts for each body type
+        const updatedBodyTypes = bodyTypes.map(bodyType => ({
+          ...bodyType,
+          planCount: data.data.filter(plan => plan.bodyType === bodyType.name).length
+        }));
+        setBodyTypes(updatedBodyTypes);
+      }
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const loadSavedPlans = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('savedPlans');
+      if (saved) {
+        setSavedPlans(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error("Error loading saved plans:", error);
+    }
+  };
+
+  const saveSavedPlans = async (plans: string[]) => {
+    try {
+      await AsyncStorage.setItem('savedPlans', JSON.stringify(plans));
+    } catch (error) {
+      console.error("Error saving plans:", error);
+    }
+  };
+
+  const handleSelect = (type: string) => {
+    // Pass the type and all plans for that body type
+    const plansForType = plans.filter(plan => plan.bodyType === type);
+    router.push({ 
+      pathname: '/plan', 
+      params: { 
+        type,
+        plans: JSON.stringify(plansForType)
+      } 
+    });
+  };
+
+  const toggleSavePlan = (planName: string) => {
+    let updatedPlans: string[];
+    if (savedPlans.includes(planName)) {
+      updatedPlans = savedPlans.filter(item => item !== planName);
+    } else {
+      updatedPlans = [...savedPlans, planName];
+    }
+    setSavedPlans(updatedPlans);
+    saveSavedPlans(updatedPlans);
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: currentColors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={currentColors.primary} />
+          <Text style={[styles.loadingText, { color: currentColors.text }]}>
+            Loading workout plans...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Improved Top Bar */}
+      {/* Top Bar */}
       <View style={[styles.topBar, { 
         backgroundColor: isDark ? 'rgba(18, 18, 18, 0.98)' : 'rgba(255, 255, 255, 0.98)',
         borderBottomColor: isDark ? 'rgba(57, 255, 20, 0.15)' : 'rgba(57, 255, 20, 0.1)',
@@ -147,7 +252,7 @@ export default function WorkoutScreen() {
         bounces={true}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
-          {/* Improved Hero Section */}
+          {/* Hero Section */}
           <View style={[styles.heroCard, { 
             backgroundColor: isDark ? currentColors.card : '#FFFFFF',
             borderColor: isDark 
@@ -185,13 +290,13 @@ export default function WorkoutScreen() {
               }]}>
                 <Ionicons name="body" size={14} color={currentColors.primary} />
                 <Text style={[styles.heroBadgeText, { color: currentColors.primary }]}>
-                  3 Body Types Available
+                  {plans.length} Plans Available
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Improved Section Title */}
+          {/* Section Title */}
           <View style={styles.sectionTitleContainer}>
             <View style={[styles.sectionTitleLine, { 
               backgroundColor: isDark 
@@ -208,7 +313,7 @@ export default function WorkoutScreen() {
             }]} />
           </View>
           
-          {/* Improved Body Types Cards */}
+          {/* Body Types Cards */}
           <FlatList
             data={bodyTypes}
             keyExtractor={(item) => item.id}
@@ -226,7 +331,7 @@ export default function WorkoutScreen() {
                     : item.color + '30',
                   shadowColor: item.color,
                 }]}>
-                  {/* Subtle Glow Effect */}
+                  {/* Glow Effect */}
                   <View style={[styles.cardGlow, { 
                     backgroundColor: item.color,
                     opacity: isDark ? 0.025 : 0.015,
@@ -264,7 +369,7 @@ export default function WorkoutScreen() {
                     </TouchableOpacity>
                   </View>
                   
-                  {/* Improved Characteristics Grid */}
+                  {/* Characteristics */}
                   <View style={styles.characteristicsRow}>
                     {item.characteristics.map((char, index) => (
                       <View key={index} style={styles.characteristicItem}>
@@ -298,33 +403,32 @@ export default function WorkoutScreen() {
                     {item.desc}
                   </Text>
                   
-                  <TouchableOpacity 
-                    style={[styles.cardButton, { 
-                      backgroundColor: item.color,
-                      ...Platform.select({
-                        ios: {
-                          shadowColor: item.color,
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.3,
-                          shadowRadius: 8,
-                        },
-                        android: {
-                          elevation: 4,
-                        },
-                      }),
-                    }]}
-                    onPress={() => handleSelect(item.name)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.cardButtonText}>View Plan</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                  </TouchableOpacity>
+                  <View style={styles.cardFooter}>
+                    <View style={[styles.planCountBadge, { 
+                      backgroundColor: isDark ? item.color + '20' : item.color + '10',
+                    }]}>
+                      <Text style={[styles.planCountText, { color: item.color }]}>
+                        {item.planCount || 0} Plans
+                      </Text>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={[styles.cardButton, { 
+                        backgroundColor: item.color,
+                      }]}
+                      onPress={() => handleSelect(item.name)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.cardButtonText}>View Plans</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </TouchableOpacity>
             )}
           />
 
-          {/* Improved Saved Plans Section */}
+          {/* Saved Plans Section */}
           {savedPlans.length > 0 && (
             <View style={[styles.savedSection, { 
               backgroundColor: isDark ? currentColors.card : '#FFFFFF',
@@ -343,14 +447,14 @@ export default function WorkoutScreen() {
                 </View>
                 <View style={styles.savedHeaderText}>
                   <Text style={[styles.savedTitle, { color: currentColors.text }]}>
-                    Saved Plans
+                    Saved Body Types
                   </Text>
                   <Text style={[styles.savedSubtitle, {
                     color: isDark 
                       ? 'rgba(255, 255, 255, 0.5)' 
                       : 'rgba(0, 0, 0, 0.45)',
                   }]}>
-                    {savedPlans.length} plan{savedPlans.length > 1 ? 's' : ''} saved
+                    {savedPlans.length} type{savedPlans.length > 1 ? 's' : ''} saved
                   </Text>
                 </View>
               </View>
@@ -400,7 +504,7 @@ export default function WorkoutScreen() {
             </View>
           )}
 
-          {/* Improved Info Card */}
+          {/* Info Card */}
           <View style={[styles.infoCard, { 
             backgroundColor: isDark ? currentColors.card : '#FFFFFF',
             borderColor: isDark 
@@ -443,60 +547,9 @@ export default function WorkoutScreen() {
             }]}>
               Each body type responds differently to training and nutrition. Select your type to get a personalized workout plan designed for optimal results.
             </Text>
-            
-            <View style={styles.infoBenefits}>
-              <View style={styles.benefitItem}>
-                <View style={[styles.benefitIconWrapper, {
-                  backgroundColor: isDark 
-                    ? 'rgba(57, 255, 20, 0.1)' 
-                    : 'rgba(57, 255, 20, 0.06)',
-                }]}>
-                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
-                </View>
-                <Text style={[styles.benefitText, { 
-                  color: isDark 
-                    ? 'rgba(255, 255, 255, 0.8)' 
-                    : 'rgba(0, 0, 0, 0.65)',
-                }]}>
-                  Customized workout plans
-                </Text>
-              </View>
-              <View style={styles.benefitItem}>
-                <View style={[styles.benefitIconWrapper, {
-                  backgroundColor: isDark 
-                    ? 'rgba(57, 255, 20, 0.1)' 
-                    : 'rgba(57, 255, 20, 0.06)',
-                }]}>
-                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
-                </View>
-                <Text style={[styles.benefitText, { 
-                  color: isDark 
-                    ? 'rgba(255, 255, 255, 0.8)' 
-                    : 'rgba(0, 0, 0, 0.65)',
-                }]}>
-                  Nutrition guidance
-                </Text>
-              </View>
-              <View style={styles.benefitItem}>
-                <View style={[styles.benefitIconWrapper, {
-                  backgroundColor: isDark 
-                    ? 'rgba(57, 255, 20, 0.1)' 
-                    : 'rgba(57, 255, 20, 0.06)',
-                }]}>
-                  <Ionicons name="checkmark-circle" size={18} color={currentColors.primary} />
-                </View>
-                <Text style={[styles.benefitText, { 
-                  color: isDark 
-                    ? 'rgba(255, 255, 255, 0.8)' 
-                    : 'rgba(0, 0, 0, 0.65)',
-                }]}>
-                  Optimized for your genetics
-                </Text>
-              </View>
-            </View>
           </View>
 
-          {/* Improved Action Button */}
+          {/* Action Button */}
           <TouchableOpacity 
             style={[styles.primaryButton, { 
               backgroundColor: currentColors.primary,
@@ -528,6 +581,7 @@ export default function WorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
   },
@@ -1002,4 +1056,32 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
+    loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 18,
+  },
+  planCountBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  planCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });
+
+
+

@@ -1,8 +1,10 @@
+
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Platform,
@@ -11,22 +13,52 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { useSimpleTheme } from "../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 
+// Define types for the plan
+type WorkoutPlan = {
+  _id: string;
+  title: string;
+  description: string;
+  bodyType: 'Ectomorph' | 'Mesomorph' | 'Endomorph';
+  focus: string;
+  days: string[];
+  tips: string;
+  icon: string;
+  color?: string; // Optional, will be generated
+};
+
 export default function PlanScreen() {
   const router = useRouter();
-  const { type } = useLocalSearchParams();
+  const { type, plans } = useLocalSearchParams();
   const { theme, toggleTheme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
+  
+  const [loading, setLoading] = useState(true);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+    // Parse plans from params
+    if (plans) {
+      try {
+        const parsedPlans = JSON.parse(plans as string);
+        setWorkoutPlans(parsedPlans);
+      } catch (error) {
+        console.error("Error parsing plans:", error);
+        // Fallback to empty array
+        setWorkoutPlans([]);
+      }
+    }
+    setLoading(false);
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -40,108 +72,9 @@ export default function PlanScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [plans]);
 
   const plan = typeof type === "string" ? type : "";
-
-  const workoutPlans = {
-    Ectomorph: [
-      {
-        title: "Mass Builder (4 Day Split)",
-        focus: "Heavy weights, low reps, high calories",
-        days: [
-          "Monday: Chest/Back - Bench Press 4x6, Pull-ups 4x8, Incline Press 3x8, Rows 3x10",
-          "Tuesday: Legs - Squats 4x6, Deadlifts 3x5, Leg Press 3x10, Calf Raises 4x15",
-          "Wednesday: Rest + 500 extra calories",
-          "Thursday: Shoulders/Arms - Military Press 4x8, Lateral Raises 3x12, Tricep Dips 4x10, Curls 3x12",
-          "Friday: Full Body - Clean & Press 4x6, Kettlebell Swings 3x15, Pull-ups 3xMax, Push-ups 3x20",
-          "Weekend: Rest + High Carb Meals",
-        ],
-        tips: "Eat every 3 hours, focus on compound lifts, minimum 8 hours sleep",
-        color: "#39FF14",
-        icon: "leaf",
-      },
-      {
-        title: "Strength & Power (3 Day)",
-        focus: "Powerlifting focus, strength gains",
-        days: [
-          "Monday: Power Day - Squats 5x5, Bench Press 5x5, Power Cleans 4x3",
-          "Wednesday: Volume Day - Deadlifts 3x8, Overhead Press 4x6, Weighted Pull-ups 3x5",
-          "Friday: Accessory Day - Front Squats 3x8, Incline Bench 3x10, Rows 4x8, Arms 3x12",
-          "Rest Days: Active recovery, mobility work",
-        ],
-        tips: "Heavy weights, long rest periods (3-5 min), progressive overload weekly",
-        color: "#00D9FF",
-        icon: "barbell",
-      },
-    ],
-
-    Mesomorph: [
-      {
-        title: "Push/Pull/Legs (6 Day Split)",
-        focus: "Balanced muscle growth and definition",
-        days: [
-          "Monday: Push - Bench Press 4x10, Shoulder Press 3x12, Tricep Extensions 3x15",
-          "Tuesday: Pull - Deadlifts 4x8, Pull-ups 4x10, Rows 3x12, Curls 3x15",
-          "Wednesday: Legs - Squats 4x10, Lunges 3x12, Leg Curls 4x15, Calf Raises 5x20",
-          "Thursday: Push - Incline Press 4x10, Dips 3x15, Lateral Raises 4x12",
-          "Friday: Pull - Barbell Rows 4x10, Lat Pulldowns 3x12, Face Pulls 4x15",
-          "Saturday: Legs - Front Squats 4x8, Romanian DL 3x10, Leg Press 4x12",
-          "Sunday: Active Recovery",
-        ],
-        tips: "45-60 min sessions, moderate cardio 3x week, balanced macros",
-        color: "#39FF14",
-        icon: "fitness",
-      },
-      {
-        title: "Upper/Lower Split (4 Day)",
-        focus: "Strength & hypertrophy balance",
-        days: [
-          "Monday: Upper Strength - Bench 5x5, Rows 5x5, Shoulder Press 4x8",
-          "Tuesday: Lower Strength - Squats 5x5, Deadlifts 3x5, Leg Press 4x10",
-          "Thursday: Upper Hypertrophy - Incline DB Press 4x10, Pull-ups 4x12, Arms 3x15",
-          "Friday: Lower Hypertrophy - Hack Squats 4x12, Lunges 3x10, Hamstring Curls 4x15",
-          "Off Days: 30 min cardio or sports",
-        ],
-        tips: "Alternate heavy/light weeks, track progress, 1.6g protein/kg bodyweight",
-        color: "#FF10F0",
-        icon: "arm-flex",
-      },
-    ],
-
-    Endomorph: [
-      {
-        title: "Fat Loss Circuit (5 Day)",
-        focus: "High intensity, metabolic conditioning",
-        days: [
-          "Monday: Full Body Circuit - 45 sec work/15 rest: Squats, Push-ups, Rows, Plank, Jumping Jacks x 4 rounds",
-          "Tuesday: HIIT Cardio - 20 min: 30 sec sprint/90 sec walk x 10 rounds",
-          "Wednesday: Strength Circuit - 3 rounds: Deadlifts 10x, Overhead Press 10x, Lunges 10x each",
-          "Thursday: Active Recovery - 45 min brisk walk, stretching",
-          "Friday: Metabolic Conditioning - AMRAP 20 min: 5 Burpees, 10 KB Swings, 15 Air Squats",
-          "Weekend: 1 hour low intensity cardio",
-        ],
-        tips: "Keep rest short (30-60 sec), focus on compound movements, intermittent fasting",
-        color: "#FF10F0",
-        icon: "run-fast",
-      },
-      {
-        title: "Strength & Conditioning (3 Day)",
-        focus: "Build muscle while burning fat",
-        days: [
-          "Monday: Heavy Day - Squats 4x8, Bench Press 4x8, Rows 4x8 (2 min rest)",
-          "Wednesday: Conditioning - 10 min warm-up, 20 min EMOM: 1) 10 KB Swings 2) 10 Push-ups 3) 10 Air Squats",
-          "Friday: Full Body - Deadlifts 3x6, Shoulder Press 3x10, Pull-ups 3xMax, 15 min HIIT after",
-          "Other Days: 45 min steady cardio, core work",
-        ],
-        tips: "Lift heavy but keep workouts under 60 min, prioritize protein, limit processed carbs",
-        color: "#00D9FF",
-        icon: "flash",
-      },
-    ],
-  };
-
-  const plans = workoutPlans[plan as keyof typeof workoutPlans] || [];
 
   const getPlanTypeIcon = (planName: string) => {
     if (planName === "Ectomorph") return "leaf";
@@ -155,11 +88,36 @@ export default function PlanScreen() {
     return "#FF10F0";
   };
 
+  // Generate color for each plan based on its body type
+  const getPlanColor = (plan: WorkoutPlan) => {
+    if (plan.bodyType === "Ectomorph") return "#39FF14";
+    if (plan.bodyType === "Mesomorph") return "#00F0FF";
+    return "#FF10F0";
+  };
+
+  // Get icon for each plan
+  const getPlanIcon = (plan: WorkoutPlan) => {
+    return plan.icon || "fitness";
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: currentColors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={currentColors.primary} />
+          <Text style={[styles.loadingText, { color: currentColors.text }]}>
+            Loading plans...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* Enhanced Top Bar */}
+      {/* Top Bar */}
       <View
         style={[
           styles.topBar,
@@ -255,7 +213,7 @@ export default function PlanScreen() {
             transform: [{ translateY: slideAnim }],
           }}
         >
-          {/* Enhanced Hero Section with Gradient Effect */}
+          {/* Hero Section */}
           <View
             style={[
               styles.heroCard,
@@ -342,243 +300,269 @@ export default function PlanScreen() {
                 <Text
                   style={[styles.heroBadgeText, { color: currentColors.primary }]}
                 >
-                  {plans.length} Available Plans
+                  {workoutPlans.length} Available Plans
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Creative Plan Cards with Staggered Layout */}
-          <View style={styles.plansContainer}>
-            {plans.map((planItem, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.planCardWrapper,
-                  {
-                    marginLeft: index % 2 === 0 ? 0 : 16,
-                    marginRight: index % 2 === 0 ? 16 : 0,
-                  },
-                ]}
+          {/* Plan Cards */}
+          {workoutPlans.length === 0 ? (
+            <View style={[styles.emptyContainer, { borderColor: getPlanTypeColor(plan) + '30' }]}>
+              <MaterialCommunityIcons 
+                name="weight-lifter" 
+                size={64} 
+                color={getPlanTypeColor(plan)} 
+              />
+              <Text style={[styles.emptyTitle, { color: currentColors.text }]}>
+                No Plans Available
+              </Text>
+              <Text style={[styles.emptyText, { color: isDark ? '#888' : '#666' }]}>
+                There are no workout plans for {plan} body type yet.
+              </Text>
+              <TouchableOpacity
+                style={[styles.emptyButton, { backgroundColor: getPlanTypeColor(plan) }]}
+                onPress={() => router.push("/workout")}
               >
-                <View
-                  style={[
-                    styles.planCard,
-                    {
-                      backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                      borderColor: planItem.color + (isDark ? "40" : "30"),
-                      shadowColor: planItem.color,
-                    },
-                  ]}
-                >
-                  {/* Accent Bar on Side */}
+                <Text style={styles.emptyButtonText}>Browse Other Types</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.plansContainer}>
+              {workoutPlans.map((planItem, index) => {
+                const planColor = getPlanColor(planItem);
+                
+                return (
                   <View
+                    key={planItem._id || index}
                     style={[
-                      styles.accentBar,
-                      { backgroundColor: planItem.color },
-                    ]}
-                  />
-
-                  {/* Plan Number Badge */}
-                  <View
-                    style={[
-                      styles.planNumber,
+                      styles.planCardWrapper,
                       {
-                        backgroundColor: planItem.color + (isDark ? "20" : "15"),
-                        borderColor: planItem.color + (isDark ? "40" : "30"),
+                        marginLeft: index % 2 === 0 ? 0 : 16,
+                        marginRight: index % 2 === 0 ? 16 : 0,
                       },
                     ]}
                   >
-                    <Text
-                      style={[styles.planNumberText, { color: planItem.color }]}
-                    >
-                      #{index + 1}
-                    </Text>
-                  </View>
-
-                  {/* Plan Header */}
-                  <View style={styles.planHeader}>
                     <View
                       style={[
-                        styles.planIconLarge,
+                        styles.planCard,
                         {
-                          backgroundColor: planItem.color + (isDark ? "20" : "10"),
-                          borderWidth: 2,
-                          borderColor: planItem.color + (isDark ? "40" : "30"),
+                          backgroundColor: isDark ? currentColors.card : "#FFFFFF",
+                          borderColor: planColor + (isDark ? "40" : "30"),
+                          shadowColor: planColor,
                         },
                       ]}
                     >
-                      <MaterialCommunityIcons
-                        name={planItem.icon as any}
-                        size={28}
-                        color={planItem.color}
-                      />
-                    </View>
-                    <View style={styles.planTitleContainer}>
-                      <Text
-                        style={[styles.planTitle, { color: currentColors.text }]}
-                      >
-                        {planItem.title}
-                      </Text>
+                      {/* Accent Bar */}
                       <View
                         style={[
-                          styles.focusBadge,
+                          styles.accentBar,
+                          { backgroundColor: planColor },
+                        ]}
+                      />
+
+                      {/* Plan Number Badge */}
+                      <View
+                        style={[
+                          styles.planNumber,
                           {
-                            backgroundColor: isDark
-                              ? "rgba(255, 107, 107, 0.15)"
-                              : "rgba(255, 107, 107, 0.08)",
+                            backgroundColor: planColor + (isDark ? "20" : "15"),
+                            borderColor: planColor + (isDark ? "40" : "30"),
                           },
                         ]}
                       >
-                        <Ionicons name="flame" size={12} color="#FF6B6B" />
                         <Text
+                          style={[styles.planNumberText, { color: planColor }]}
+                        >
+                          #{index + 1}
+                        </Text>
+                      </View>
+
+                      {/* Plan Header */}
+                      <View style={styles.planHeader}>
+                        <View
                           style={[
-                            styles.planFocus,
+                            styles.planIconLarge,
                             {
-                              color: isDark
-                                ? "rgba(255, 255, 255, 0.8)"
-                                : "rgba(0, 0, 0, 0.7)",
+                              backgroundColor: planColor + (isDark ? "20" : "10"),
+                              borderWidth: 2,
+                              borderColor: planColor + (isDark ? "40" : "30"),
                             },
                           ]}
                         >
-                          {planItem.focus}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Divider */}
-                  <View
-                    style={[
-                      styles.cardDivider,
-                      { backgroundColor: planItem.color + (isDark ? "20" : "15") },
-                    ]}
-                  />
-
-                  {/* Days Section with Enhanced Design */}
-                  <View style={styles.daysSection}>
-                    <View style={styles.daysSectionHeader}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={16}
-                        color={currentColors.primary}
-                      />
-                      <Text
-                        style={[
-                          styles.daysSectionTitle,
-                          { color: currentColors.text },
-                        ]}
-                      >
-                        Training Schedule
-                      </Text>
-                      <View
-                        style={[
-                          styles.daysCount,
-                          {
-                            backgroundColor: isDark
-                              ? "rgba(57, 255, 20, 0.15)"
-                              : "rgba(57, 255, 20, 0.1)",
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.daysCountText,
-                            { color: currentColors.primary },
-                          ]}
-                        >
-                          {planItem.days.length}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.daysContainer}>
-                      {planItem.days.map((day, dayIndex) => (
-                        <View key={dayIndex} style={styles.dayItem}>
+                          <MaterialCommunityIcons
+                            name={getPlanIcon(planItem) as any}
+                            size={28}
+                            color={planColor}
+                          />
+                        </View>
+                        <View style={styles.planTitleContainer}>
+                          <Text
+                            style={[styles.planTitle, { color: currentColors.text }]}
+                          >
+                            {planItem.title}
+                          </Text>
                           <View
                             style={[
-                              styles.dayDot,
-                              { backgroundColor: planItem.color },
+                              styles.focusBadge,
+                              {
+                                backgroundColor: isDark
+                                  ? "rgba(255, 107, 107, 0.15)"
+                                  : "rgba(255, 107, 107, 0.08)",
+                              },
                             ]}
-                          />
-                          <View style={styles.dayContent}>
+                          >
+                            <Ionicons name="flame" size={12} color="#FF6B6B" />
                             <Text
                               style={[
-                                styles.dayText,
+                                styles.planFocus,
                                 {
                                   color: isDark
-                                    ? "rgba(255, 255, 255, 0.9)"
-                                    : "rgba(0, 0, 0, 0.8)",
+                                    ? "rgba(255, 255, 255, 0.8)"
+                                    : "rgba(0, 0, 0, 0.7)",
                                 },
                               ]}
                             >
-                              {day}
+                              {planItem.focus}
                             </Text>
                           </View>
                         </View>
-                      ))}
-                    </View>
-                  </View>
+                      </View>
 
-                  {/* Tips Section with Enhanced Design */}
-                  <View
-                    style={[
-                      styles.tipsContainer,
-                      {
-                        backgroundColor: isDark
-                          ? "rgba(255, 193, 7, 0.1)"
-                          : "rgba(255, 193, 7, 0.05)",
-                        borderColor: isDark
-                          ? "rgba(255, 193, 7, 0.25)"
-                          : "rgba(255, 193, 7, 0.15)",
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.tipIconWrapper,
-                        {
-                          backgroundColor: isDark
-                            ? "rgba(255, 193, 7, 0.2)"
-                            : "rgba(255, 193, 7, 0.15)",
-                        },
-                      ]}
-                    >
-                      <Ionicons name="bulb" size={18} color="#FFC107" />
-                    </View>
-                    <View style={styles.tipsContent}>
-                      <Text
+                      {/* Divider */}
+                      <View
                         style={[
-                          styles.tipsLabel,
+                          styles.cardDivider,
+                          { backgroundColor: planColor + (isDark ? "20" : "15") },
+                        ]}
+                      />
+
+                      {/* Days Section */}
+                      <View style={styles.daysSection}>
+                        <View style={styles.daysSectionHeader}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={16}
+                            color={currentColors.primary}
+                          />
+                          <Text
+                            style={[
+                              styles.daysSectionTitle,
+                              { color: currentColors.text },
+                            ]}
+                          >
+                            Training Schedule
+                          </Text>
+                          <View
+                            style={[
+                              styles.daysCount,
+                              {
+                                backgroundColor: isDark
+                                  ? "rgba(57, 255, 20, 0.15)"
+                                  : "rgba(57, 255, 20, 0.1)",
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.daysCountText,
+                                { color: currentColors.primary },
+                              ]}
+                            >
+                              {planItem.days.length}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.daysContainer}>
+                          {planItem.days.map((day, dayIndex) => (
+                            <View key={dayIndex} style={styles.dayItem}>
+                              <View
+                                style={[
+                                  styles.dayDot,
+                                  { backgroundColor: planColor },
+                                ]}
+                              />
+                              <View style={styles.dayContent}>
+                                <Text
+                                  style={[
+                                    styles.dayText,
+                                    {
+                                      color: isDark
+                                        ? "rgba(255, 255, 255, 0.9)"
+                                        : "rgba(0, 0, 0, 0.8)",
+                                    },
+                                  ]}
+                                >
+                                  {day}
+                                </Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      {/* Tips Section */}
+                      <View
+                        style={[
+                          styles.tipsContainer,
                           {
-                            color: isDark
-                              ? "rgba(255, 193, 7, 0.9)"
-                              : "rgba(255, 193, 7, 0.8)",
+                            backgroundColor: isDark
+                              ? "rgba(255, 193, 7, 0.1)"
+                              : "rgba(255, 193, 7, 0.05)",
+                            borderColor: isDark
+                              ? "rgba(255, 193, 7, 0.25)"
+                              : "rgba(255, 193, 7, 0.15)",
                           },
                         ]}
                       >
-                        Pro Tips
-                      </Text>
-                      <Text
-                        style={[
-                          styles.tipsText,
-                          {
-                            color: isDark
-                              ? "rgba(255, 255, 255, 0.8)"
-                              : "rgba(0, 0, 0, 0.7)",
-                          },
-                        ]}
-                      >
-                        {planItem.tips}
-                      </Text>
+                        <View
+                          style={[
+                            styles.tipIconWrapper,
+                            {
+                              backgroundColor: isDark
+                                ? "rgba(255, 193, 7, 0.2)"
+                                : "rgba(255, 193, 7, 0.15)",
+                            },
+                          ]}
+                        >
+                          <Ionicons name="bulb" size={18} color="#FFC107" />
+                        </View>
+                        <View style={styles.tipsContent}>
+                          <Text
+                            style={[
+                              styles.tipsLabel,
+                              {
+                                color: isDark
+                                  ? "rgba(255, 193, 7, 0.9)"
+                                  : "rgba(255, 193, 7, 0.8)",
+                              },
+                            ]}
+                          >
+                            Pro Tips
+                          </Text>
+                          <Text
+                            style={[
+                              styles.tipsText,
+                              {
+                                color: isDark
+                                  ? "rgba(255, 255, 255, 0.8)"
+                                  : "rgba(0, 0, 0, 0.7)",
+                              },
+                            ]}
+                          >
+                            {planItem.tips}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </View>
-            ))}
-          </View>
+                );
+              })}
+            </View>
+          )}
 
-          {/* Enhanced Info Card */}
+          {/* Info Card */}
           <View
             style={[
               styles.infoCard,
@@ -786,6 +770,7 @@ export default function PlanScreen() {
   );
 }
 
+// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1248,4 +1233,48 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+
+  
+   loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderRadius: 24,
+    borderStyle: 'dashed',
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  emptyButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: '#000000',
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });
+

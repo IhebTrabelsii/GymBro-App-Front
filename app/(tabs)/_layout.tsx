@@ -5,9 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
-import {
-  useSimpleTheme,
-} from "../../context/SimpleThemeContext";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 export default function TabLayout() {
   const { theme } = useSimpleTheme();
@@ -82,14 +80,25 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="news" // ✅ FIXED - changed from "tabs/news"
+        name="ai-coach"
+        options={{
+          title: "AI Coach",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="chatbubbles" size={24} color={color} />
+          ),
+          tabBarLabel: "AI Coach",
+        }}
+      />
+
+      {/* <Tabs.Screen
+        name="news" 
         options={{
           title: "Gym News",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="newspaper" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }

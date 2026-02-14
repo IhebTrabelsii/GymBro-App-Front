@@ -21,8 +21,20 @@ import {
   View,
 } from "react-native";
 import { useSimpleTheme } from "../context/SimpleThemeContext";
+import { signInWithApple, signInWithGoogle } from "./utils/socialAuth";
 
 Dimensions.get("window");
+
+// Email validation function
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
+
+// Helper to check if Apple Sign In is available
+const isAppleSignInAvailable = (): boolean => {
+  return Platform.OS === 'ios';
+};
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -34,61 +46,159 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
   const [loading, setLoading] = useState(false);
-  
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(
+    null,
+  );
 
-const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert("Error", "Please enter both email and password.");
-    return;
-  }
+  // Validation states
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [touchedEmail, setTouchedEmail] = useState(false);
 
-  setLoading(true);
-
-  try {
-    const response = await fetch("http://localhost:3000/api/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = (await response.json()) as {
-      success?: boolean;
-      token?: string;
-      user?: {
-        username?: string;
-        role?: string;
-      };
-      error?: string;
-    };
-
-    console.log("LOGIN RESPONSE:", data);
-
-    if (response.ok && data.token && data.user) {
-      const role = data.user.role || "user";
-
-      await AsyncStorage.setItem("userToken", data.token);
-      await AsyncStorage.setItem("username", data.user.username || "");
-      await AsyncStorage.setItem("userRole", role);
-
-      // ✅ Redirect correctly
-      if (role === "admin") {
-        router.replace("/admin/dashboard");
-      } else {
-        router.replace("/");
-      }
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    setTouchedEmail(true);
+    if (text.trim() === "") {
+      setEmailError("Email is required");
+    } else if (!validateEmail(text)) {
+      setEmailError("Please enter a valid email address");
     } else {
-      Alert.alert("Login Failed", data.error || "Invalid credentials.");
+      setEmailError(null);
     }
-  } catch (error) {
-    Alert.alert("Network Error", "Failed to connect to the server.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  type UserLoginResponse = {
+    success?: boolean;
+    token?: string;
+    user?: {
+      username?: string;
+      role?: string;
+      email?: string;
+    };
+    error?: string;
+  };
 
+  type AdminLoginResponse = {
+    success?: boolean;
+    token?: string;
+    admin?: {
+      id?: string;
+      email?: string;
+      lastLogin?: string;
+    };
+    error?: string;
+  };
 
+  const handleLogin = async () => {
+    // Validate email before proceeding
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
 
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      setTouchedEmail(true);
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Determine which endpoint to use
+      const isAdminLogin =
+        email.includes("admin") || email.endsWith("@gymbro.app");
+
+      const endpoint = isAdminLogin
+        ? "http://192.168.100.143:3000/api/admin/login"
+        : "http://192.168.100.143:3000/api/users/login";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      console.log("LOGIN RESPONSE:", data);
+
+      if (isAdminLogin) {
+        // Type assertion for admin response
+        const adminData = data as AdminLoginResponse;
+
+        if (response.ok && adminData.success && adminData.token) {
+          await AsyncStorage.setItem("userToken", adminData.token);
+          await AsyncStorage.setItem(
+            "username",
+            adminData.admin?.email || email,
+          );
+          await AsyncStorage.setItem("userRole", "admin");
+
+          router.replace("/admin/dashboard");
+        } else {
+          Alert.alert(
+            "Login Failed",
+            adminData.error || "Invalid admin credentials.",
+          );
+        }
+      } else {
+        // Type assertion for user response
+        const userData = data as UserLoginResponse;
+
+        if (response.ok && userData.token) {
+          await AsyncStorage.setItem("userToken", userData.token);
+          await AsyncStorage.setItem("username", userData.user?.username || "");
+          await AsyncStorage.setItem("userRole", userData.user?.role || "user");
+
+          // Store user data for later use
+          await AsyncStorage.setItem("userData", JSON.stringify(userData.user));
+
+          router.replace("/");
+        } else {
+          Alert.alert("Login Failed", userData.error || "Invalid credentials.");
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Alert.alert("Network Error", "Failed to connect to the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading("google");
+    const result = await signInWithGoogle();
+
+    if (result.success) {
+      router.replace("/");
+    } else {
+      Alert.alert(
+        "Google Sign In Failed",
+        result.error || "Something went wrong",
+      );
+    }
+    setSocialLoading(null);
+  };
+
+  const handleAppleSignIn = async () => {
+    setSocialLoading("apple");
+    const result = await signInWithApple();
+
+    if (result.success) {
+      router.replace("/");
+    } else {
+      // Don't show error for platform unavailability
+      if (result.error !== 'Apple Sign In is only available on iOS devices') {
+        Alert.alert(
+          "Apple Sign In Failed",
+          result.error || "Something went wrong",
+        );
+      }
+    }
+    setSocialLoading(null);
+  };
 
   return (
     <View
@@ -121,7 +231,6 @@ const handleLogin = async () => {
           </View>
         </TouchableOpacity>
 
-
         <TouchableOpacity
           onPress={toggleTheme}
           style={[
@@ -151,8 +260,6 @@ const handleLogin = async () => {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-     
-
           {/* Login Form */}
           <View>
             <View
@@ -167,7 +274,7 @@ const handleLogin = async () => {
                 },
               ]}
             >
-              {/* Email Input */}
+              {/* Email Input - With Validation */}
               <View style={styles.inputGroup}>
                 <View style={styles.inputLabelContainer}>
                   <View
@@ -200,17 +307,26 @@ const handleLogin = async () => {
                         ? currentColors.background
                         : "#F8F9FA",
                       color: currentColors.text,
-                      borderColor: isDark ? currentColors.border : "#E0E0E0",
+                      borderColor:
+                        emailError && touchedEmail
+                          ? "#FF4444"
+                          : isDark
+                            ? currentColors.border
+                            : "#E0E0E0",
                     },
                   ]}
                   placeholder="Enter your email"
                   placeholderTextColor={isDark ? "#999" : "#888"}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={handleEmailChange}
+                  onBlur={() => setTouchedEmail(true)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
+                {emailError && touchedEmail && (
+                  <Text style={styles.errorMessage}>{emailError}</Text>
+                )}
               </View>
 
               {/* Password Input */}
@@ -276,6 +392,26 @@ const handleLogin = async () => {
                 </View>
               </View>
 
+              {/* Forgot Password Link */}
+              <TouchableOpacity
+                style={styles.forgotPasswordContainer}
+                onPress={() =>
+                  Alert.alert(
+                    "Coming Soon",
+                    "Forgot password functionality will be added soon!",
+                  )
+                }
+              >
+                <Text
+                  style={[
+                    styles.forgotPasswordText,
+                    { color: currentColors.primary },
+                  ]}
+                >
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+
               {/* Login Button */}
               <View>
                 <TouchableOpacity
@@ -284,10 +420,11 @@ const handleLogin = async () => {
                     {
                       backgroundColor: currentColors.primary,
                       shadowColor: currentColors.primary,
+                      opacity: emailError || !email || !password ? 0.6 : 1,
                     },
                   ]}
                   onPress={handleLogin}
-                  disabled={loading}
+                  disabled={loading || !!emailError || !email || !password}
                   activeOpacity={0.85}
                 >
                   {loading ? (
@@ -370,6 +507,7 @@ const handleLogin = async () => {
                 Social Login
               </Text>
               <View style={styles.socialButtons}>
+                {/* Google Button - Works on ALL platforms */}
                 <TouchableOpacity
                   style={[
                     styles.socialButton,
@@ -378,48 +516,80 @@ const handleLogin = async () => {
                         ? currentColors.background
                         : "#F8F9FA",
                       borderColor: isDark ? currentColors.border : "#E0E0E0",
+                      opacity: socialLoading === "google" ? 0.7 : 1,
+                      flex: isAppleSignInAvailable() ? 1 : 2,
                     },
                   ]}
                   activeOpacity={0.7}
+                  onPress={handleGoogleSignIn}
+                  disabled={socialLoading !== null}
                 >
-                  <FontAwesome name="google" size={22} color="#DB4437" />
+                  {socialLoading === "google" ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={currentColors.primary}
+                    />
+                  ) : (
+                    <FontAwesome name="google" size={22} color="#DB4437" />
+                  )}
                   <Text
                     style={[
                       styles.socialButtonText,
                       { color: currentColors.text },
                     ]}
                   >
-                    Google
+                    {socialLoading === "google" ? "Signing in..." : "Google"}
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.socialButton,
-                    {
-                      backgroundColor: isDark
-                        ? currentColors.background
-                        : "#F8F9FA",
-                      borderColor: isDark ? currentColors.border : "#E0E0E0",
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome
-                    name="apple"
-                    size={22}
-                    color={currentColors.text}
-                  />
-                  <Text
+                {/* Apple Button - iOS ONLY */}
+                {isAppleSignInAvailable() && (
+                  <TouchableOpacity
                     style={[
-                      styles.socialButtonText,
-                      { color: currentColors.text },
+                      styles.socialButton,
+                      {
+                        backgroundColor: isDark
+                          ? currentColors.background
+                          : "#F8F9FA",
+                        borderColor: isDark ? currentColors.border : "#E0E0E0",
+                        opacity: socialLoading === "apple" ? 0.7 : 1,
+                        flex: 1,
+                      },
                     ]}
+                    activeOpacity={0.7}
+                    onPress={handleAppleSignIn}
+                    disabled={socialLoading !== null}
                   >
-                    Apple
-                  </Text>
-                </TouchableOpacity>
+                    {socialLoading === "apple" ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={currentColors.primary}
+                      />
+                    ) : (
+                      <FontAwesome
+                        name="apple"
+                        size={22}
+                        color={currentColors.text}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.socialButtonText,
+                        { color: currentColors.text },
+                      ]}
+                    >
+                      {socialLoading === "apple" ? "Signing in..." : "Apple"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
+              
+              {/* Optional note for Android users */}
+              {!isAppleSignInAvailable() && (
+                <Text style={[styles.noteText, { color: isDark ? '#888' : '#666' }]}>
+                  Apple Sign In is available on iOS devices
+                </Text>
+              )}
             </View>
           </View>
 
@@ -446,15 +616,21 @@ const handleLogin = async () => {
               </TouchableOpacity>
             </View>
           </View>
-
-
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
+// Add this new style to your StyleSheet
 const styles = StyleSheet.create({
+  // ... keep all your existing styles, then add this at the end
+  noteText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
   container: {
     flex: 1,
   },
@@ -514,7 +690,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-
   backText: {
     fontWeight: "600",
     fontSize: 14,
@@ -613,6 +788,21 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     fontSize: 15,
     fontWeight: "500",
+  },
+  errorMessage: {
+    color: "#FF4444",
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  forgotPasswordContainer: {
+    alignItems: "flex-end",
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   passwordContainer: {
     flexDirection: "row",

@@ -16,8 +16,28 @@ import {
     View,
 } from 'react-native';
 import { useSimpleTheme } from '../context/SimpleThemeContext';
+import { signInWithApple, signInWithGoogle } from "./utils/socialAuth";
 
-const { width } = Dimensions.get('window');
+Dimensions.get('window');
+
+// Email validation function
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
+
+// Password validation function
+const validatePassword = (password: string): { isValid: boolean; message: string } => {
+  if (!password || password.length < 6) {
+    return { isValid: false, message: 'Password must be at least 6 characters' };
+  }
+  return { isValid: true, message: '' };
+};
+
+// Helper to check if Apple Sign In is available
+const isAppleSignInAvailable = (): boolean => {
+  return Platform.OS === 'ios';
+};
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -31,15 +51,57 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState('');
+  
+  // Validation states
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [touchedEmail, setTouchedEmail] = useState(false);
+  const [touchedPassword, setTouchedPassword] = useState(false);
 
-  const isFormValid = fullName.trim() && phone.trim() && email.trim() && password.trim();
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    setTouchedEmail(true);
+    if (text.trim() === '') {
+      setEmailError('Email is required');
+    } else if (!validateEmail(text)) {
+      setEmailError('Please enter a valid email (e.g., name@example.com)');
+    } else {
+      setEmailError(null);
+    }
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    setTouchedPassword(true);
+    const { isValid, message } = validatePassword(text);
+    setPasswordError(isValid ? null : message);
+  };
+
+  const isFormValid = fullName.trim() && phone.trim() && email.trim() && password.trim() && !emailError && !passwordError;
 
   const handleSignUp = async () => {
+    // Mark fields as touched to show validation errors
+    setTouchedEmail(true);
+    setTouchedPassword(true);
+    
+    // Validate email
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+    }
+    
+    // Validate password
+    const { isValid: isPasswordValid, message: passwordMessage } = validatePassword(password);
+    if (!isPasswordValid) {
+      setPasswordError(passwordMessage);
+    }
+
     if (!isFormValid) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fix the errors before continuing');
       return;
     }
+    
     setError('');
     setLoading(true);
 
@@ -74,6 +136,39 @@ export default function SignUpScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading("google");
+    const result = await signInWithGoogle();
+
+    if (result.success) {
+      router.replace("/");
+    } else {
+      Alert.alert(
+        "Google Sign In Failed",
+        result.error || "Something went wrong",
+      );
+    }
+    setSocialLoading(null);
+  };
+
+  const handleAppleSignIn = async () => {
+    setSocialLoading("apple");
+    const result = await signInWithApple();
+
+    if (result.success) {
+      router.replace("/");
+    } else {
+      // Don't show error for platform unavailability
+      if (result.error !== 'Apple Sign In is only available on iOS devices') {
+        Alert.alert(
+          "Apple Sign In Failed",
+          result.error || "Something went wrong",
+        );
+      }
+    }
+    setSocialLoading(null);
   };
 
   return (
@@ -239,7 +334,7 @@ export default function SignUpScreen() {
                 />
               </View>
 
-              {/* Email Input */}
+              {/* Email Input - With Validation */}
               <View style={styles.inputGroup}>
                 <View style={styles.inputLabelContainer}>
                   <View style={[styles.inputIcon, { 
@@ -252,23 +347,34 @@ export default function SignUpScreen() {
                   </Text>
                 </View>
                 <TextInput
-                  style={[styles.input, { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    color: currentColors.text,
-                    borderColor: isDark ? currentColors.border : '#E0E0E0',
-                  }]}
+                  style={[
+                    styles.input, 
+                    { 
+                      backgroundColor: isDark ? currentColors.background : '#F8F9FA',
+                      color: currentColors.text,
+                      borderColor: emailError && touchedEmail 
+                        ? '#FF4444' 
+                        : (isDark ? currentColors.border : '#E0E0E0'),
+                    }
+                  ]}
                   placeholder="Enter your email"
                   placeholderTextColor={isDark ? '#999' : '#888'}
                   keyboardType="email-address"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={handleEmailChange}
+                  onBlur={() => setTouchedEmail(true)}
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect={false}
                 />
+                {emailError && touchedEmail && (
+                  <Text style={styles.errorMessage}>
+                    {emailError}
+                  </Text>
+                )}
               </View>
 
-              {/* Password Input */}
+              {/* Password Input - With Validation */}
               <View style={styles.inputGroup}>
                 <View style={styles.inputLabelContainer}>
                   <View style={[styles.inputIcon, { 
@@ -280,17 +386,23 @@ export default function SignUpScreen() {
                     Password
                   </Text>
                 </View>
-                <View style={[styles.passwordContainer, { 
-                  backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                  borderColor: isDark ? currentColors.border : '#E0E0E0',
-                }]}>
+                <View style={[
+                  styles.passwordContainer, 
+                  { 
+                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
+                    borderColor: passwordError && touchedPassword 
+                      ? '#FF4444' 
+                      : (isDark ? currentColors.border : '#E0E0E0'),
+                  }
+                ]}>
                   <TextInput
                     style={[styles.passwordInput, { color: currentColors.text }]}
                     placeholder="Create a strong password"
                     placeholderTextColor={isDark ? '#999' : '#888'}
                     secureTextEntry={!showPassword}
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={handlePasswordChange}
+                    onBlur={() => setTouchedPassword(true)}
                     autoCapitalize="none"
                     autoCorrect={false}
                     textContentType="newPassword"
@@ -307,6 +419,16 @@ export default function SignUpScreen() {
                     />
                   </TouchableOpacity>
                 </View>
+                {passwordError && touchedPassword && (
+                  <Text style={styles.errorMessage}>
+                    {passwordError}
+                  </Text>
+                )}
+                {password.length > 0 && password.length < 6 && (
+                  <Text style={styles.passwordHint}>
+                    {6 - password.length} more characters needed
+                  </Text>
+                )}
               </View>
 
               {/* Sign Up Button */}
@@ -370,32 +492,59 @@ export default function SignUpScreen() {
                 Social Sign Up
               </Text>
               <View style={styles.socialButtons}>
+                {/* Google Button - Works on ALL platforms */}
                 <TouchableOpacity 
                   style={[styles.socialButton, { 
                     backgroundColor: isDark ? currentColors.background : '#F8F9FA',
                     borderColor: isDark ? currentColors.border : '#E0E0E0',
+                    opacity: socialLoading === "google" ? 0.7 : 1,
+                    flex: isAppleSignInAvailable() ? 1 : 2,
                   }]}
                   activeOpacity={0.7}
+                  onPress={handleGoogleSignIn}
+                  disabled={socialLoading !== null}
                 >
-                  <FontAwesome name="google" size={22} color="#DB4437" />
+                  {socialLoading === "google" ? (
+                    <ActivityIndicator size="small" color={currentColors.primary} />
+                  ) : (
+                    <FontAwesome name="google" size={22} color="#DB4437" />
+                  )}
                   <Text style={[styles.socialButtonText, { color: currentColors.text }]}>
-                    Google
+                    {socialLoading === "google" ? "Signing in..." : "Google"}
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={[styles.socialButton, { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    borderColor: isDark ? currentColors.border : '#E0E0E0',
-                  }]}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome name="apple" size={22} color={currentColors.text} />
-                  <Text style={[styles.socialButtonText, { color: currentColors.text }]}>
-                    Apple
-                  </Text>
-                </TouchableOpacity>
+                {/* Apple Button - iOS ONLY */}
+                {isAppleSignInAvailable() && (
+                  <TouchableOpacity 
+                    style={[styles.socialButton, { 
+                      backgroundColor: isDark ? currentColors.background : '#F8F9FA',
+                      borderColor: isDark ? currentColors.border : '#E0E0E0',
+                      opacity: socialLoading === "apple" ? 0.7 : 1,
+                      flex: 1,
+                    }]}
+                    activeOpacity={0.7}
+                    onPress={handleAppleSignIn}
+                    disabled={socialLoading !== null}
+                  >
+                    {socialLoading === "apple" ? (
+                      <ActivityIndicator size="small" color={currentColors.primary} />
+                    ) : (
+                      <FontAwesome name="apple" size={22} color={currentColors.text} />
+                    )}
+                    <Text style={[styles.socialButtonText, { color: currentColors.text }]}>
+                      {socialLoading === "apple" ? "Signing in..." : "Apple"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
+              
+              {/* Optional note for Android users */}
+              {!isAppleSignInAvailable() && (
+                <Text style={[styles.noteText, { color: isDark ? '#888' : '#666' }]}>
+                  Apple Sign In is available on iOS devices
+                </Text>
+              )}
             </View>
           </View>
 
@@ -438,7 +587,9 @@ export default function SignUpScreen() {
   );
 }
 
+// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
+  // ... keep all your existing styles above
   container: {
     flex: 1,
   },
@@ -644,6 +795,21 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 4,
   },
+  // New styles for validation
+  errorMessage: {
+    color: '#FF4444',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  passwordHint: {
+    color: '#FFA500',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 8,
+    fontStyle: 'italic',
+  },
   signupButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -736,6 +902,12 @@ const styles = StyleSheet.create({
   socialButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  noteText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   loginContainer: {
     flexDirection: 'row',

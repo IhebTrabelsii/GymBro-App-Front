@@ -1,5 +1,6 @@
 import Clock from "@/components/clock";
 import { Colors } from "@/constants/Colors";
+
 import {
   AntDesign,
   Ionicons,
@@ -24,6 +25,7 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 const { width } = Dimensions.get("window");
 
 export default function Home() {
+  
   const { theme, toggleTheme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const router = useRouter();
@@ -233,39 +235,42 @@ export default function Home() {
 
           {isLoggedIn ? (
             <View style={styles.loggedInContainer}>
-              <View style={styles.userBadge}>
-                <View
-                  style={[
-                    styles.avatarCircle,
-                    {
-                      backgroundColor: isDark
-                        ? currentColors.primary
-                        : "rgba(57, 255, 20, 0.15)",
-                      borderWidth: 2,
-                      borderColor: isDark
-                        ? "rgba(57, 255, 20, 0.3)"
-                        : currentColors.primary,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.avatarText,
-                      {
-                        color: isDark
-                          ? currentColors.background
-                          : currentColors.primary,
-                      },
-                    ]}
-                  >
-                    {username.charAt(0).toUpperCase() || "U"}
-                  </Text>
-                </View>
-                <Text style={[styles.username, { color: currentColors.text }]}>
-                  {username || "User"}
-                </Text>
-              </View>
-
+<TouchableOpacity
+  style={styles.userBadge}
+  onPress={() => router.push("/profile")}
+  activeOpacity={0.7}
+>
+  <View
+    style={[
+      styles.avatarCircle,
+      {
+        backgroundColor: isDark
+          ? currentColors.primary
+          : "rgba(57, 255, 20, 0.15)",
+        borderWidth: 2,
+        borderColor: isDark
+          ? "rgba(57, 255, 20, 0.3)"
+          : currentColors.primary,
+      },
+    ]}
+  >
+    <Text
+      style={[
+        styles.avatarText,
+        {
+          color: isDark
+            ? currentColors.background
+            : currentColors.primary,
+        },
+      ]}
+    >
+      {username.charAt(0).toUpperCase() || "U"}
+    </Text>
+  </View>
+  <Text style={[styles.username, { color: currentColors.text }]}>
+    {username || "User"}
+  </Text>
+</TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.logoutButton,
