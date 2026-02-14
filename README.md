@@ -1,6 +1,12 @@
-# 💪 GymBro - Your Personal Fitness Companion
+# <div align="center">💪 GymBro</div>
+
+## <div align="center">Your Personal Fitness Companion</div>
 
 <div align="center">
+
+### A cutting-edge cross-platform fitness companion with personalized workout plans, intelligent calculators, and expert content to help you achieve your health goals.
+
+---
 
 ![React Native](https://img.shields.io/badge/React%20Native-0.81.5-61DAFB?style=for-the-badge&logo=react)
 ![Expo](https://img.shields.io/badge/Expo-54.0.30-000000?style=for-the-badge&logo=expo)
@@ -9,669 +15,524 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20Web-blue?style=for-the-badge)
 
-A cutting-edge mobile fitness application designed to help users achieve their gym goals with personalized workout plans, intelligent fitness calculators, and expert fitness content.
+---
 
-[Quick Start](#-quick-start) • [Features](#-features) • [Installation](#-installation) • [Architecture](#-architecture) • [Tech Stack](#-tech-stack) • [Contributing](#-contributing)
+[Features](#-key-features) • [Installation](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing) • [License](#-license)
 
 </div>
 
 ---
 
-## 📋 Overview
+## ✨ Overview
 
-**GymBro** is a comprehensive, cross-platform fitness companion that empowers users to take control of their health and fitness journey. Whether you're a beginner starting your first workout or an experienced athlete looking to optimize your training, GymBro provides personalized tools, intelligent calculators, and curated fitness content to help you achieve your goals.
+**GymBro** is a comprehensive mobile fitness application designed to empower users to take control of their health journey. From beginners starting their first workout to experienced athletes optimizing their training, GymBro provides personalized tools, intelligent calculators, and curated content to help you succeed.
 
-### Why GymBro?
+### 🌟 Why Choose GymBro?
 
-- 🎯 **Personalized**: Get workout recommendations tailored to your body type
-- 📱 **Cross-Platform**: Seamless experience on iOS, Android, and Web
-- 🎨 **Modern UI**: Beautiful dark/light theme with smooth animations
-- 🔒 **Secure**: Token-based authentication with secure data storage
-- ⚡ **Fast**: Built with React Native and Expo for optimal performance
+| Feature                     | Benefit                                            |
+| :-------------------------- | :------------------------------------------------- |
+| 🎯 **Personalized Plans**   | Workout recommendations tailored to your body type |
+| 📱 **Multi-Platform**       | Seamless experience across iOS, Android, and Web   |
+| 🎨 **Beautiful UI**         | Modern design with smooth dark/light themes        |
+| 🔒 **Secure & Private**     | JWT authentication with encrypted data storage     |
+| ⚡ **High Performance**     | Optimized with React Native & Expo                 |
+| 📊 **Advanced Calculators** | BMI, BMR, and TDEE for precision fitness tracking  |
 
 ---
 
-## ✨ Features
+## 🚀 Key Features
 
-### 🏠 **Dashboard & Home**
+### 🏠 Dashboard & Home
 
-- User authentication with secure login and signup
-- Personalized home screen with quick stats and insights
-- Real-time digital clock display
-- Seamless dark/light theme switching
-- Quick navigation to all major features
+Your personal fitness command center with real-time insights and quick access to all features.
 
-### 🏋️ **Workout Planning**
+- **Personalized Dashboard** — Real-time stats and quick insights at a glance
+- **Smart Authentication** — Secure login/signup with social auth options
+- **Theme Switching** — Seamless dark/light mode toggle
+- **Quick Links** — Fast access to all major features
+- **Digital Clock** — Live time display with modern UI
 
-- **Body Type Analysis**: Identify your body type
-  - Ectomorph
-  - Mesomorph
-  - Endomorph
-- **Customized Plans**: Personalized workout recommendations based on body composition
-- **Training Strategies**: Detailed, evidence-based guidance for each body type
-  - Ectomorph: Heavy weights + High carb diet strategy
-  - Mesomorph: Balanced strength training and cardio
-  - Endomorph: Cardio-focused routines with calorie management
-- Progressive training recommendations
+### 🏋️ Workout Planning
 
-### 📊 **Fitness Calculator**
+Personalized training programs tailored to your body type and fitness goals.
 
-- **BMI Calculator**: Track and understand your Body Mass Index
-- **BMR Calculator**: Calculate Basal Metabolic Rate for personalized nutrition
-- **TDEE Calculator**: Determine Total Daily Energy Expenditure based on activity levels
-- **Smart Inputs**: Age, Gender, Weight, Height, Activity Level
-- Historical tracking and progress metrics
+Discover your body type and unlock customized training:
 
-### 📰 **Fitness News & Education**
+- **Ectomorph** — Heavy weights + high-calorie diet strategy
+- **Mesomorph** — Balanced strength and cardio training
+- **Endomorph** — Cardio-focused with calorie management
 
-- Curated fitness trends and expert tips
-- Latest health and wellness articles
-- Science-backed fitness information
-- Regular content updates
-- Educational resources for fitness enthusiasts
+Each plan includes:
 
-### 🍎 **Nutrition Tracking**
+- ✅ Progressive training recommendations
+- ✅ Evidence-based guidance
+- ✅ Customized approach per body type
+- ✅ Flexible weekly schedules
 
-- Food logging and tracking
-- Macronutrient breakdown
-- Calorie management tools
+### 📊 Fitness Calculators
+
+Professional-grade calculation tools for precision fitness tracking.
+
+| Calculator | Purpose                                  |
+| :--------- | :--------------------------------------- |
+| **BMI**    | Track and assess healthy weight range    |
+| **BMR**    | Calculate daily calorie needs at rest    |
+| **TDEE**   | Determine total daily energy expenditure |
+
+**Features:** Activity level tracking • Historical data • Visual progress metrics
+
+### 🍎 Nutrition Tracker
+
+Complete nutrition management and meal planning.
+
+- Food logging and calorie tracking
+- Macronutrient breakdown (protein, carbs, fats)
 - Personalized nutrition recommendations
+- Daily intake monitoring
 
-### 👥 **Admin Dashboard**
+### 📰 News & Content Hub
 
-- Admin authentication portal
-- Content management system
-- User management capabilities
-- Analytics and monitoring tools
-- Content approval workflows
+Stay informed with curated fitness articles and expert wellness advice.
 
-### ⚙️ **Additional Features**
+- Curated fitness articles and trends
+- Science-backed training tips
+- Latest health and wellness updates
+- Expert wellness content from professionals
 
-- Secure JWT-based authentication
-- AsyncStorage for persistent data management
-- Smooth animations and transitions using Moti
-- Responsive design optimized for all device sizes
-- Haptic feedback for better user experience
-- Support and help section with FAQs
+### 🤖 AI Coach
+
+Intelligent coaching powered by advanced algorithms.
+
+- Personalized training recommendations
+- Real-time feedback and guidance
+- Adaptive workout adjustments
+- Progress-based coaching
+
+### 👨‍💼 Admin Panel
+
+Complete administrative control over your application.
+
+- Exclusive admin authentication
+- User & content management
+- Analytics dashboard
+- System monitoring & controls
 
 ---
 
-## 🚀 Quick Start
+## 🎯 Quick Start
 
 ### Prerequisites
 
-- **Node.js** 16+ and npm/yarn
-- **Expo CLI**: `npm install -g expo-cli`
-- **iOS**: macOS with Xcode 14+ (for iOS development)
-- **Android**: Android Studio with SDK (for Android development)
+Ensure you have the following installed on your system:
 
-### Installation
+- **Node.js** 16+ & npm/yarn
+- **Expo CLI** — `npm install -g expo-cli`
+- **Git** — for version control
+- **iOS Development** — Xcode 14+ (macOS only)
+- **Android Development** — Android Studio with SDK
+- **Code Editor** — VS Code or similar (optional)
 
-1. **Clone the repository**
+### Installation & Setup
 
-   ```bash
-   git clone https://github.com/yourusername/GymBro.git
-   cd GymBro
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   # or with yarn
-   yarn install
-   ```
-
-3. **Start the development server**
-
-   ```bash
-   npm start
-   # or
-   expo start --clear
-   ```
-
-4. **Run on your platform**
-
-   ```bash
-   # iOS (requires macOS)
-   i
-
-   # Android
-   a
-
-   # Web
-   w
-   ```
-
----
-
-## 📱 Platform Setup
-
-### iOS Development
+Follow these steps to get GymBro running on your machine:
 
 ```bash
-# Install iOS dependencies
+# 1. Clone the repository
+git clone https://github.com/yourusername/GymBro.git
+cd GymBro
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the development server
+npm start
+
+# 4. Run on your platform
+# Select one of the following in the terminal:
+#   i = iOS  |  a = Android  |  w = Web
+```
+
+### Platform-Specific Setup
+
+#### iOS (macOS only)
+
+```bash
 cd ios && pod install && cd ..
-
-# Run on iOS simulator
 npm start
-# Then press 'i'
-
-# Build with EAS
-eas build --platform ios
+# Press 'i' to open on iOS
 ```
 
-### Android Development
+#### Android
 
 ```bash
-# Run on Android emulator
 npm start
-# Then press 'a'
-
-# Build with EAS
-eas build --platform android
+# Press 'a' to open on Android Emulator
 ```
 
-### Web Development
+#### Web
 
 ```bash
 npm run web
-# or
-npm start
-# Then press 'w'
+# Opens at http://localhost:19000
 ```
 
 ---
 
-## 🏗️ Project Architecture
-
-### Directory Structure
+## 📂 Project Architecture
 
 ```
 GymBro/
-├── app/                          # Expo Router - File-based routing
-│   ├── _layout.tsx              # Root layout & navigation setup
-│   ├── landing.tsx              # Splash/loading screen
-│   ├── login.tsx                # User login page
-│   ├── signup.tsx               # User registration page
-│   ├── plan.tsx                 # Fitness plans page
-│   ├── support.tsx              # Support & help section
-│   ├── +not-found.tsx           # 404 page
-│   ├── (tabs)/                  # Tab-based navigation routes
-│   │   ├── _layout.tsx          # Tab navigator
-│   │   ├── index.tsx            # Home/Dashboard
-│   │   ├── workout.tsx          # Workout planning
-│   │   ├── calculator.tsx       # Fitness calculator
-│   │   ├── food.tsx             # Nutrition tracking
-│   │   └── news.tsx             # Fitness news & articles
-│   └── admin/                   # Admin portal
-│       ├── login.tsx            # Admin authentication
-│       └── dashboard.tsx        # Admin dashboard
+├── 📁 app/                         # Expo Router navigation framework
+│   ├── _layout.tsx                # Root layout & global setup
+│   ├── landing.tsx                # Landing/splash screen
+│   ├── 📁 (tabs)/                 # Tab navigation layout
+│   │   ├── _layout.tsx            # Tab navigation wrapper
+│   │   ├── index.tsx              # 🏠 Home Dashboard
+│   │   ├── workout.tsx            # 🏋️ Workout Planning
+│   │   ├── calculator.tsx         # 📊 Fitness Calculators
+│   │   ├── food.tsx               # 🍎 Nutrition Tracker
+│   │   ├── ai-coach.tsx           # 🤖 AI Coach
+│   │   └── news.tsx.bak             # 📰 News Hub(unused)
+│   │
+│   ├── 📁 admin/                  # Admin portal section
+│   │   ├── dashboard.tsx          # Admin dashboard
+│   │   ├── login.tsx              # Admin authentication
+│   │   ├── users.tsx              # User management
+│   │   └── workouts.tsx           # Workout management
+│   │
+│   ├── login.tsx                  # User login screen
+│   ├── signup.tsx                 # User registration
+│   ├── profile.tsx                # User profile management
+│   ├── edit-profile.tsx           # Profile editing
+│   ├── premium.tsx                # Premium subscription
+│   ├── plan.tsx                   # Workout plan selection
+│   ├── change-password.tsx        # Password management
+│   ├── verify-email.tsx           # Email verification
+│   ├── notification-settings.tsx  # Notification preferences
+│   ├── privacy-settings.tsx       # Privacy controls
+│   ├── support.tsx                # Support/help section
+│   └── +not-found.tsx             # 404 page
 │
-├── components/                  # Reusable React components
-│   ├── ThemedText.tsx           # Theme-aware text component
-│   ├── ThemedView.tsx           # Theme-aware view component
-│   ├── ParallaxScrollView.tsx   # Parallax scrolling container
-│   ├── ExternalLink.tsx         # External links
-│   ├── Collapsible.tsx          # Collapsible section component
-│   ├── HapticTab.tsx            # Haptic feedback tab
-│   ├── HelloWave.tsx            # Animated wave component
-│   ├── clock.tsx                # Digital clock display
-│   └── ui/                      # UI-specific components
-│       ├── IconSymbol.tsx       # Icon symbol
-│       ├── TabBarBackground.tsx # Tab bar styling
-│       └── ...
+├── 📁 components/                 # Reusable UI components
+│   ├── ThemedText.tsx             # Theme-aware text component
+│   ├── ThemedView.tsx             # Theme-aware view component
+│   ├── clock.tsx                  # Digital clock display
+│   ├── Collapsible.tsx            # Expandable component
+│   ├── ExternalLink.tsx           # External link handler
+│   ├── HapticTab.tsx              # Touch feedback tab
+│   ├── HelloWave.tsx              # Animated wave component
+│   ├── ParallaxScrollView.tsx     # Parallax scrolling view
+│   ├── StripePayment.web.tsx      # Payment processing
+│   └── 📁 ui/                     # UI component library
+│       ├── IconSymbol.tsx         # Icon component
+│       └── TabBarBackground.tsx   # Tab bar styling
 │
-├── context/                     # React Context providers
-│   ├── ThemeContext.tsx         # Dark/Light theme context
-│   └── SimpleThemeContext.tsx   # Simplified theme context
+├── 📁 context/                    # React Context providers
+│   ├── ThemeContext.tsx           # Theme state management
+│   └── SimpleThemeContext.tsx     # Simplified theme provider
 │
-├── hooks/                       # Custom React hooks
-│   ├── useColorScheme.ts        # Device color scheme detection
-│   ├── useColorScheme.web.ts    # Web-specific color scheme
-│   └── useThemeColor.ts         # Theme color access hook
+├── 📁 hooks/                      # Custom React Hooks
+│   ├── useColorScheme.ts          # Device color scheme detection
+│   ├── useColorScheme.web.ts      # Web-specific color detection
+│   └── useThemeColor.ts           # Theme color helper
 │
-├── constants/                   # Application constants
-│   └── Colors.ts                # Color palette definitions
+├── 📁 constants/                  # Application constants
+│   └── Colors.ts                  # Color palette definitions
 │
-├── assets/                      # Static assets
-│   ├── images/                  # App images & icons
-│   │   ├── icon.png             # App icon
-│   │   ├── adaptive-icon.png    # Android adaptive icon
-│   │   └── favicon.png          # Web favicon
-│   └── fonts/                   # Custom fonts
+├── 📁 assets/                     # Static assets
+│   ├── 📁 images/                 # Icons, logos, and images
+│   └── 📁 fonts/                  # Custom typography fonts
 │
-├── scripts/                     # Utility scripts
-│   └── reset-project.js         # Project reset utility
+├── 🔧 Configuration Files
+│   ├── app.json                   # Expo configuration
+│   ├── package.json               # NPM dependencies
+│   ├── tsconfig.json              # TypeScript configuration
+│   ├── eslint.config.js           # ESLint rules
+│   ├── webpack.config.js          # Webpack configuration
+│   └── expo-env.d.ts              # Expo type definitions
 │
-├── app.json                     # Expo configuration
-├── package.json                 # Dependencies & scripts
-├── tsconfig.json                # TypeScript configuration
-├── webpack.config.js            # Web build configuration
-├── eslint.config.js            # ESLint configuration
-└── README.md                    # This file
-```
-
-### Data Flow
-
-```
-┌─────────────────────────────────────┐
-│         User Interface              │
-│  (Screens & Components)             │
-└──────────────────┬──────────────────┘
-                   │
-                   ▼
-        ┌──────────────────────┐
-        │  React Context API   │
-        │  (Theme, Auth Data)  │
-        └─────────┬────────────┘
-                  │
-                  ▼
-        ┌──────────────────────┐
-        │   AsyncStorage       │
-        │   (Persistent Data)  │
-        └──────────────────────┘
+└── 📄 README.md                   # Project documentation
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-### Core
+Our modern technology architecture ensures high performance, scalability, and an excellent developer experience.
 
-- **React Native** 0.81.5 - Cross-platform mobile framework
-- **Expo** 54.0.30 - Development platform and cloud build service
-- **Expo Router** 6.0.21 - File-based routing system
-- **React** 19.1.0 - UI library
-- **TypeScript** 5.9.3 - Type-safe JavaScript
+### Core Technologies
 
-### Animations & UI
+| Category         | Technology              | Version |
+| :--------------- | :---------------------- | :------ |
+| **Framework**    | React Native            | 0.81.5  |
+| **Platform**     | Expo                    | 54.0.30 |
+| **Router**       | Expo Router             | 6.0.21  |
+| **UI Library**   | React                   | 19.1.0  |
+| **Language**     | TypeScript              | 5.9.3   |
+| **Animations**   | React Native Reanimated | 4.1.1   |
+| **State Mgmt**   | React Context API       | Native  |
+| **Storage**      | AsyncStorage            | 2.2.0   |
+| **Auth**         | JWT Decode              | 4.0.0   |
+| **Icons**        | Expo Vector Icons       | 15.0.3  |
+| **Payments**     | Stripe React Native     | 0.58.0  |
+| **Bundler**      | Metro / Webpack         | Latest  |
+| **Code Quality** | ESLint & TypeScript     | Latest  |
 
-- **React Native Reanimated** 4.1.1 - Advanced animations
-- **React Native Gesture Handler** 2.28 - Gesture recognition
-- **Moti** 0.30.0 - Animation library
-- **Expo Linear Gradient** 15.0.8 - Gradient backgrounds
-- **Expo Blur** 15.0.8 - Blur effects
+### Key Dependencies
 
-### Navigation & State
-
-- **React Native Screens** 4.16 - Native screen management
-- **React Context API** - State management
-- **React Native Safe Area Context** 5.6.2 - Safe area handling
-
-### Storage & Authentication
-
-- **AsyncStorage** 2.2.0 - Local data persistence
-- **JWT Decode** 4.0.0 - Token decoding
-
-### Utilities
-
-- **React Native Worklets** 0.5.1 - High-performance operations
-- **Expo Vector Icons** 15.0.3 - Icon library
-- **React Native Picker** 2.11.1 - Picker component
-
-### Development
-
-- **Babel** 7.27.4 - Code transpilation
-- **Webpack** 5+ - Module bundling
-- **ESLint** - Code linting
+- **expo-linear-gradient** — Gradient UI elements
+- **expo-blur** — Blur effects
+- **react-native-gesture-handler** — Gesture recognition
+- **react-native-screens** — Native screen optimization
+- **bcryptjs** — Password hashing
+- **mongoose** — Database modeling
+- **dotenv** — Environment configuration
+- **express** — Backend API
 
 ---
 
-## 📖 Features in Detail
+## 🔐 Security & Best Practices
 
-### Home Dashboard
+### Authentication & Data Protection
 
-- Real-time digital clock
-- Quick statistic overview
-- Personalized fitness recommendations
-- Quick action buttons for all features
+- ✅ **JWT Authentication** — Secure token-based user authentication
+- ✅ **Password Encryption** — bcryptjs for secure password hashing
+- ✅ **AsyncStorage** — Encrypted local data persistence
+- ✅ **Admin Controls** — Separate authentication layer for admin access
+- ✅ **Session Management** — Automatic token validation and refresh
+- ✅ **HTTPS Ready** — Built for secure API communication
 
-### Workout Module
+### Theme System
 
-Identify your body type and get tailored workout plans:
-
-#### Body Types
-
-- **Ectomorph**: Naturally lean, fast metabolism
-  - Focus: High-intensity strength training
-  - Diet: High calories, high protein
-  - Frequency: 4-5 days/week
-
-- **Mesomorph**: Athletic, balanced metabolism
-  - Focus: Strength and hypertrophy training
-  - Diet: Balanced macros
-  - Frequency: 5-6 days/week
-
-- **Endomorph**: Stocky build, slow metabolism
-  - Focus: High-intensity cardio with strength
-  - Diet: Lower calories, controlled carbs
-  - Frequency: 6 days/week with cardio emphasis
-
-### Fitness Calculators
-
-- **BMI (Body Mass Index)**: Assess healthy weight range
-- **BMR (Basal Metabolic Rate)**: Daily calorie needs at rest
-- **TDEE (Total Daily Energy Expenditure)**: Overall daily calorie needs based on activity level
-
-### Nutrition Tracker
-
-- Log daily food intake
-- Track macronutrients (proteins, carbs, fats)
-- Calorie counting and monitoring
-- Personalized nutrition recommendations
-
-### News & Education Hub
-
-- Latest fitness articles
-- Training tips and tricks
-- Nutrition guides
-- Science-backed information
-
-### Admin Panel
-
-- User management
-- Content creation and editing
-- Analytics dashboard
-- System monitoring
-
----
-
-## 🔐 Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **AsyncStorage Encryption**: Secure local data storage
-- **Admin-Only Access**: Separate admin authentication layer
-- **Session Management**: Automatic token validation
-- **HTTPS**: Secure API communication (production)
-
----
-
-## 🎨 Theming System
-
-The app includes a robust theming system:
+Implement consistent theming across your entire application:
 
 ```typescript
-// Access theme colors anywhere
-const colors = useThemeColor();
+// Use theme colors easily throughout your app
+import { useThemeColor } from '@/hooks/useThemeColor';
 
-// Available colors
-{
-  light: { primary, background, tint, ... },
-  dark: { primary, background, tint, ... }
+export function MyComponent() {
+  const textColor = useThemeColor(
+    { light: "#000", dark: "#fff" },
+    "text"
+  );
+
+  return <Text style={{ color: textColor }}>Hello World</Text>;
 }
 ```
 
-Features:
-
-- Automatic system theme detection
-- Manual theme switching
-- Smooth transitions
-- Full component consistency
-
 ---
 
-## 📝 Available Scripts
+## � NPM Scripts
+
+Quick reference for common development commands:
 
 ```bash
-# Development
-npm start              # Start Expo development server
+npm start              # Start development server (recommended for first-time)
 npm run web           # Start web development server
-
-# Building
-npm run build         # Build for production
-eas build             # Cloud build for all platforms
-
-# Quality
-npm run lint          # Check code quality
-npm run type-check    # Run TypeScript type checking
-
-# Utilities
-npm run reset-project # Reset project to initial state
+npm run lint          # Run ESLint code quality checks
+npm test              # Run test suite (if available)
 ```
 
----
-
-## 🧪 Development Best Practices
-
-### Hot Reloading
-
-Both Fast Refresh and full app reloading are enabled:
+### Dev Workflow
 
 ```bash
+# Start with expo go
 npm start
-# Save files to see changes instantly
+
+# In another terminal, clear cache if needed
+npm start -- --clear
+
+# Run specific platform
+npm start -- --ios
+npm start -- --android
 ```
-
-### Debugging
-
-```bash
-# Enable remote debugging
-npm start
-# Press 'j' for debugger menu
-```
-
-### Type Checking
-
-Ensure type safety throughout development:
-
-```bash
-tsc --noEmit      # Check for type errors
-npm run lint      # Run ESLint
-```
-
----
-
-## 📊 Performance Optimization
-
-- React Native Worklets for heavy computations
-- Memoization of expensive components
-- Lazy loading of routes
-- Optimized animations with Reanimated
-- Efficient local storage queries
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+Common issues and their solutions:
 
-**Problem**: `Module not found` after npm install
+| Issue                           | Solution                                              |
+| :------------------------------ | :---------------------------------------------------- |
+| **Module not found error**      | Run `npm install` and `expo prebuild --clean`         |
+| **iOS build fails**             | `cd ios && rm -rf Pods && pod install && cd ..`       |
+| **AsyncStorage not persisting** | Check file permissions in `app.json`                  |
+| **Android build issues**        | Run `cd android && ./gradlew clean && cd ..`          |
+| **Theme not updating**          | Ensure components use `useThemeColor()` hook properly |
+| **Blank white screen**          | Clear cache: `npm start -- --clear`                   |
+| **Port already in use**         | Kill process or use `npm start -- --port 19001`       |
+| **TypeScript errors**           | Run `tsc --noEmit` to check all files                 |
 
-```bash
-# Solution
-npm install
-expo prebuild --clean
-npm start --clear
-```
+### Getting Help
 
-**Problem**: iOS build fails
+If issues persist:
 
-```bash
-# Solution
-cd ios && rm -rf Pods && pod install && cd ..
-npm start
-```
-
-**Problem**: AsyncStorage not persisting data
-
-```bash
-# Ensure you're not in development mode reload
-# Check AsyncStorage permissions in app.json
-```
-
-**Problem**: Theme not updating across all screens
-
-```typescript
-// Ensure component uses useThemeColor() hook
-import { useThemeColor } from "@/hooks/useThemeColor";
-const color = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-```
-
-**Problem**: Android build issues
-
-```bash
-# Clear Android build cache
-cd android && ./gradlew clean && cd ..
-npm start
-```
+1. Check the [Expo Documentation](https://docs.expo.dev)
+2. Review React Native [troubleshooting guide](https://reactnative.dev/docs/troubleshooting)
+3. Search GitHub issues in this repository
+4. Check Discord or community forums
 
 ---
 
 ## ❓ FAQ
 
-**Q: Does GymBro work offline?**
-A: Yes! All user data is stored locally with AsyncStorage and works offline.
-
-**Q: Can I use GymBro on my older device?**
-A: iOS 13+ and Android 5+ are supported.
-
-**Q: How often is fitness content updated?**
-A: The admin team regularly updates articles and training information.
-
-**Q: Is my data secure?**
-A: Yes, we use JWT tokens and secure local storage with encryption.
-
-**Q: Can I export my fitness data?**
-A: This feature is in development for future releases.
-
-**Q: What if I forget my password?**
-A: Use the password reset option on the login screen.
+| Question                   | Answer                                                  |
+| :------------------------- | :------------------------------------------------------ |
+| **Works offline?**         | Yes! All data stored locally with AsyncStorage          |
+| **Supported devices?**     | iOS 13+ and Android 5.0+                                |
+| **Content updates?**       | Admin team regularly adds new articles & training plans |
+| **Data security?**         | JWT tokens + secure encrypted local storage             |
+| **Password reset?**        | Available on login screen with email verification       |
+| **Data export?**           | Planned for future releases                             |
+| **Free or paid?**          | Free with optional premium features                     |
+| **Can I use on web?**      | Yes! Full web support with `npm run web`                |
+| **Dark mode support?**     | Yes! Automatic based on device settings                 |
+| **Multi-account support?** | Yes! Multiple user accounts can use the app             |
 
 ---
 
 ## 🤝 Contributing
 
-We appreciate your interest in contributing to GymBro! Here's how you can help:
+We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
 
-### Getting Started
+### Getting Started with Development
 
-1. **Fork the repository**
+1. **Fork & Clone the Repository**
 
    ```bash
    git clone https://github.com/yourusername/GymBro.git
    cd GymBro
+   npm install
+   npm start
    ```
 
-2. **Create a feature branch**
+2. **Create a Feature Branch**
 
    ```bash
-   git checkout -b feature/AmazingFeature
+   git checkout -b feature/YourFeatureName
+   # or for bug fixes: git checkout -b fix/BugName
    ```
 
-3. **Make your changes**
-   - Write clean, readable code
-   - Follow TypeScript best practices
-   - Add comments for complex logic
-   - Test on multiple platforms
+3. **Make Your Changes**
+   - Follow the existing code style and conventions
+   - Write clean, readable TypeScript code
+   - Add meaningful comments for complex logic
+   - Test your changes on multiple platforms (iOS, Android, Web)
 
-4. **Commit your changes**
+4. **Commit Your Changes**
 
    ```bash
    git add .
-   git commit -m 'Add AmazingFeature'
+   git commit -m "feat: Add description of your changes"
+   # Use conventional commits: feat|fix|docs|style|refactor|perf|test|chore
    ```
 
-5. **Push to your fork**
+5. **Push to Your Fork**
 
    ```bash
-   git push origin feature/AmazingFeature
+   git push origin feature/YourFeatureName
    ```
 
 6. **Create a Pull Request**
-   - Describe your changes clearly
-   - Link to relevant issues
-   - Include testing details
+   - Go to GitHub and create a pull request
+   - Provide a clear description of your changes
+   - Reference any related issues
+   - Wait for review and feedback
 
-### Guidelines
+### Development Guidelines
 
-- Follow the existing code style
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Respect the project's architecture
+- **Code Style**: Follow TypeScript and React best practices
+- **Testing**: Test your code on iOS, Android, and Web before submitting
+- **Documentation**: Update README if you add new features
+- **Comments**: Add JSDoc comments for complex functions
+- **Performance**: Avoid unnecessary re-renders and optimize bundle size
+- **Accessibility**: Ensure components are accessible to all users
 
----
+### Commit Message Format
 
-## 📄 License
+```
+<type>(<scope>): <subject>
 
-This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file for details.
+<body>
 
-Permission is granted to use, modify, and distribute the software freely, with the only requirement being attribution.
+<footer>
+```
 
----
+**Types**: feat, fix, docs, style, refactor, perf, test, ci, build, chore
 
-## 👥 Authors & Acknowledgments
-
-- **Development Team**: GymBro Contributors
-- **Framework**: [Expo](https://expo.dev)
-- **Community**: Thanks to all contributors and users
-
----
-
-## 🔗 Useful Links
-
-- [Expo Documentation](https://docs.expo.dev)
-- [React Native Docs](https://reactnative.dev)
-- [TypeScript Guide](https://www.typescriptlang.org/docs/)
-- [Expo Router Guide](https://docs.expo.dev/routing/introduction/)
-
----
-
-## 📞 Support
-
-For issues, questions, or suggestions:
-
-- **GitHub Issues**: [Report a bug](https://github.com/yourusername/GymBro/issues)
-- **Discussions**: [Ask questions](https://github.com/yourusername/GymBro/discussions)
-- **Email**: support@gymbro.app
-- **Support Page**: In-app support section
-
----
-
-<div align="center">
-
-### Made with ❤️ by GymBro Team
-
-⭐ If you find this project helpful, please consider giving it a star!
-
-[⬆ Back to top](#-gymbro---your-personal-fitness-companion)
-
-</div>
+**Example**: `feat(workout): Add rest day tracking feature`
 
 ---
 
 ## 📄 License
 
-This project is private. All rights reserved.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+You are free to:
+
+- ✅ Use this software for any purpose
+- ✅ Modify and distribute the software
+- ✅ Include it in proprietary applications
+
+With the requirement to:
+
+- ⚠️ Include a copy of the license and copyright notice
 
 ---
 
-## 👨‍💻 Author
+## 🔗 Important Resources
 
-**GymBro Development Team**
+**Documentation & Guides**
+
+- [Expo Documentation](https://docs.expo.dev) — Official Expo framework docs
+- [React Native Docs](https://reactnative.dev) — React Native official guide
+- [TypeScript Guide](https://www.typescriptlang.org/docs/) — TypeScript handbook
+- [Expo Router Guide](https://docs.expo.dev/routing/introduction/) — File-based routing
+
+**Community & Support**
+
+- [Expo Community Forums](https://forums.expo.dev)
+- [React Native Community](https://github.com/react-native-community)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/react-native)
+
+**Tools & Extensions**
+
+- [VS Code](https://code.visualstudio.com/) — Code editor
+- [React Developer Tools](https://github.com/facebook/react-devtools) — DevTools
+- [Expo DevTools](https://github.com/expo/dev-plugins) — Dev plugins
 
 ---
 
-## 🙏 Acknowledgments
+## 📞 Support & Contact
 
-- [Expo](https://expo.dev/) - The world's fastest way to build apps
-- [React Native](https://reactnative.dev/) - Learn once, write anywhere
-- [React Router](https://expo.github.io/router/) - File-based routing
-- [Expo Vector Icons](https://icons.expo.fyi/) - Vector icon library
+Have questions or need help? We're here to assist!
+
+- **🐛 Found a Bug?** [Open an Issue](https://github.com/yourusername/GymBro/issues)
+- **💬 Have a Question?** [Start a Discussion](https://github.com/yourusername/GymBro/discussions)
+- **📧 Email Support** — support@gymbro.app
+- **🐦 Follow Us** — [@GymBroApp](https://twitter.com/gymbro)
 
 ---
 
-## 💬 Support
+## 🌟 Contributors
 
-For support, email support@gymbro.app or create an issue in the repository.
+Thank you to all the amazing contributors who have helped make GymBro better!
+
+<!-- Contributors list will be auto-generated -->
 
 ---
 
 <div align="center">
 
-**Made with 💪 by the GymBro Team**
+### Made with 💪 by GymBro Team
 
-[⬆ back to top](#-gymbro---your-personal-fitness-companion)
+**If you find GymBro helpful, please give us a ⭐ on GitHub!**
+
+This helps us grow the community and continue improving the app.
+
+---
+
+[⬆ Back to top](#-gymbro)
 
 </div>
