@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSimpleTheme } from "../context/SimpleThemeContext";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 const API_BASE_URL = "http://192.168.100.143:3000";

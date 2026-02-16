@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSimpleTheme } from '../context/SimpleThemeContext';
+import { useSimpleTheme } from '../../context/SimpleThemeContext';
 
 const { width } = Dimensions.get('window');
 

@@ -26,6 +26,6 @@
     "**/*.jsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ],
+, "app/config/plan.tsx"  ],
   "exclude": ["node_modules", "web-build/**/*"]
 }

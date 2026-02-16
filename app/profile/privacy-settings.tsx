@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { useSimpleTheme } from "../context/SimpleThemeContext";
-import { Colors } from "../constants/Colors";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 

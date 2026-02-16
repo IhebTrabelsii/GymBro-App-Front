@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../constants/Colors';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -20,7 +20,7 @@ import Animated, {
   FadeInDown,
   FadeInUp,
 } from 'react-native-reanimated';
-import { useSimpleTheme } from '../context/SimpleThemeContext';
+import { useSimpleTheme } from '../../context/SimpleThemeContext';
 
 const { width } = Dimensions.get('window');
 

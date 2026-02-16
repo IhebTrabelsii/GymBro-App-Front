@@ -1,4 +1,4 @@
-import { Colors } from "../constants/Colors";
+import { Colors } from "@/constants/Colors";
 
 import {
   FontAwesome,
@@ -21,8 +21,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSimpleTheme } from "../context/SimpleThemeContext";
-import { signInWithApple, signInWithGoogle } from "./utils/socialAuth";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { signInWithApple, signInWithGoogle } from "../utils/socialAuth";
 
 Dimensions.get("window");
 

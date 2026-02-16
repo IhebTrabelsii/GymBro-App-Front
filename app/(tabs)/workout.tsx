@@ -158,7 +158,7 @@ export default function WorkoutScreen() {
     // Pass the type and all plans for that body type
     const plansForType = plans.filter(plan => plan.bodyType === type);
     router.push({ 
-      pathname: '/plan', 
+      pathname: '/config/plan', 
       params: { 
         type,
         plans: JSON.stringify(plansForType)

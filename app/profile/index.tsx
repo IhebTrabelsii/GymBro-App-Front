@@ -15,7 +15,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useSimpleTheme } from "../context/SimpleThemeContext";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 
@@ -171,22 +171,22 @@ export default function ProfileScreen() {
 
   // ✅ EDIT PROFILE - Navigates to edit screen
   const handleEditProfile = () => {
-    router.push("/edit-profile");
+    router.push("./profile/edit-profile");
   };
 
   // ✅ CHANGE PASSWORD - Navigate to change password screen
   const handleChangePassword = () => {
-    router.push("/change-password");
+    router.push("./profile/change-password");
   };
 
   // ✅ NOTIFICATION SETTINGS - Navigate to notification preferences
   const handleNotificationSettings = () => {
-    router.push("/notification-settings");
+    router.push("./profile/notification-settings");
   };
 
   // ✅ PRIVACY SETTINGS - Navigate to privacy settings
   const handlePrivacySettings = () => {
-    router.push("/privacy-settings");
+    router.push("./profile/privacy-settings");
   };
 
   // ========== Loading / Error ==========
