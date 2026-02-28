@@ -850,7 +850,7 @@ export default function Home() {
                   shadowColor: currentColors.primary,
                 },
               ]}
-              onPress={() => router.push("/plan")}
+              onPress={() => router.push("/config/plan")}
               activeOpacity={0.85}
             >
               <Animated.View

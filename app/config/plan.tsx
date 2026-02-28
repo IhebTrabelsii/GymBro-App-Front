@@ -1,4 +1,3 @@
-
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,9 +12,9 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert,
 } from "react-native";
 import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { Video, ResizeMode } from 'expo-av';
 
 const { width } = Dimensions.get("window");
 
@@ -24,7 +23,7 @@ type WorkoutPlan = {
   _id: string;
   title: string;
   description: string;
-  bodyType: 'Ectomorph' | 'Mesomorph' | 'Endomorph';
+  bodyType: "Ectomorph" | "Mesomorph" | "Endomorph";
   focus: string;
   days: string[];
   tips: string;
@@ -38,7 +37,7 @@ export default function PlanScreen() {
   const { theme, toggleTheme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
-  
+
   const [loading, setLoading] = useState(true);
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
 
@@ -102,7 +101,12 @@ export default function PlanScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: currentColors.background }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: currentColors.background },
+        ]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={currentColors.primary} />
           <Text style={[styles.loadingText, { color: currentColors.text }]}>
@@ -175,7 +179,11 @@ export default function PlanScreen() {
             ]}
             activeOpacity={0.8}
           >
-            <Ionicons name="arrow-back" size={18} color={currentColors.primary} />
+            <Ionicons
+              name="arrow-back"
+              size={18}
+              color={currentColors.primary}
+            />
             <Text style={[styles.backText, { color: currentColors.primary }]}>
               Back
             </Text>
@@ -296,9 +304,16 @@ export default function PlanScreen() {
                   },
                 ]}
               >
-                <Ionicons name="calendar" size={14} color={currentColors.primary} />
+                <Ionicons
+                  name="calendar"
+                  size={14}
+                  color={currentColors.primary}
+                />
                 <Text
-                  style={[styles.heroBadgeText, { color: currentColors.primary }]}
+                  style={[
+                    styles.heroBadgeText,
+                    { color: currentColors.primary },
+                  ]}
                 >
                   {workoutPlans.length} Available Plans
                 </Text>
@@ -308,20 +323,30 @@ export default function PlanScreen() {
 
           {/* Plan Cards */}
           {workoutPlans.length === 0 ? (
-            <View style={[styles.emptyContainer, { borderColor: getPlanTypeColor(plan) + '30' }]}>
-              <MaterialCommunityIcons 
-                name="weight-lifter" 
-                size={64} 
-                color={getPlanTypeColor(plan)} 
+            <View
+              style={[
+                styles.emptyContainer,
+                { borderColor: getPlanTypeColor(plan) + "30" },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="weight-lifter"
+                size={64}
+                color={getPlanTypeColor(plan)}
               />
               <Text style={[styles.emptyTitle, { color: currentColors.text }]}>
                 No Plans Available
               </Text>
-              <Text style={[styles.emptyText, { color: isDark ? '#888' : '#666' }]}>
+              <Text
+                style={[styles.emptyText, { color: isDark ? "#888" : "#666" }]}
+              >
                 There are no workout plans for {plan} body type yet.
               </Text>
               <TouchableOpacity
-                style={[styles.emptyButton, { backgroundColor: getPlanTypeColor(plan) }]}
+                style={[
+                  styles.emptyButton,
+                  { backgroundColor: getPlanTypeColor(plan) },
+                ]}
                 onPress={() => router.push("/workout")}
               >
                 <Text style={styles.emptyButtonText}>Browse Other Types</Text>
@@ -331,7 +356,7 @@ export default function PlanScreen() {
             <View style={styles.plansContainer}>
               {workoutPlans.map((planItem, index) => {
                 const planColor = getPlanColor(planItem);
-                
+
                 return (
                   <View
                     key={planItem._id || index}
@@ -347,7 +372,9 @@ export default function PlanScreen() {
                       style={[
                         styles.planCard,
                         {
-                          backgroundColor: isDark ? currentColors.card : "#FFFFFF",
+                          backgroundColor: isDark
+                            ? currentColors.card
+                            : "#FFFFFF",
                           borderColor: planColor + (isDark ? "40" : "30"),
                           shadowColor: planColor,
                         },
@@ -384,7 +411,8 @@ export default function PlanScreen() {
                           style={[
                             styles.planIconLarge,
                             {
-                              backgroundColor: planColor + (isDark ? "20" : "10"),
+                              backgroundColor:
+                                planColor + (isDark ? "20" : "10"),
                               borderWidth: 2,
                               borderColor: planColor + (isDark ? "40" : "30"),
                             },
@@ -398,7 +426,10 @@ export default function PlanScreen() {
                         </View>
                         <View style={styles.planTitleContainer}>
                           <Text
-                            style={[styles.planTitle, { color: currentColors.text }]}
+                            style={[
+                              styles.planTitle,
+                              { color: currentColors.text },
+                            ]}
                           >
                             {planItem.title}
                           </Text>
@@ -433,7 +464,9 @@ export default function PlanScreen() {
                       <View
                         style={[
                           styles.cardDivider,
-                          { backgroundColor: planColor + (isDark ? "20" : "15") },
+                          {
+                            backgroundColor: planColor + (isDark ? "20" : "15"),
+                          },
                         ]}
                       />
 
@@ -562,6 +595,67 @@ export default function PlanScreen() {
             </View>
           )}
 
+          {/* 👇 View All Exercises Button - Add this NEW button */}
+          {workoutPlans.length > 0 && (
+            <TouchableOpacity
+              style={[
+                styles.viewAllButton,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(57, 255, 20, 0.1)"
+                    : "rgba(57, 255, 20, 0.05)",
+                  borderColor: currentColors.primary,
+                },
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: "/exercise-details",
+                  params: { type: "all", planType: type },
+                })
+              }
+              activeOpacity={0.8}
+            >
+              <View
+                style={[
+                  styles.viewAllIcon,
+                  { backgroundColor: currentColors.primary + "20" },
+                ]}
+              >
+                <Ionicons
+                  name="library"
+                  size={24}
+                  color={currentColors.primary}
+                />
+              </View>
+              <View style={styles.viewAllTextContainer}>
+                <Text
+                  style={[styles.viewAllTitle, { color: currentColors.text }]}
+                >
+                  View All Exercises
+                </Text>
+                <Text
+                  style={[
+                    styles.viewAllSubtitle,
+                    { color: isDark ? "#aaa" : "#666" },
+                  ]}
+                >
+                  See all exercises from all {type} plans combined
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.viewAllChevron,
+                  { backgroundColor: currentColors.primary + "15" },
+                ]}
+              >
+                <Ionicons
+                  name="arrow-forward"
+                  size={20}
+                  color={currentColors.primary}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
           {/* Info Card */}
           <View
             style={[
@@ -1234,35 +1328,34 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  
-   loadingContainer: {
+  loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 40,
     marginBottom: 24,
     borderWidth: 2,
     borderRadius: 24,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
     lineHeight: 20,
   },
@@ -1272,9 +1365,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   emptyButtonText: {
-    color: '#000000',
-    fontWeight: '700',
+    color: "#000000",
+    fontWeight: "700",
     fontSize: 14,
   },
+  viewAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginBottom: 20,
+    gap: 16,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  viewAllIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewAllTextContainer: {
+    flex: 1,
+  },
+  viewAllTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  viewAllSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  viewAllChevron: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
-
