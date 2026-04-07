@@ -326,7 +326,7 @@ export default function PremiumScreen() {
               >
                 {plan.popular && (
                   <View style={[styles.popularBadge, { backgroundColor: primaryColor }]}>
-                    <Text style={styles.popularText}>🔥 MOST POPULAR</Text>
+                    <Text style={styles.popularText}>MOST POPULAR</Text>
                   </View>
                 )}
 
@@ -389,7 +389,7 @@ export default function PremiumScreen() {
           ]}
         >
           <Text style={[styles.summaryTitle, { color: isDark ? '#FFF' : '#000' }]}>
-            ✨ All Pro Plans Include
+            All Pro Plans Include
           </Text>
           <View style={styles.summaryGrid}>
             {[

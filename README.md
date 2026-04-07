@@ -15,15 +15,17 @@ Professional fitness application built with Expo, React Native, and TypeScript. 
 
 ## Overview
 
+xx
 GymBro is a cross-platform fitness application providing:
-- 💪 Body-type specific workout plans (Ectomorph, Mesomorph, Endomorph)
-- 🤖 AI-powered fitness coaching
-- 📊 Fitness calculator (BMI, BMR, TDEE)
-- 🍎 Nutrition and food database
-- 👤 User profiles and progress tracking
-- 💎 Premium subscription system
-- 📰 Fitness news and articles
-- 🛠️ Admin dashboard for content management
+
+- Body-type specific workout plans (Ectomorph, Mesomorph, Endomorph)
+- AI-powered fitness coaching
+- Fitness calculator (BMI, BMR, TDEE)
+- Nutrition and food database
+- User profiles and progress tracking
+- Premium subscription system
+- Fitness news and articles
+- Admin dashboard for content management
 
 ## Quick Start
 
@@ -138,52 +140,60 @@ GymBro/
 
 ## Features
 
-### 🏋️ Workout System
+### Workout System
+
 - Body-type analysis (Ectomorph, Mesomorph, Endomorph)
 - Personalized workout plans from API
 - Detailed exercise instructions
 - Progress tracking
 
-### 🤖 AI Coach
+### AI Coach
+
 - Real-time fitness Q&A
 - Workout recommendations
 - Nutrition advice
 - Message limits for free users
 - Unlimited access for premium users
 
-### 📊 Fitness Calculator
+### Fitness Calculator
+
 - BMI calculator
 - BMR (Basal Metabolic Rate) calculation
 - TDEE (Total Daily Energy Expenditure)
 - Activity level customization
 
-### 🍎 Nutrition Database
+### Nutrition Database
+
 - 50+ food items with macros
 - Calorie tracking
 - Category filtering
 - Nutritional benefits display
 
-### 👤 User System
+### User System
+
 - Registration and authentication
 - Profile management
 - Password reset
 - Premium subscription (Monthly, Yearly, Lifetime)
 - JWT token-based auth
 
-### 💎 Premium Features
+### Premium Features
+
 - Unlimited AI messages
 - Exclusive workout videos
 - Advanced analytics
 - Early access to new features
 - Priority support
 
-### 📰 News Feed
+### News Feed
+
 - Latest fitness articles
 - Categorized content (Nutrition, Workout, Science)
 - Search functionality
 - News filtering
 
-### 🛠️ Admin Dashboard
+### Admin Dashboard
+
 - User management
 - Workout plan CRUD
 - Analytics and stats
@@ -193,6 +203,7 @@ GymBro/
 ## Tech Stack
 
 ### Frontend
+
 - **React Native** - Cross-platform mobile framework
 - **Expo** - Development platform and services
 - **TypeScript** - Type-safe JavaScript
@@ -200,23 +211,27 @@ GymBro/
 - **Expo Router** - File-based routing
 
 ### Styling & Animations
+
 - **React Native StyleSheet** - Component styling
 - **Moti** - Animation library
 - **React Native Reanimated** - Advanced animations
 - **Expo Linear Gradient** - Gradient backgrounds
 
 ### State & Storage
+
 - **AsyncStorage** - Local persistence
 - **Context API** - Global state management
 - **React Hooks** - State management
 
 ### Backend Integration
+
 - **Fetch API** - HTTP requests
 - **JWT Authentication** - Token-based auth
 - **Node.js/Express** - Backend API (referenced)
 - **MongoDB** - Database (referenced)
 
 ### Additional Tools
+
 - **Stripe** - Payment processing
 - **Expo Vector Icons** - Icon library
 - **Expo AV** - Video playback
@@ -267,15 +282,17 @@ npm run lint
 ### Theme System
 
 The app uses a custom theme context (`SimpleThemeContext`) supporting:
+
 - Light mode
 - Dark mode
 - Dynamic color schemes based on theme
 
 Access theme in components:
+
 ```tsx
 const { theme } = useSimpleTheme();
 const currentColors = Colors[theme];
-const isDark = theme === 'dark';
+const isDark = theme === "dark";
 ```
 
 ## Contributing
@@ -283,6 +300,7 @@ const isDark = theme === 'dark';
 ### Getting Started
 
 1. **Fork & Clone**
+
    ```bash
    git clone https://github.com/yourusername/GymBro.git
    cd GymBro
@@ -290,6 +308,7 @@ const isDark = theme === 'dark';
    ```
 
 2. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/YourFeatureName
    ```
@@ -301,6 +320,7 @@ const isDark = theme === 'dark';
    - Add JSDoc comments for complex logic
 
 4. **Commit & Push**
+
    ```bash
    git add .
    git commit -m "feat(scope): description"
@@ -328,12 +348,12 @@ const isDark = theme === 'dark';
 
 ### Development Guidelines
 
-- ✅ Follow existing code style
-- ✅ Test on multiple platforms
-- ✅ Update README for new features
-- ✅ Optimize performance and bundle size
-- ✅ Ensure accessibility
-- ✅ Use TypeScript strictly
+- Follow existing code style
+- Test on multiple platforms
+- Update README for new features
+- Optimize performance and bundle size
+- Ensure accessibility
+- Use TypeScript strictly
 
 ## API Integration
 
@@ -378,44 +398,49 @@ JWT_SECRET=your_jwt_secret
 - [ ] Video tutorial library
 - [ ] Community challenges
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** - see the `LICENSE` file for details.
 
 You are free to:
-- ✅ Use for any purpose
-- ✅ Modify and distribute
-- ✅ Include in proprietary applications
+
+- Use for any purpose
+- Modify and distribute
+- Include in proprietary applications
 
 Requirements:
-- ⚠️ Include license and copyright notice
 
-## 🔗 Resources
+- Include license and copyright notice
+
+## Resources
 
 **Documentation**
+
 - [Expo Documentation](https://docs.expo.dev)
 - [React Native Docs](https://reactnative.dev)
 - [TypeScript Guide](https://www.typescriptlang.org/docs/)
 - [Expo Router Guide](https://docs.expo.dev/routing/introduction/)
 
 **Community & Support**
+
 - [Expo Community Forums](https://forums.expo.dev)
 - [React Native Community](https://github.com/react-native-community)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/react-native)
 
 **Tools**
+
 - [VS Code](https://code.visualstudio.com/)
 - [React Developer Tools](https://github.com/facebook/react-devtools)
 - [Expo DevTools](https://github.com/expo/dev-plugins)
 
-## 📞 Support & Contact
+## Support & Contact
 
 Have questions or need help?
 
-- **🐛 Found a Bug?** [Open an Issue](https://github.com/yourusername/GymBro/issues)
-- **💬 Questions?** [Start a Discussion](https://github.com/yourusername/GymBro/discussions)
-- **📧 Email** — support@gymbro.app
-- **🐦 Follow** — [@GymBroApp](https://twitter.com/gymbro)
+- ** Found a Bug?** [Open an Issue](https://github.com/yourusername/GymBro/issues)
+- ** Questions?** [Start a Discussion](https://github.com/yourusername/GymBro/discussions)
+- ** Email** — support@gymbro.app
+- ** Follow** — [@GymBroApp](https://twitter.com/gymbro)
 
 ## Contributors
 

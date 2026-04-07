@@ -1,8 +1,14 @@
 import Clock from "@/components/clock";
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import {
   Alert,
   Animated,
@@ -15,34 +21,208 @@ import {
   View,
   Dimensions,
 } from "react-native";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
-// BMI Categories
 const BMI_CATEGORIES = {
   UNDERWEIGHT: { text: "Underweight", color: "#3B82F6", range: "< 18.5" },
   NORMAL: { text: "Normal", color: "#00FF41", range: "18.5 - 24.9" },
   OVERWEIGHT: { text: "Overweight", color: "#F59E0B", range: "25 - 29.9" },
-  OBESE: { text: "Obese", color: "#EF4444", range: "≥ 30" }
+  OBESE: { text: "Obese", color: "#EF4444", range: "≥ 30" },
 } as const;
 
-// Activity levels with labels and values - ALL 5 RESTORED
 const ACTIVITY_LEVELS = [
-  { label: "Sedentary", description: "Little or no exercise", value: "1.2", icon: "bed-outline" },
-  { label: "Lightly active", description: "Light exercise 1-3 days/week", value: "1.375", icon: "walk-outline" },
-  { label: "Moderately active", description: "Moderate exercise 3-5 days/week", value: "1.55", icon: "bicycle-outline" },
-  { label: "Very active", description: "Hard exercise 6-7 days/week", value: "1.725", icon: "barbell-outline" },
-  { label: "Extra active", description: "Very hard exercise/physical job", value: "1.9", icon: "fitness-outline" },
+  {
+    label: "Sedentary",
+    description: "Little or no exercise",
+    value: "1.2",
+    icon: "bed-outline",
+    emoji: "🛋️",
+  },
+  {
+    label: "Lightly active",
+    description: "Light exercise 1-3 days/week",
+    value: "1.375",
+    icon: "walk-outline",
+    emoji: "🚶",
+  },
+  {
+    label: "Moderately active",
+    description: "Moderate exercise 3-5 days/week",
+    value: "1.55",
+    icon: "bicycle-outline",
+    emoji: "🚴",
+  },
+  {
+    label: "Very active",
+    description: "Hard exercise 6-7 days/week",
+    value: "1.725",
+    icon: "barbell-outline",
+    emoji: "🏋️",
+  },
+  {
+    label: "Extra active",
+    description: "Very hard exercise/physical job",
+    value: "1.9",
+    icon: "fitness-outline",
+    emoji: "⚡",
+  },
 ] as const;
+
+// ── BMI Gauge visual ─────────────────────────────────────────────────────────
+const BMIGauge = ({ bmi, color }: { bmi: number; color: string }) => {
+  const pct = Math.min(Math.max((bmi - 10) / (45 - 10), 0), 1);
+  const filledWidth = pct * (width - 88);
+  return (
+    <View style={gaugeStyles.wrap}>
+      <View style={gaugeStyles.track}>
+        {/* Segment fills */}
+        <View
+          style={[gaugeStyles.seg, { backgroundColor: "#3B82F6", flex: 8.5 }]}
+        />
+        <View
+          style={[gaugeStyles.seg, { backgroundColor: "#00FF41", flex: 6.4 }]}
+        />
+        <View
+          style={[gaugeStyles.seg, { backgroundColor: "#F59E0B", flex: 5 }]}
+        />
+        <View
+          style={[gaugeStyles.seg, { backgroundColor: "#EF4444", flex: 15 }]}
+        />
+        {/* Thumb */}
+        <View
+          style={[
+            gaugeStyles.thumb,
+            { left: filledWidth - 8, backgroundColor: color },
+          ]}
+        />
+      </View>
+      <View style={gaugeStyles.labels}>
+        {["10", "18.5", "25", "30", "45"].map((l) => (
+          <Text key={l} style={gaugeStyles.labelText}>
+            {l}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const gaugeStyles = StyleSheet.create({
+  wrap: { marginTop: 12, marginBottom: 4 },
+  track: {
+    flexDirection: "row",
+    height: 8,
+    borderRadius: 4,
+    overflow: "visible",
+    position: "relative",
+  },
+  seg: { height: 8, marginHorizontal: 1 },
+  thumb: {
+    position: "absolute",
+    top: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#fff",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  labels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  labelText: { fontSize: 9, color: "#888", fontWeight: "600" },
+});
+
+// ── InputField — defined OUTSIDE CalculatorScreen to prevent remount on every keystroke ──
+const InputField = ({
+  label,
+  icon,
+  value,
+  onChangeText,
+  unit,
+  placeholder,
+  isDark,
+  primaryColor,
+  textColor,
+}: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  onChangeText: (text: string) => void;
+  unit: string;
+  placeholder: string;
+  isDark: boolean;
+  primaryColor: string;
+  textColor: string;
+}) => (
+  <View style={styles.inputWrapper}>
+    <View style={styles.inputLabelRow}>
+      <Text style={[styles.inputLabel, { color: isDark ? "#777" : "#aaa" }]}>
+        {label}
+      </Text>
+      {value !== "" && (
+        <View
+          style={[
+            styles.inputValuePill,
+            { backgroundColor: primaryColor + "15" },
+          ]}
+        >
+          <Text style={[styles.inputValuePillText, { color: primaryColor }]}>
+            {value} {unit}
+          </Text>
+        </View>
+      )}
+    </View>
+    <View
+      style={[
+        styles.inputContainer,
+        {
+          backgroundColor: isDark ? "#111" : "#fafafa",
+          borderColor:
+            value !== "" ? primaryColor + "50" : isDark ? "#222" : "#ebebeb",
+        },
+      ]}
+    >
+      <View
+        style={[styles.inputIconBox, { backgroundColor: primaryColor + "12" }]}
+      >
+        <Ionicons name={icon} size={18} color={primaryColor} />
+      </View>
+      <TextInput
+        style={[styles.input, { color: textColor }]}
+        placeholder={placeholder}
+        placeholderTextColor={isDark ? "#333" : "#ccc"}
+        keyboardType="numeric"
+        value={value}
+        onChangeText={onChangeText}
+        selectionColor={primaryColor}
+      />
+      <Text style={[styles.inputUnit, { color: isDark ? "#444" : "#ccc" }]}>
+        {unit}
+      </Text>
+    </View>
+  </View>
+);
 
 export default function CalculatorScreen() {
   const { theme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
 
-  // Form state
+  // ─── Form state (unchanged) ───────────────────────────────────────────────
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("male");
   const [weight, setWeight] = useState("");
@@ -54,14 +234,14 @@ export default function CalculatorScreen() {
     calories?: number;
   }>({});
 
-  // Animation refs
+  // ─── Animation refs (unchanged) ──────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const buttonPulse = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const resultSlide = useRef(new Animated.Value(40)).current;
 
-  // Start animations
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -76,7 +256,6 @@ export default function CalculatorScreen() {
       }),
     ]).start();
 
-    // Button pulse animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(buttonPulse, {
@@ -89,10 +268,9 @@ export default function CalculatorScreen() {
           duration: 1500,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
 
-    // Glow animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
@@ -105,11 +283,19 @@ export default function CalculatorScreen() {
           duration: 2000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, []);
 
-  // Get BMI category with memoization
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      console.log("User token exists:", token ? "YES" : "NO");
+    };
+    checkToken();
+  }, []);
+
+  // ─── All original logic intact ────────────────────────────────────────────
   const getBMICategory = useCallback((bmi: number) => {
     if (bmi < 18.5) return BMI_CATEGORIES.UNDERWEIGHT;
     if (bmi < 25) return BMI_CATEGORIES.NORMAL;
@@ -117,8 +303,70 @@ export default function CalculatorScreen() {
     return BMI_CATEGORIES.OBESE;
   }, []);
 
-  // Calculate metrics
-  const calculate = useCallback(() => {
+  const API_BASE_URL = "http://192.168.100.143:3000";
+
+  const saveDailyData = async (bmi: number, bmr: number, calories: number) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      console.log("🔍 Token found:", token ? "Yes" : "No");
+      if (!token) {
+        console.log("No token, cannot save");
+        return false;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const lastSaveKey = `lastSave_${today}`;
+      const alreadySaved = await AsyncStorage.getItem(lastSaveKey);
+      if (alreadySaved) {
+        console.log("⏭️ Already saved today, skipping...");
+        return false;
+      }
+
+      const requestBody = {
+        gender,
+        age: parseInt(age),
+        weight: parseFloat(weight),
+        height: parseFloat(height),
+        activityLevel,
+        bmi,
+        bmr,
+        tdee: calories,
+      };
+      console.log("📤 Sending data:", requestBody);
+
+      const response = await fetch(`${API_BASE_URL}/api/daily-data/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = (await response.json()) as {
+        success: boolean;
+        alreadySaved?: boolean;
+        message?: string;
+      };
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Response data:", data);
+
+      if (response.ok && data.success) {
+        await AsyncStorage.setItem(lastSaveKey, "true");
+        console.log("✅ Daily data saved!");
+        return true;
+      } else if (data.alreadySaved) {
+        await AsyncStorage.setItem(lastSaveKey, "true");
+        return false;
+      }
+      return false;
+    } catch (error) {
+      console.log("Save error:", error);
+      return false;
+    }
+  };
+
+  const calculate = useCallback(async () => {
     const ageNum = parseInt(age);
     const weightNum = parseFloat(weight);
     const heightNum = parseFloat(height);
@@ -127,40 +375,39 @@ export default function CalculatorScreen() {
       Alert.alert(
         "Invalid Input",
         "Please enter valid age (1-120), weight, and height",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
       return;
     }
-
-    if (weightNum < 20 || weightNum > 300 || heightNum < 100 || heightNum > 250) {
+    if (
+      weightNum < 20 ||
+      weightNum > 300 ||
+      heightNum < 100 ||
+      heightNum > 250
+    ) {
       Alert.alert(
         "Out of Range",
         "Please enter realistic values (Weight: 20-300kg, Height: 100-250cm)",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
       return;
     }
 
     const heightMeters = heightNum / 100;
     const bmi = weightNum / (heightMeters * heightMeters);
-
-    // Mifflin-St Jeor Equation
-    let bmr;
-    if (gender === "male") {
-      bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
-    } else {
-      bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
-    }
-
+    let bmr =
+      gender === "male"
+        ? 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5
+        : 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
     const calories = bmr * parseFloat(activityLevel);
 
-    setResults({
-      bmi: parseFloat(bmi.toFixed(1)),
-      bmr: Math.round(bmr),
-      calories: Math.round(calories),
-    });
+    const bmiValue = parseFloat(bmi.toFixed(1));
+    const bmrValue = Math.round(bmr);
+    const caloriesValue = Math.round(calories);
 
-    // Animate results
+    setResults({ bmi: bmiValue, bmr: bmrValue, calories: caloriesValue });
+
+    resultSlide.setValue(40);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -173,113 +420,103 @@ export default function CalculatorScreen() {
         friction: 7,
         useNativeDriver: true,
       }),
+      Animated.spring(resultSlide, {
+        toValue: 0,
+        tension: 55,
+        friction: 9,
+        useNativeDriver: true,
+      }),
     ]).start();
+
+    await saveDailyData(bmiValue, bmrValue, caloriesValue);
   }, [age, gender, weight, height, activityLevel]);
 
-  // Clear form
   const clearForm = useCallback(() => {
     setAge("");
     setWeight("");
     setHeight("");
     setResults({});
-    fadeAnim.setValue(0);
     scaleAnim.setValue(0.95);
+    // Do NOT reset fadeAnim — it would fade out the entire form
   }, []);
 
-  // Memoized values
-  const bmiCategory = useMemo(() => 
-    results.bmi ? getBMICategory(results.bmi) : null,
-  [results.bmi, getBMICategory]);
+  const bmiCategory = useMemo(
+    () => (results.bmi ? getBMICategory(results.bmi) : null),
+    [results.bmi, getBMICategory],
+  );
+  const isFormValid = useMemo(
+    () =>
+      age &&
+      weight &&
+      height &&
+      !isNaN(parseInt(age)) &&
+      !isNaN(parseFloat(weight)) &&
+      !isNaN(parseFloat(height)),
+    [age, weight, height],
+  );
+  // ─────────────────────────────────────────────────────────────────────────
 
-  const isFormValid = useMemo(() => 
-    age && weight && height && 
-    !isNaN(parseInt(age)) && 
-    !isNaN(parseFloat(weight)) && 
-    !isNaN(parseFloat(height)),
-  [age, weight, height]);
-
-  // Custom input component
-  const InputField = ({ 
-    label, 
-    icon, 
-    value, 
-    onChangeText, 
-    unit, 
-    placeholder 
-  }: { 
-    label: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    value: string;
-    onChangeText: (text: string) => void;
-    unit: string;
-    placeholder: string;
-  }) => (
-    <View style={styles.inputWrapper}>
-      <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-        {label}
-      </Text>
-      <Animated.View
+  return (
+    <View
+      style={[styles.container, { backgroundColor: currentColors.background }]}
+    >
+      {/* ── HEADER ───────────────────────────────────────────────────────── */}
+      <View
         style={[
-          styles.inputContainer,
+          styles.header,
           {
-            backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#FFFFFF',
-            borderColor: isDark ? 'rgba(0, 255, 65, 0.3)' : 'rgba(0, 255, 65, 0.2)',
+            backgroundColor: isDark ? "#0a0a0a" : "#fff",
+            borderBottomColor: isDark
+              ? currentColors.primary + "18"
+              : currentColors.primary + "10",
           },
         ]}
       >
-        <View style={[
-          styles.inputIconWrapper,
-          {
-            backgroundColor: isDark ? 'rgba(0, 255, 65, 0.15)' : 'rgba(0, 255, 65, 0.08)',
-          }
-        ]}>
-          <Ionicons name={icon} size={20} color={currentColors.primary} />
-        </View>
-        <TextInput
-          style={[styles.input, { color: currentColors.text }]}
-          placeholder={placeholder}
-          placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'}
-          keyboardType="numeric"
-          value={value}
-          onChangeText={onChangeText}
-          selectionColor={currentColors.primary}
+        {/* Top accent line */}
+        <LinearGradient
+          colors={[
+            currentColors.primary + "00",
+            currentColors.primary,
+            currentColors.primary + "00",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.headerTopLine}
         />
-        <Text style={[styles.inputUnit, { color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }]}>
-          {unit}
-        </Text>
-      </Animated.View>
-    </View>
-  );
-
-  return (
-    <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Premium Header with Gradient */}
-      <LinearGradient
-        colors={isDark ? ['#1a1a1a', '#0a0a0a'] : ['#ffffff', '#f8f8f8']}
-        style={styles.header}
-      >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <View style={[
-              styles.headerIconWrapper,
-              {
-                backgroundColor: isDark ? 'rgba(0, 255, 65, 0.2)' : 'rgba(0, 255, 65, 0.1)',
-                borderWidth: 2,
-                borderColor: currentColors.primary,
-              }
-            ]}>
-              <Ionicons name="calculator" size={24} color={currentColors.primary} />
-            </View>
+            <LinearGradient
+              colors={[
+                currentColors.primary + "28",
+                currentColors.primary + "08",
+              ]}
+              style={styles.headerIconWrapper}
+            >
+              <Ionicons
+                name="calculator"
+                size={22}
+                color={currentColors.primary}
+              />
+            </LinearGradient>
             <View>
               <Text style={[styles.title, { color: currentColors.text }]}>
-                Fitness Calculator
+                Calculator
               </Text>
-              <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
-                BMI • BMR • Calories
-              </Text>
+              <View style={styles.subtitleRow}>
+                <View
+                  style={[
+                    styles.subtitleDot,
+                    { backgroundColor: currentColors.primary },
+                  ]}
+                />
+                <Text
+                  style={[styles.subtitle, { color: isDark ? "#555" : "#bbb" }]}
+                >
+                  BMI · BMR · Calories
+                </Text>
+              </View>
             </View>
           </View>
-          
           <View style={styles.headerRight}>
             <Clock />
             <TouchableOpacity
@@ -287,718 +524,1071 @@ export default function CalculatorScreen() {
               style={[
                 styles.clearButton,
                 {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                }
+                  backgroundColor: isDark ? "#1a1a1a" : "#f0f0f0",
+                  borderColor: isDark ? "#333" : "#ddd",
+                },
               ]}
               activeOpacity={0.7}
             >
-              <Ionicons name="refresh" size={20} color={currentColors.text} />
+              <Ionicons
+                name="refresh"
+                size={18}
+                color={isDark ? currentColors.primary : "#666"}
+              />
+              <Text
+                style={[
+                  styles.clearButtonText,
+                  { color: isDark ? currentColors.primary : "#666" },
+                ]}
+              >
+                
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Input Section */}
-        <Animated.View 
-          style={[
-            styles.inputsSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
+        <Animated.View
+          style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
         >
-          {/* Age Input */}
-          <InputField
-            label="Age"
-            icon="person-outline"
-            value={age}
-            onChangeText={setAge}
-            unit="years"
-            placeholder="25"
-          />
+          {/* ── INPUT CARD ─────────────────────────────────────────────────── */}
+          <View
+            style={[
+              styles.formCard,
+              {
+                backgroundColor: isDark ? "#0e0e0e" : "#fff",
+                borderColor: isDark ? "#1e1e1e" : "#f0f0f0",
+              },
+            ]}
+          >
+            {/* Section label */}
+            <View style={styles.formCardHeader}>
+              <Text
+                style={[
+                  styles.formCardLabel,
+                  { color: isDark ? "#444" : "#ddd" },
+                ]}
+              >
+                YOUR MEASUREMENTS
+              </Text>
+              <View
+                style={[
+                  styles.formCardLine,
+                  { backgroundColor: isDark ? "#1e1e1e" : "#f0f0f0" },
+                ]}
+              />
+            </View>
 
-          {/* Gender Selection - Fixed Dark Mode */}
-          <View style={styles.inputWrapper}>
-            <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-              Gender
-            </Text>
-            <View style={styles.genderContainer}>
-              {['male', 'female'].map((g) => (
-                <TouchableOpacity
-                  key={g}
-                  style={[
-                    styles.genderButton,
-                    {
-                      backgroundColor: gender === g 
-                        ? currentColors.primary 
-                        : isDark 
-                          ? 'rgba(255,255,255,0.08)' 
-                          : 'rgba(0,0,0,0.03)',
-                      borderColor: gender === g 
-                        ? currentColors.primary 
-                        : isDark 
-                          ? 'rgba(255,255,255,0.1)' 
-                          : 'rgba(0,0,0,0.1)',
-                    }
-                  ]}
-                  onPress={() => setGender(g)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name={g === 'male' ? 'male' : 'female'} 
-                    size={22} 
-                    color={gender === g 
-                      ? isDark ? '#000000' : '#FFFFFF'
-                      : isDark 
-                        ? 'rgba(255,255,255,0.6)' 
-                        : 'rgba(0,0,0,0.6)'
-                    } 
-                  />
-                  <Text style={[
-                    styles.genderText,
-                    { 
-                      color: gender === g 
-                        ? isDark ? '#000000' : '#FFFFFF'
-                        : isDark 
-                          ? 'rgba(255,255,255,0.8)' 
-                          : 'rgba(0,0,0,0.8)'
-                    }
-                  ]}>
-                    {g === 'male' ? 'Male' : 'Female'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            {/* Age */}
+            <InputField
+              label="Age"
+              icon="person-outline"
+              value={age}
+              onChangeText={setAge}
+              unit="yrs"
+              placeholder="25"
+              isDark={isDark}
+              primaryColor={currentColors.primary}
+              textColor={currentColors.text}
+            />
+
+            {/* Gender toggle */}
+            <View style={styles.inputWrapper}>
+              <Text
+                style={[styles.inputLabel, { color: isDark ? "#777" : "#aaa" }]}
+              >
+                Gender
+              </Text>
+              <View
+                style={[
+                  styles.genderTrack,
+                  {
+                    backgroundColor: isDark ? "#111" : "#f5f5f5",
+                    borderColor: isDark ? "#222" : "#ebebeb",
+                  },
+                ]}
+              >
+                {["male", "female"].map((g) => {
+                  const active = gender === g;
+                  return (
+                    <TouchableOpacity
+                      key={g}
+                      style={[
+                        styles.genderTab,
+                        active && { backgroundColor: currentColors.primary },
+                      ]}
+                      onPress={() => setGender(g)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name={g === "male" ? "male" : "female"}
+                        size={16}
+                        color={
+                          active
+                            ? isDark
+                              ? "#000"
+                              : "#fff"
+                            : isDark
+                              ? "#555"
+                              : "#bbb"
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.genderTabText,
+                          {
+                            color: active
+                              ? isDark
+                                ? "#000"
+                                : "#fff"
+                              : isDark
+                                ? "#555"
+                                : "#aaa",
+                          },
+                        ]}
+                      >
+                        {g === "male" ? "Male" : "Female"}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Weight & Height side by side */}
+            <View style={styles.dualRow}>
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label="Weight"
+                  icon="barbell-outline"
+                  value={weight}
+                  onChangeText={setWeight}
+                  unit="kg"
+                  placeholder="70"
+                  isDark={isDark}
+                  primaryColor={currentColors.primary}
+                  textColor={currentColors.text}
+                />
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label="Height"
+                  icon="resize-outline"
+                  value={height}
+                  onChangeText={setHeight}
+                  unit="cm"
+                  placeholder="175"
+                  isDark={isDark}
+                  primaryColor={currentColors.primary}
+                  textColor={currentColors.text}
+                />
+              </View>
+            </View>
+
+            {/* Activity level */}
+            <View style={styles.inputWrapper}>
+              <Text
+                style={[styles.inputLabel, { color: isDark ? "#777" : "#aaa" }]}
+              >
+                Activity Level
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.activityScrollContent}
+              >
+                {ACTIVITY_LEVELS.map((level) => {
+                  const isSelected = activityLevel === level.value;
+                  return (
+                    <TouchableOpacity
+                      key={level.value}
+                      style={[
+                        styles.activityCard,
+                        {
+                          backgroundColor: isSelected
+                            ? currentColors.primary
+                            : isDark
+                              ? "#111"
+                              : "#fafafa",
+                          borderColor: isSelected
+                            ? currentColors.primary
+                            : isDark
+                              ? "#222"
+                              : "#ebebeb",
+                        },
+                      ]}
+                      onPress={() => setActivityLevel(level.value)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.activityEmoji}>{level.emoji}</Text>
+                      <View style={styles.activityTextContainer}>
+                        <Text
+                          style={[
+                            styles.activityLabel,
+                            {
+                              color: isSelected
+                                ? isDark
+                                  ? "#000"
+                                  : "#fff"
+                                : currentColors.text,
+                            },
+                          ]}
+                        >
+                          {level.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.activityDescription,
+                            {
+                              color: isSelected
+                                ? isDark
+                                  ? "rgba(0,0,0,0.7)"
+                                  : "rgba(255,255,255,0.85)"
+                                : isDark
+                                  ? "#444"
+                                  : "#ccc",
+                            },
+                          ]}
+                        >
+                          {level.description}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <View
+                          style={[
+                            styles.activityCheck,
+                            {
+                              backgroundColor: isDark
+                                ? "rgba(0,0,0,0.2)"
+                                : "rgba(255,255,255,0.25)",
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name="checkmark"
+                            size={12}
+                            color={isDark ? "#000" : "#fff"}
+                          />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
           </View>
 
-          {/* Weight Input */}
-          <InputField
-            label="Weight"
-            icon="barbell-outline"
-            value={weight}
-            onChangeText={setWeight}
-            unit="kg"
-            placeholder="70"
-          />
-
-          {/* Height Input */}
-          <InputField
-            label="Height"
-            icon="resize-outline"
-            value={height}
-            onChangeText={setHeight}
-            unit="cm"
-            placeholder="175"
-          />
-
-          {/* Activity Level - ALL 5 LEVELS RESTORED - Fixed Dark Mode */}
-          <View style={styles.inputWrapper}>
-            <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-              Activity Level
-            </Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.activityContainer}
-            >
-              {ACTIVITY_LEVELS.map((level) => {
-                const isSelected = activityLevel === level.value;
-                return (
-                  <TouchableOpacity
-                    key={level.value}
-                    style={[
-                      styles.activityCard,
-                      {
-                        backgroundColor: isSelected
-                          ? currentColors.primary
-                          : isDark 
-                            ? 'rgba(20, 20, 20, 0.95)' 
-                            : '#FFFFFF',
-                        borderColor: isSelected
-                          ? currentColors.primary
-                          : isDark 
-                            ? 'rgba(255,255,255,0.1)' 
-                            : 'rgba(0,0,0,0.08)',
-                      }
-                    ]}
-                    onPress={() => setActivityLevel(level.value)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[
-                      styles.activityIconWrapper,
-                      {
-                        backgroundColor: isSelected
-                          ? isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.25)'
-                          : isDark 
-                            ? 'rgba(255,255,255,0.08)' 
-                            : 'rgba(0,0,0,0.04)',
-                      }
-                    ]}>
-                      <Ionicons 
-                        name={level.icon as any} 
-                        size={22} 
-                        color={isSelected
-                          ? isDark ? '#000000' : '#FFFFFF'
-                          : isDark 
-                            ? 'rgba(255,255,255,0.7)' 
-                            : 'rgba(0,0,0,0.6)'
-                        } 
-                      />
-                    </View>
-                    <View style={styles.activityTextContainer}>
-                      <Text style={[
-                        styles.activityLabel,
-                        { 
-                          color: isSelected
-                            ? isDark ? '#000000' : '#FFFFFF'
-                            : currentColors.text
-                        }
-                      ]}>
-                        {level.label}
-                      </Text>
-                      <Text style={[
-                        styles.activityDescription,
-                        { 
-                          color: isSelected
-                            ? isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'
-                            : isDark 
-                              ? 'rgba(255,255,255,0.45)' 
-                              : 'rgba(0,0,0,0.45)'
-                        }
-                      ]}>
-                        {level.description}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Calculate Button */}
+          {/* ── CALCULATE BUTTON ───────────────────────────────────────────── */}
           <Animated.View style={{ transform: [{ scale: buttonPulse }] }}>
             <TouchableOpacity
               style={[
                 styles.calculateButton,
                 {
-                  backgroundColor: currentColors.primary,
-                  opacity: isFormValid ? 1 : 0.6,
-                }
+                  shadowColor: currentColors.primary,
+                  opacity: isFormValid ? 1 : 0.5,
+                },
               ]}
               onPress={calculate}
               disabled={!isFormValid}
               activeOpacity={0.85}
             >
+              <LinearGradient
+                colors={[currentColors.primary, currentColors.primary + "cc"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
               <Animated.View
                 style={[
                   styles.buttonGlow,
                   {
+                    backgroundColor: "#fff",
                     opacity: glowAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0.2, 0.4],
+                      outputRange: [0, 0.12],
                     }),
                   },
                 ]}
               />
-              <MaterialCommunityIcons
-                name="calculator-variant"
-                size={24}
-                color={isDark ? '#000000' : '#FFFFFF'}
-              />
-              <Text style={[
-                styles.calculateButtonText,
-                { color: isDark ? '#000000' : '#FFFFFF' }
-              ]}>
+              <View
+                style={[
+                  styles.btnIconWrap,
+                  { backgroundColor: "rgba(0,0,0,0.15)" },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="calculator-variant"
+                  size={20}
+                  color={isDark ? "#000" : "#fff"}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.calculateButtonText,
+                  { color: isDark ? "#000" : "#fff" },
+                ]}
+              >
                 Calculate My Metrics
               </Text>
-              <Ionicons
-                name="arrow-forward"
-                size={20}
-                color={isDark ? '#000000' : '#FFFFFF'}
-              />
+              <View
+                style={[
+                  styles.btnArrow,
+                  { backgroundColor: "rgba(0,0,0,0.12)" },
+                ]}
+              >
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={isDark ? "#000" : "#fff"}
+                />
+              </View>
             </TouchableOpacity>
           </Animated.View>
-        </Animated.View>
 
-        {/* Results Section */}
-        {results.bmi && (
-          <Animated.View
-            style={[
-              styles.resultsSection,
-              {
+          {/* ── RESULTS ────────────────────────────────────────────────────── */}
+          {results.bmi && bmiCategory && (
+            <Animated.View
+              style={{
                 opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={isDark 
-                ? ['rgba(25,25,25,0.98)', 'rgba(18,18,18,0.98)'] 
-                : ['rgba(255,255,255,0.98)', 'rgba(250,250,250,0.98)']
-              }
-              style={[
-                styles.resultsContainer,
-                {
-                  borderColor: currentColors.primary,
-                }
-              ]}
+                transform: [{ scale: scaleAnim }, { translateY: resultSlide }],
+              }}
             >
-              {/* BMI Result */}
-              <View style={styles.resultMain}>
-                <View style={styles.resultHeader}>
-                  <View style={[
-                    styles.resultIconWrapper,
-                    {
-                      backgroundColor: isDark ? 'rgba(0, 255, 65, 0.15)' : 'rgba(0, 255, 65, 0.08)',
-                      borderWidth: 2,
-                      borderColor: currentColors.primary,
-                    }
-                  ]}>
-                    <Ionicons name="body-outline" size={32} color={currentColors.primary} />
-                  </View>
+              {/* BMI Card */}
+              <View
+                style={[
+                  styles.resultCard,
+                  {
+                    backgroundColor: isDark ? "#0e0e0e" : "#fff",
+                    borderColor: isDark
+                      ? bmiCategory.color + "30"
+                      : bmiCategory.color + "18",
+                  },
+                ]}
+              >
+                {/* Color top strip */}
+                <View
+                  style={[
+                    styles.resultCardStrip,
+                    { backgroundColor: bmiCategory.color },
+                  ]}
+                />
+
+                <View style={styles.bmiTopRow}>
                   <View>
-                    <Text style={[styles.resultLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
-                      YOUR BMI
+                    <Text
+                      style={[
+                        styles.resultSectionLabel,
+                        { color: isDark ? "#444" : "#ccc" },
+                      ]}
+                    >
+                      BODY MASS INDEX
                     </Text>
-                    <View style={styles.resultValueRow}>
-                      <Text style={[styles.resultValue, { color: currentColors.text }]}>
+                    <View style={styles.bmiValueRow}>
+                      <Text
+                        style={[
+                          styles.bmiBigNumber,
+                          { color: currentColors.text },
+                        ]}
+                      >
                         {results.bmi}
                       </Text>
-                      {bmiCategory && (
-                        <View style={[
-                          styles.categoryBadge,
-                          { backgroundColor: bmiCategory.color }
-                        ]}>
-                          <Text style={styles.categoryText}>
-                            {bmiCategory.text}
-                          </Text>
-                        </View>
-                      )}
+                      <View
+                        style={[
+                          styles.bmiCategoryBadge,
+                          {
+                            backgroundColor: bmiCategory.color + "20",
+                            borderColor: bmiCategory.color + "50",
+                          },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.bmiCategoryDot,
+                            { backgroundColor: bmiCategory.color },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.bmiCategoryText,
+                            { color: bmiCategory.color },
+                          ]}
+                        >
+                          {bmiCategory.text}
+                        </Text>
+                      </View>
                     </View>
-                    {bmiCategory && (
-                      <Text style={[styles.resultRange, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
-                        {bmiCategory.range}
-                      </Text>
-                    )}
+                    <Text
+                      style={[
+                        styles.bmiRange,
+                        { color: isDark ? "#444" : "#ccc" },
+                      ]}
+                    >
+                      Range: {bmiCategory.range}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.bmiIconBox,
+                      { backgroundColor: bmiCategory.color + "15" },
+                    ]}
+                  >
+                    <Ionicons
+                      name="body-outline"
+                      size={34}
+                      color={bmiCategory.color}
+                    />
                   </View>
                 </View>
+
+                <BMIGauge bmi={results.bmi} color={bmiCategory.color} />
               </View>
 
-              <View style={[
-                styles.divider,
-                { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
-              ]} />
-
-              {/* BMR & Calories Grid */}
-              <View style={styles.metricsGrid}>
-                <View style={styles.metricItem}>
-                  <View style={[styles.metricIcon, { backgroundColor: 'rgba(255, 107, 107, 0.15)' }]}>
-                    <Ionicons name="flame-outline" size={24} color="#FF6B6B" />
+              {/* BMR + Calories row */}
+              <View style={styles.metricsRow}>
+                {/* BMR */}
+                <View
+                  style={[
+                    styles.metricCard,
+                    {
+                      backgroundColor: isDark ? "#0e0e0e" : "#fff",
+                      borderColor: isDark ? "#FF6B6B25" : "#FF6B6B12",
+                      flex: 1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.metricCardStrip,
+                      { backgroundColor: "#FF6B6B" },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.metricIconBox,
+                      { backgroundColor: "rgba(255,107,107,0.1)" },
+                    ]}
+                  >
+                    <Ionicons name="flame-outline" size={22} color="#FF6B6B" />
                   </View>
-                  <Text style={[styles.metricTitle, { color: currentColors.text }]}>
+                  <Text
+                    style={[
+                      styles.metricCardLabel,
+                      { color: isDark ? "#555" : "#bbb" },
+                    ]}
+                  >
                     BMR
                   </Text>
-                  <Text style={[styles.metricValue2, { color: currentColors.text }]}>
+                  <Text
+                    style={[
+                      styles.metricCardValue,
+                      { color: currentColors.text },
+                    ]}
+                  >
                     {results.bmr}
                   </Text>
-                  <Text style={[styles.metricUnit2, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
+                  <Text
+                    style={[
+                      styles.metricCardUnit,
+                      { color: isDark ? "#444" : "#ccc" },
+                    ]}
+                  >
                     kcal/day
                   </Text>
-                  <Text style={[styles.metricDescription2, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>
+                  <Text
+                    style={[
+                      styles.metricCardSub,
+                      { color: isDark ? "#333" : "#ddd" },
+                    ]}
+                  >
                     At rest
                   </Text>
                 </View>
 
-                <View style={[styles.metricDivider, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]} />
-
-                <View style={styles.metricItem}>
-                  <View style={[styles.metricIcon, { backgroundColor: 'rgba(255, 193, 7, 0.15)' }]}>
-                    <Ionicons name="nutrition-outline" size={24} color="#FFC107" />
+                {/* Calories */}
+                <View
+                  style={[
+                    styles.metricCard,
+                    {
+                      backgroundColor: isDark ? "#0e0e0e" : "#fff",
+                      borderColor: isDark ? "#FFC10725" : "#FFC10712",
+                      flex: 1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.metricCardStrip,
+                      { backgroundColor: "#FFC107" },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.metricIconBox,
+                      { backgroundColor: "rgba(255,193,7,0.1)" },
+                    ]}
+                  >
+                    <Ionicons
+                      name="nutrition-outline"
+                      size={22}
+                      color="#FFC107"
+                    />
                   </View>
-                  <Text style={[styles.metricTitle, { color: currentColors.text }]}>
+                  <Text
+                    style={[
+                      styles.metricCardLabel,
+                      { color: isDark ? "#555" : "#bbb" },
+                    ]}
+                  >
                     Daily Calories
                   </Text>
-                  <Text style={[styles.metricValue2, { color: currentColors.text }]}>
+                  <Text
+                    style={[
+                      styles.metricCardValue,
+                      { color: currentColors.text },
+                    ]}
+                  >
                     {results.calories}
                   </Text>
-                  <Text style={[styles.metricUnit2, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
-                    kcal
+                  <Text
+                    style={[
+                      styles.metricCardUnit,
+                      { color: isDark ? "#444" : "#ccc" },
+                    ]}
+                  >
+                    kcal/day
                   </Text>
-                  <Text style={[styles.metricDescription2, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>
+                  <Text
+                    style={[
+                      styles.metricCardSub,
+                      { color: isDark ? "#333" : "#ddd" },
+                    ]}
+                  >
                     With activity
                   </Text>
                 </View>
               </View>
 
+              {/* Calorie targets breakdown */}
+              <View
+                style={[
+                  styles.targetCard,
+                  {
+                    backgroundColor: isDark ? "#0e0e0e" : "#fff",
+                    borderColor: isDark
+                      ? currentColors.primary + "20"
+                      : currentColors.primary + "10",
+                  },
+                ]}
+              >
+                <View style={styles.targetCardHeader}>
+                  <View
+                    style={[
+                      styles.targetIconBox,
+                      { backgroundColor: currentColors.primary + "12" },
+                    ]}
+                  >
+                    <Ionicons
+                      name="cellular-outline"
+                      size={18}
+                      color={currentColors.primary}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.targetCardTitle,
+                      { color: currentColors.text },
+                    ]}
+                  >
+                    Calorie Targets
+                  </Text>
+                </View>
+                {[
+                  {
+                    label: "Lose weight",
+                    kcal: Math.round((results.calories ?? 0) - 500),
+                    color: "#3B82F6",
+                    pct: 0.78,
+                  },
+                  {
+                    label: "Maintain",
+                    kcal: results.calories ?? 0,
+                    color: currentColors.primary,
+                    pct: 1,
+                  },
+                  {
+                    label: "Gain muscle",
+                    kcal: Math.round((results.calories ?? 0) + 300),
+                    color: "#FF6B6B",
+                    pct: 1.12,
+                  },
+                ].map((t, i) => (
+                  <View key={i} style={styles.targetRow}>
+                    <Text
+                      style={[
+                        styles.targetLabel,
+                        { color: isDark ? "#777" : "#aaa" },
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
+                    <View style={styles.targetBarWrap}>
+                      <View
+                        style={[
+                          styles.targetBarTrack,
+                          { backgroundColor: isDark ? "#1a1a1a" : "#f5f5f5" },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.targetBarFill,
+                            {
+                              backgroundColor: t.color,
+                              width: `${t.pct * 68}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                    <Text style={[styles.targetKcal, { color: t.color }]}>
+                      {t.kcal}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
               {/* Disclaimer */}
-              <View style={[
-                styles.disclaimer,
-                {
-                  backgroundColor: isDark ? 'rgba(0, 255, 65, 0.06)' : 'rgba(0, 255, 65, 0.03)',
-                  borderColor: isDark ? 'rgba(0, 255, 65, 0.15)' : 'rgba(0, 255, 65, 0.1)',
-                }
-              ]}>
-                <Ionicons name="information-circle-outline" size={16} color={currentColors.primary} />
-                <Text style={[styles.disclaimerText, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
-                  These are estimates. Consult a professional for personalized advice.
+              <View
+                style={[
+                  styles.disclaimer,
+                  {
+                    backgroundColor: isDark
+                      ? currentColors.primary + "07"
+                      : currentColors.primary + "04",
+                    borderColor: isDark
+                      ? currentColors.primary + "18"
+                      : currentColors.primary + "10",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="information-circle-outline"
+                  size={14}
+                  color={currentColors.primary}
+                />
+                <Text
+                  style={[
+                    styles.disclaimerText,
+                    { color: isDark ? "#555" : "#bbb" },
+                  ]}
+                >
+                  Estimates only. Consult a professional for personalized
+                  advice.
                 </Text>
               </View>
-            </LinearGradient>
-          </Animated.View>
-        )}
+            </Animated.View>
+          )}
+        </Animated.View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+
+  // ── Header ─────────────────────────────────────────────────────────────────
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === "ios" ? 56 : 42,
     paddingBottom: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderBottomWidth: 1,
+    position: "relative",
+    overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
       },
-      android: {
-        elevation: 8,
-      },
+      android: { elevation: 6 },
     }),
   },
+  headerTopLine: { position: "absolute", top: 0, left: 0, right: 0, height: 2 },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
+    paddingRight: 24,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 14 },
   headerIconWrapper: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '500',
+  title: { fontSize: 21, fontWeight: "900", letterSpacing: 0.2 },
+  subtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginTop: 2,
   },
+  subtitleDot: { width: 5, height: 5, borderRadius: 2.5 },
+  subtitle: { fontSize: 12, fontWeight: "600" },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginRight: 10,
   },
   clearButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginLeft: 26,
+    marginBottom: -0,
   },
-  scrollContainer: {
-    padding: 20,
-  },
-  inputsSection: {
-    marginBottom: 24,
-  },
-  inputWrapper: {
-    marginBottom: 20,
-  },
-  inputLabel: {
+  clearButtonText: {
     fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-    marginLeft: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: "700",
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+
+  // ── Scroll ─────────────────────────────────────────────────────────────────
+  scrollContainer: { padding: 18, paddingBottom: 44 },
+
+  // ── Form card ──────────────────────────────────────────────────────────────
+  formCard: {
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1.5,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowRadius: 12,
       },
-      android: {
-        elevation: 2,
-      },
+      android: { elevation: 3 },
     }),
   },
-  inputIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  formCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 18,
   },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontWeight: '600',
+  formCardLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
+  formCardLine: { flex: 1, height: 1 },
+
+  // ── Input field ────────────────────────────────────────────────────────────
+  inputWrapper: { marginBottom: 16 },
+  inputLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 7,
   },
-  inputUnit: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+  inputLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 1 },
+  inputValuePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
-  genderContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  genderButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+  inputValuePillText: { fontSize: 10, fontWeight: "700" },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 14,
+    paddingHorizontal: 12,
     borderWidth: 1.5,
-    gap: 8,
-  },
-  genderText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  activityContainer: {
-    paddingVertical: 4,
-    paddingRight: 4,
-    gap: 12,
-  },
-  activityCard: {
-    width: width * 0.65,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    marginRight: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
         shadowRadius: 6,
       },
-      android: {
-        elevation: 2,
-      },
+      android: { elevation: 1 },
     }),
   },
-  activityIconWrapper: {
-    width: 48,
-    height: 48,
+  inputIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  input: { flex: 1, paddingVertical: 13, fontSize: 16, fontWeight: "700" },
+  inputUnit: { fontSize: 12, fontWeight: "600", marginLeft: 6 },
+
+  // ── Gender ────────────────────────────────────────────────────────────────
+  genderTrack: {
+    flexDirection: "row",
     borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1.5,
+    padding: 4,
+    gap: 4,
   },
-  activityTextContainer: {
+  genderTab: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 11,
+    borderRadius: 11,
+    gap: 6,
   },
-  activityLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  activityDescription: {
-    fontSize: 11,
-    fontWeight: '500',
-    lineHeight: 14,
-  },
-  calculateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    marginTop: 12,
-    marginBottom: 8,
+  genderTabText: { fontSize: 14, fontWeight: "700" },
+
+  // ── Dual row ──────────────────────────────────────────────────────────────
+  dualRow: { flexDirection: "row" },
+
+  // ── Activity ──────────────────────────────────────────────────────────────
+  activityScrollContent: { gap: 10, paddingRight: 4 },
+  activityCard: {
+    width: width * 0.58,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
       },
-      android: {
-        elevation: 6,
-      },
+      android: { elevation: 2 },
     }),
   },
-  buttonGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#00FF41',
+  activityEmoji: { fontSize: 24 },
+  activityTextContainer: { flex: 1 },
+  activityLabel: { fontSize: 14, fontWeight: "800", marginBottom: 2 },
+  activityDescription: { fontSize: 11, fontWeight: "500", lineHeight: 15 },
+  activityCheck: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  calculateButtonText: {
-    fontWeight: '800',
-    fontSize: 17,
-    letterSpacing: 0.5,
-  },
-  resultsSection: {
-    marginTop: 8,
-  },
-  resultsContainer: {
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 2,
-    overflow: 'hidden',
+
+  // ── Calculate button ───────────────────────────────────────────────────────
+  calculateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 17,
+    borderRadius: 20,
+    marginBottom: 20,
+    gap: 10,
+    overflow: "hidden",
+    position: "relative",
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
+        shadowOpacity: 0.35,
+        shadowRadius: 18,
       },
-      android: {
-        elevation: 8,
-      },
+      android: { elevation: 10 },
     }),
   },
-  resultMain: {
-    marginBottom: 20,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  resultIconWrapper: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  resultLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-    letterSpacing: 1,
-  },
-  resultValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 4,
-  },
-  resultValue: {
-    fontSize: 40,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  resultRange: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  categoryBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  categoryText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 20,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  metricItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  metricIcon: {
-    width: 48,
-    height: 48,
+  buttonGlow: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  btnIconWrap: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  calculateButtonText: { fontWeight: "900", fontSize: 16, letterSpacing: 0.3 },
+  btnArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // ── BMI result card ────────────────────────────────────────────────────────
+  resultCard: {
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    overflow: "hidden",
+    position: "relative",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 14,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  resultCardStrip: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+  },
+  bmiTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  resultSectionLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.4,
     marginBottom: 8,
   },
-  metricTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  metricValue2: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  metricUnit2: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  metricDescription2: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  metricDivider: {
-    width: 1,
-    height: 40,
-    marginHorizontal: 16,
-  },
-  disclaimer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    marginTop: 24,
+  bmiValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
+    marginBottom: 4,
+  },
+  bmiBigNumber: {
+    fontSize: 48,
+    fontWeight: "900",
+    letterSpacing: -2,
+    lineHeight: 52,
+  },
+  bmiCategoryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
     borderWidth: 1,
   },
-  disclaimerText: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 18,
+  bmiCategoryDot: { width: 6, height: 6, borderRadius: 3 },
+  bmiCategoryText: { fontSize: 12, fontWeight: "800" },
+  bmiRange: { fontSize: 11, fontWeight: "600" },
+  bmiIconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
+
+  // ── Metrics row ───────────────────────────────────────────────────────────
+  metricsRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
+  metricCard: {
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    alignItems: "center",
+    overflow: "hidden",
+    position: "relative",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: { elevation: 3 },
+    }),
+  },
+  metricCardStrip: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+  },
+  metricIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    marginTop: 6,
+  },
+  metricCardLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  metricCardValue: { fontSize: 30, fontWeight: "900", letterSpacing: -0.5 },
+  metricCardUnit: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+  metricCardSub: { fontSize: 10, fontWeight: "500", marginTop: 4 },
+
+  // ── Calorie target card ───────────────────────────────────────────────────
+  targetCard: {
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  targetCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 16,
+  },
+  targetIconBox: {width: 34,height: 34,borderRadius: 17,justifyContent: "center",alignItems: "center",},
+  targetCardTitle: { fontSize: 15, fontWeight: "800" },
+  targetRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  targetLabel: { fontSize: 12, fontWeight: "600", width: 82 },
+  targetBarWrap: { flex: 1, marginHorizontal: 10 },
+  targetBarTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
+  targetBarFill: { height: 6, borderRadius: 3 },
+  targetKcal: {
+    fontSize: 13,
+    fontWeight: "800",
+    minWidth: 40,
+    textAlign: "right",
+  },
+
+  // ── Disclaimer ────────────────────────────────────────────────────────────
+  disclaimer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 8,
+  },
+  disclaimerText: { flex: 1, fontSize: 11, fontWeight: "500", lineHeight: 16 },
 });

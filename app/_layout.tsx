@@ -20,8 +20,20 @@ export default function RootLayout() {
     <SimpleThemeProvider>
       <ThemeProvider> 
         <View style={{ flex: 1 }}>
-          <Stack screenOptions={{}}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack screenOptions={{
+            headerShown: false, // This hides headers for ALL screens by default
+          }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="profile" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="signup" options={{ headerShown: false }} />
+            <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+            <Stack.Screen name="reset-password" options={{ headerShown: false }} />
+            <Stack.Screen name="verify-email" options={{ headerShown: false }} />
+            <Stack.Screen name="change-password" options={{ headerShown: false }} />
+            <Stack.Screen name="privacy-settings" options={{ headerShown: false }} />
+            <Stack.Screen name="notification-settings" options={{ headerShown: false }} />
+            <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />

@@ -57,10 +57,18 @@ type AIChatResponse = {
 type LimitResponse = {
   success: boolean;
   plan?: string;
-  unlimited?: boolean;
+  unlimited?: boolean;  // ← this already exists
+  isUnlimited?: boolean; // ← ADD THIS for compatibility
   limit?: number;
   used?: number;
   remaining?: number;
+  error?: string;
+  aiMessagesRemaining?: number; // ← ADD THIS
+};
+type UseMessageResponse = {
+  success: boolean;
+  aiMessagesRemaining: number;
+  isUnlimited: boolean;
   error?: string;
 };
 
@@ -79,19 +87,15 @@ export default function AICoachTab() {
   const [messageCount, setMessageCount] = useState({ used: 0, total: 10, remaining: 10 });
   const [showChat, setShowChat] = useState(false);
 
-  const primaryColor = "#39FF14";
-
-  // Load chat history from storage
+const primaryColor = currentColors.primary;
   useEffect(() => {
     loadChatHistory();
   }, []);
 
-  // Check plan and load limits
   useEffect(() => {
     checkUserPlan();
   }, []);
 
-  // Show chat interface for premium users or free users who have started
   useEffect(() => {
     if (userPlan !== "free" && messages.length === 0) {
       // Add welcome message for premium users
@@ -114,7 +118,6 @@ export default function AICoachTab() {
       const savedMessages = await AsyncStorage.getItem("aiChatHistory");
       if (savedMessages) {
         const parsed = JSON.parse(savedMessages);
-        // Convert string dates back to Date objects
         const messagesWithDates = parsed.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
@@ -166,7 +169,6 @@ export default function AICoachTab() {
           }
         }
 
-        // Check message limits
         await checkRemainingMessages();
       }
     } catch (error) {
@@ -176,33 +178,35 @@ export default function AICoachTab() {
     }
   };
 
-  const checkRemainingMessages = async () => {
-    try {
-      const token = await AsyncStorage.getItem("userToken");
-      if (!token) return;
+const checkRemainingMessages = async () => {
+  try {
+    const token = await AsyncStorage.getItem("userToken");
+    if (!token) return;
 
-      const response = await fetch("http://192.168.100.143:3000/api/ai-coach/limits", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    const response = await fetch("http://192.168.100.143:3000/api/users/ai-messages", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    const data = (await response.json()) as LimitResponse;
+    
+    if (data.success) {
+      const isUnlimited = data.unlimited === true || data.isUnlimited === true;
       
-      const data = (await response.json()) as LimitResponse;
-      
-      if (data.success) {
-        if (data.unlimited) {
-          setMessageCount({ used: 0, total: 999, remaining: 999 });
-        } else {
-          setMessageCount({
-            used: data.used || 0,
-            total: data.limit || 10,
-            remaining: data.remaining || 0
-          });
-        }
+      if (isUnlimited) {
+        setMessageCount({ used: 0, total: 999, remaining: 999 });
+      } else {
+        const remaining = data.aiMessagesRemaining || data.remaining || 10;
+        setMessageCount({
+          used: (data.limit || 10) - remaining,
+          total: data.limit || 10,
+          remaining: remaining
+        });
       }
-    } catch (error) {
-      console.error("Error checking limits:", error);
     }
-  };
-
+  } catch (error) {
+    console.error("Error checking limits:", error);
+  }
+};
   const handleUpgradePress = () => {
     router.push("/premium");
   };
@@ -212,20 +216,20 @@ const sendMessage = async (questionText?: string) => {
   
   if (!textToSend.trim() || isWaiting) return;
 
-  // Check if free user has reached limit
   if (userPlan === "free" && messageCount.remaining <= 0) {
     Alert.alert(
       "Daily Limit Reached",
-      "You've used all your free messages for today. Upgrade to Pro for unlimited access!",
+      "You've used all your free messages for today. Complete missions or upgrade to Pro for unlimited access!",
       [
         { text: "Not Now", style: "cancel" },
         { text: "Upgrade Now", onPress: handleUpgradePress },
+        { text: "View Missions", onPress: () => router.push("/profile") },
       ]
     );
     return;
   }
 
-  // Add user message
+  // Add message
   const userMessage: Message = {
     id: Date.now().toString(),
     text: textToSend,
@@ -247,33 +251,68 @@ const sendMessage = async (questionText?: string) => {
   try {
     const token = await AsyncStorage.getItem("userToken");
     
-    // 🔍 DEBUG: Check if token exists
-    console.log("🔍 Token from storage:", token ? "Token exists" : "No token found");
-    
     if (!token) {
       Alert.alert("Not Logged In", "Please log in to use the AI Coach");
       router.push("/login");
       return;
     }
 
-    const response = await fetch("http://192.168.100.143:3000/api/ai-coach/chat", {
+    const useResponse = await fetch("http://192.168.100.143:3000/api/users/use-ai-message", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // Make sure this format is correct
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    const useData = (await useResponse.json()) as UseMessageResponse;
+
+    // If no messages left
+    if (!useData.success && useData.error) {
+      Alert.alert(
+        "No Messages Left",
+        "You've used all your messages. Complete missions to earn more or upgrade to Pro!",
+        [
+          { text: "Not Now", style: "cancel" },
+          { text: "Upgrade Now", onPress: handleUpgradePress },
+          { text: "View Missions", onPress: () => router.push("/profile") },
+        ]
+      );
+      setIsWaiting(false);
+      
+      // Remove the user message we added
+      const messagesWithoutLast = updatedMessages.slice(0, -1);
+      setMessages(messagesWithoutLast);
+      saveChatHistory(messagesWithoutLast);
+      return;
+    }
+
+    // Update remaining count
+    if (useData.aiMessagesRemaining !== undefined) {
+      setMessageCount(prev => ({
+        ...prev,
+        remaining: useData.aiMessagesRemaining,
+        used: prev.total - useData.aiMessagesRemaining
+      }));
+    }
+
+    // Now send the actual AI chat request
+    const chatResponse = await fetch("http://192.168.100.143:3000/api/ai-coach/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({ message: textToSend }),
     });
 
-    console.log("🔍 Response status:", response.status);
+    const chatData = (await chatResponse.json()) as AIChatResponse;
 
-    const data = (await response.json()) as AIChatResponse;
-
-    if (response.ok && data.success) {
+    if (chatResponse.ok && chatData.success) {
       // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.reply || "I'm here to help with your fitness journey!",
+        text: chatData.reply || "I'm here to help with your fitness journey!",
         isUser: false,
         timestamp: new Date(),
       };
@@ -283,22 +322,22 @@ const sendMessage = async (questionText?: string) => {
       saveChatHistory(finalMessages);
       
       // Update remaining count for free users
-      if (data.limit) {
+      if (chatData.limit) {
         setMessageCount({
-          used: data.limit.used,
-          total: data.limit.total,
-          remaining: data.limit.remaining
+          used: chatData.limit.used,
+          total: chatData.limit.total,
+          remaining: chatData.limit.remaining
         });
       } else {
         await checkRemainingMessages();
       }
     } else {
       // Handle specific errors
-      if (response.status === 401) {
+      if (chatResponse.status === 401) {
         Alert.alert("Session Expired", "Please log in again");
         await AsyncStorage.multiRemove(["userToken", "userData"]);
         router.push("/login");
-      } else if (data.requiresUpgrade) {
+      } else if (chatData.requiresUpgrade) {
         Alert.alert(
           "Premium Feature",
           "AI Coach requires a premium subscription. Upgrade to Pro to continue!",
@@ -308,12 +347,17 @@ const sendMessage = async (questionText?: string) => {
           ]
         );
       } else {
-        Alert.alert("Error", data.error || "Failed to get response");
+        Alert.alert("Error", chatData.error || "Failed to get response");
       }
     }
   } catch (error) {
-    console.error("🔍 Fetch error:", error);
+    console.error("Fetch error:", error);
     Alert.alert("Network Error", "Could not connect to server");
+    
+    // Remove the user message on error
+    const messagesWithoutLast = updatedMessages.slice(0, -1);
+    setMessages(messagesWithoutLast);
+    saveChatHistory(messagesWithoutLast);
   } finally {
     setIsWaiting(false);
     setTimeout(() => {
@@ -524,40 +568,49 @@ const sendMessage = async (questionText?: string) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      {/* Header */}
-      <View style={[styles.chatHeader, { borderBottomColor: primaryColor + "20" }]}>
-        <View style={styles.chatHeaderLeft}>
-          <View style={[styles.headerAvatar, { backgroundColor: primaryColor + "20" }]}>
-            <MaterialCommunityIcons name="robot" size={24} color={primaryColor} />
-          </View>
-          <View>
-            <Text style={[styles.headerTitle, { color: isDark ? "#FFF" : "#000" }]}>
-              AI Coach
-            </Text>
-            <Text style={[styles.headerStatus, { color: primaryColor }]}>
-              ● Online
-            </Text>
-          </View>
-        </View>
-        
-        {/* Message Counter for Free Users */}
-        {userPlan === "free" && (
-          <View style={[styles.headerCounter, { backgroundColor: primaryColor + "20" }]}>
-            <Text style={[styles.headerCounterText, { color: primaryColor }]}>
-              {messageCount.remaining}/{messageCount.total}
-            </Text>
-          </View>
-        )}
-        
-        {userPlan !== "free" && (
-          <View style={[styles.premiumBadge, { backgroundColor: primaryColor + "20" }]}>
-            <MaterialCommunityIcons name="crown" size={16} color={primaryColor} />
-            <Text style={[styles.premiumBadgeText, { color: primaryColor }]}>
-              PRO
-            </Text>
-          </View>
-        )}
-      </View>
+{/* Header with Back Button */}
+<View style={[styles.chatHeader, { borderBottomColor: primaryColor + "20" }]}>
+  {/* Back Button */}
+ <TouchableOpacity                                                                                                                   
+    onPress={() => router.push("/premium")}                                                                                           
+    style={styles.backButton}                                                                                                         
+  >                                                                                                                                   
+    <Ionicons name="arrow-back" size={22} color={isDark ? "#FFF" : "#000"} />                                                         
+  </TouchableOpacity>  
+
+  {/* Left Content */}
+  <View style={styles.chatHeaderLeft}>
+    <View style={[styles.headerAvatar, { backgroundColor: primaryColor + "20" }]}>
+      <MaterialCommunityIcons name="robot" size={24} color={primaryColor} />
+    </View>
+    <View>
+      <Text style={[styles.headerTitle, { color: isDark ? "#FFF" : "#000" }]}>
+        AI Coach
+      </Text>
+      <Text style={[styles.headerStatus, { color: primaryColor }]}>
+        ● Online
+      </Text>
+    </View>
+  </View>
+  
+  {/* Message Counter for Free Users */}
+  {userPlan === "free" && (
+    <View style={[styles.headerCounter, { backgroundColor: primaryColor + "20" }]}>
+      <Text style={[styles.headerCounterText, { color: primaryColor }]}>
+        {messageCount.remaining}/{messageCount.total}
+      </Text>
+    </View>
+  )}
+  
+  {userPlan !== "free" && (
+    <View style={[styles.premiumBadge, { backgroundColor: primaryColor + "20" }]}>
+      <MaterialCommunityIcons name="crown" size={16} color={primaryColor} />
+      <Text style={[styles.premiumBadgeText, { color: primaryColor }]}>
+        PRO
+      </Text>
+    </View>
+  )}
+</View>
 
       {/* Messages */}
       <FlatList
@@ -963,4 +1016,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textDecorationLine: "underline",
   },
+  backButton: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 4,
+},
 });

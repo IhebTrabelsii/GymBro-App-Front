@@ -1,15 +1,27 @@
 export const Colors = {
-  light: {
-    background: '#F8F9FA',      // Clean light gray background
-    card: '#FFFFFF',            // Pure white cards
-    text: '#0A0A0A',            // Deep black text
-    border: '#E5E5E5',          // Subtle gray border
-    primary: '#0f3618',         // Vibrant neon green
-    notification: '#FF6B6B',
-    secondary: '#F0F0F0',       // Light gray
-    accent: '#0f3618',          // Bright lime accent
-    gradient1: '#0f3618',       // Gradient start
-    gradient2: '#0f3618',       // Gradient end
+ light: {
+    background: '#FFFFFF',      // Pure white background
+    card: '#FFFFFF',            // White cards (consistent)
+    text: '#1A1A1A',            // Dark gray for readability
+    border: '#EEF2F6',          // Very soft border
+    primary: '#2E7D32',         // Rich green (lighter than before, still professional)
+    notification: '#FF6B6B',    // Soft red
+    secondary: '#F8F9FA',       // Light gray for secondary
+    accent: '#4CAF50',          // Brighter green accent
+    gradient1: '#2E7D32',       // Gradient start
+    gradient2: '#4CAF50',       // Gradient end
+    
+    // Additional light mode enhancements
+    cardShadow: 'rgba(0, 0, 0, 0.03)',
+    inputBackground: '#FFFFFF',
+    inputBorder: '#E2E8F0',
+    placeholder: '#94A3B8',
+    iconInactive: '#CBD5E1',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6',
+    buttonText: '#FFFFFF',      // White text on buttons
   },
   dark: {
     background: '#000000',      // Pure black background

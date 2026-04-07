@@ -14,7 +14,6 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "target": "ES2020",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
@@ -26,6 +25,6 @@
     "**/*.jsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/config/plan.tsx"  ],
+, "app/config/plan.tsx", "app/(auth)/login.tsx"  ],
   "exclude": ["node_modules", "web-build/**/*"]
 }

@@ -1,12 +1,15 @@
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,11 +17,9 @@ import {
   View,
 } from "react-native";
 import { useSimpleTheme } from "../../context/SimpleThemeContext";
-import { Video, ResizeMode } from 'expo-av';
 
 const { width } = Dimensions.get("window");
 
-// Define types for the plan
 type WorkoutPlan = {
   _id: string;
   title: string;
@@ -28,7 +29,7 @@ type WorkoutPlan = {
   days: string[];
   tips: string;
   icon: string;
-  color?: string; // Optional, will be generated
+  color?: string;
 };
 
 export default function PlanScreen() {
@@ -40,19 +41,20 @@ export default function PlanScreen() {
 
   const [loading, setLoading] = useState(true);
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const modalScale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    // Parse plans from params
     if (plans) {
       try {
         const parsedPlans = JSON.parse(plans as string);
         setWorkoutPlans(parsedPlans);
       } catch (error) {
         console.error("Error parsing plans:", error);
-        // Fallback to empty array
         setWorkoutPlans([]);
       }
     }
@@ -84,19 +86,38 @@ export default function PlanScreen() {
   const getPlanTypeColor = (planName: string) => {
     if (planName === "Ectomorph") return "#39FF14";
     if (planName === "Mesomorph") return "#00F0FF";
-    return "#FF10F0";
+    return "#6c7deb";
   };
 
-  // Generate color for each plan based on its body type
   const getPlanColor = (plan: WorkoutPlan) => {
     if (plan.bodyType === "Ectomorph") return "#39FF14";
     if (plan.bodyType === "Mesomorph") return "#00F0FF";
-    return "#FF10F0";
+    return "#6c7deb";
   };
 
-  // Get icon for each plan
-  const getPlanIcon = (plan: WorkoutPlan) => {
-    return plan.icon || "fitness";
+  const getPlanIcon = (plan: WorkoutPlan) => plan.icon || "fitness";
+
+  const openPlanDetails = (planItem: WorkoutPlan) => {
+    setSelectedPlan(planItem);
+    setModalVisible(true);
+    modalScale.setValue(0.9);
+    Animated.spring(modalScale, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeModal = () => {
+    Animated.timing(modalScale, {
+      toValue: 0.9,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      setSelectedPlan(null);
+    });
   };
 
   if (loading) {
@@ -121,191 +142,116 @@ export default function PlanScreen() {
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* Top Bar */}
-      <View
+      {/* Header */}
+      <LinearGradient
+        colors={isDark ? ["#0a0a0a", "#000000"] : ["#ffffff", "#f8f9fa"]}
         style={[
-          styles.topBar,
-          {
-            backgroundColor: isDark
-              ? "rgba(18, 18, 18, 0.98)"
-              : "rgba(255, 255, 255, 0.98)",
-            borderBottomColor: isDark
-              ? "rgba(57, 255, 20, 0.15)"
-              : "rgba(57, 255, 20, 0.1)",
-          },
+          styles.header,
+          { borderBottomColor: currentColors.primary + "20" },
         ]}
       >
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          activeOpacity={0.7}
-        >
-          <View style={styles.logoContainer}>
-            <View
-              style={[
-                styles.logoIconWrapper,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.15)"
-                    : "rgba(57, 255, 20, 0.1)",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="dumbbell"
-                size={24}
-                color={currentColors.primary}
-              />
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={[
+                  currentColors.primary + "30",
+                  currentColors.primary + "10",
+                ]}
+                style={styles.logoIconWrapper}
+              >
+                <MaterialCommunityIcons
+                  name="dumbbell"
+                  size={22}
+                  color={currentColors.primary}
+                />
+              </LinearGradient>
+              <Text style={[styles.logo, { color: currentColors.primary }]}>
+                GymBro
+              </Text>
             </View>
-            <Text style={[styles.logo, { color: currentColors.primary }]}>
-              GymBro
-            </Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        <View style={styles.topRightSection}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={toggleTheme}
             style={[
-              styles.backButton,
-              {
-                backgroundColor: isDark
-                  ? "rgba(57, 255, 20, 0.12)"
-                  : "rgba(57, 255, 20, 0.06)",
-                borderWidth: 1.5,
-                borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.3)"
-                  : "rgba(57, 255, 20, 0.25)",
-              },
+              styles.themeToggle,
+              { backgroundColor: currentColors.primary },
             ]}
             activeOpacity={0.8}
           >
             <Ionicons
-              name="arrow-back"
+              name={isDark ? "sunny" : "moon"}
               size={18}
-              color={currentColors.primary}
+              color={isDark ? "#000" : "#fff"}
             />
-            <Text style={[styles.backText, { color: currentColors.primary }]}>
-              Back
-            </Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          onPress={toggleTheme}
-          style={[
-            styles.themeToggle,
-            {
-              backgroundColor: currentColors.primary,
-              shadowColor: currentColors.primary,
-            },
-          ]}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name={isDark ? "sunny" : "moon"}
-            size={20}
-            color={isDark ? currentColors.background : "#FFFFFF"}
-          />
-        </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       <ScrollView
-        style={{ backgroundColor: currentColors.background }}
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        bounces={true}
       >
         <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
+          style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
         >
           {/* Hero Section */}
-          <View
+          <LinearGradient
+            colors={isDark ? ["#0a0a0a", "#050505"] : ["#ffffff", "#fafafa"]}
             style={[
               styles.heroCard,
-              {
-                backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(57, 255, 20, 0.15)",
-                shadowColor: currentColors.primary,
-              },
+              { borderColor: currentColors.primary + "30" },
             ]}
           >
-            {/* Decorative Circles */}
             <View
               style={[
-                styles.decorCircle,
-                styles.decorCircle1,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.04)"
-                    : "rgba(57, 255, 20, 0.025)",
-                },
+                styles.heroGlow1,
+                { backgroundColor: currentColors.primary + "08" },
               ]}
             />
             <View
               style={[
-                styles.decorCircle,
-                styles.decorCircle2,
-                {
-                  backgroundColor: isDark
-                    ? getPlanTypeColor(plan) + "10"
-                    : getPlanTypeColor(plan) + "08",
-                },
+                styles.heroGlow2,
+                { backgroundColor: currentColors.primary + "05" },
               ]}
             />
 
             <View style={styles.heroContent}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.15)"
-                      : "rgba(57, 255, 20, 0.08)",
-                    borderWidth: 3,
-                    borderColor: isDark
-                      ? "rgba(57, 255, 20, 0.25)"
-                      : "rgba(57, 255, 20, 0.15)",
-                  },
+              <LinearGradient
+                colors={[
+                  currentColors.primary + "30",
+                  currentColors.primary + "10",
                 ]}
+                style={styles.heroIcon}
               >
                 <MaterialCommunityIcons
                   name={getPlanTypeIcon(plan) as any}
-                  size={46}
+                  size={44}
                   color={currentColors.primary}
                 />
-              </View>
+              </LinearGradient>
               <Text style={[styles.heroTitle, { color: currentColors.text }]}>
-                {plan} Workout Plans
+                {plan}{" "}
+                <Text style={{ color: currentColors.primary }}>Workout</Text>{" "}
+                Plans
               </Text>
               <Text
                 style={[
                   styles.heroSubtitle,
-                  {
-                    color: isDark
-                      ? "rgba(255, 255, 255, 0.65)"
-                      : "rgba(0, 0, 0, 0.6)",
-                  },
+                  { color: isDark ? "#aaa" : "#666" },
                 ]}
               >
-                Customized training programs for your body type
+                Customized training programs for your {plan} body type
               </Text>
               <View
                 style={[
                   styles.heroBadge,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.12)"
-                      : "rgba(57, 255, 20, 0.08)",
-                  },
+                  { backgroundColor: currentColors.primary + "12" },
                 ]}
               >
                 <Ionicons
-                  name="calendar"
+                  name="fitness"
                   size={14}
                   color={currentColors.primary}
                 />
@@ -319,20 +265,20 @@ export default function PlanScreen() {
                 </Text>
               </View>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* Plan Cards */}
           {workoutPlans.length === 0 ? (
             <View
               style={[
                 styles.emptyContainer,
-                { borderColor: getPlanTypeColor(plan) + "30" },
+                { borderColor: currentColors.primary + "30" },
               ]}
             >
               <MaterialCommunityIcons
                 name="weight-lifter"
                 size={64}
-                color={getPlanTypeColor(plan)}
+                color={currentColors.primary}
               />
               <Text style={[styles.emptyTitle, { color: currentColors.text }]}>
                 No Plans Available
@@ -345,7 +291,7 @@ export default function PlanScreen() {
               <TouchableOpacity
                 style={[
                   styles.emptyButton,
-                  { backgroundColor: getPlanTypeColor(plan) },
+                  { backgroundColor: currentColors.primary },
                 ]}
                 onPress={() => router.push("/workout")}
               >
@@ -353,277 +299,152 @@ export default function PlanScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.plansContainer}>
-              {workoutPlans.map((planItem, index) => {
-                const planColor = getPlanColor(planItem);
+            <>
+              <View style={styles.sectionHeader}>
+                <View
+                  style={[
+                    styles.sectionLine,
+                    { backgroundColor: currentColors.primary + "30" },
+                  ]}
+                />
+                <Text
+                  style={[styles.sectionTitle, { color: currentColors.text }]}
+                >
+                  SELECT YOUR PLAN
+                </Text>
+                <View
+                  style={[
+                    styles.sectionLine,
+                    { backgroundColor: currentColors.primary + "30" },
+                  ]}
+                />
+              </View>
 
-                return (
-                  <View
-                    key={planItem._id || index}
-                    style={[
-                      styles.planCardWrapper,
-                      {
-                        marginLeft: index % 2 === 0 ? 0 : 16,
-                        marginRight: index % 2 === 0 ? 16 : 0,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.planCard,
-                        {
-                          backgroundColor: isDark
-                            ? currentColors.card
-                            : "#FFFFFF",
-                          borderColor: planColor + (isDark ? "40" : "30"),
-                          shadowColor: planColor,
-                        },
-                      ]}
+              <View style={styles.plansGrid}>
+                {workoutPlans.map((planItem, index) => {
+                  const planColor = getPlanColor(planItem);
+                  return (
+                    <TouchableOpacity
+                      key={planItem._id || index}
+                      activeOpacity={0.85}
+                      onPress={() => openPlanDetails(planItem)}
                     >
-                      {/* Accent Bar */}
-                      <View
+                      <LinearGradient
+                        colors={
+                          isDark
+                            ? ["#0e0e0e", "#080808"]
+                            : ["#ffffff", "#f8f8f8"]
+                        }
                         style={[
-                          styles.accentBar,
-                          { backgroundColor: planColor },
-                        ]}
-                      />
-
-                      {/* Plan Number Badge */}
-                      <View
-                        style={[
-                          styles.planNumber,
-                          {
-                            backgroundColor: planColor + (isDark ? "20" : "15"),
-                            borderColor: planColor + (isDark ? "40" : "30"),
-                          },
+                          styles.planCard,
+                          { borderColor: planColor + "40" },
                         ]}
                       >
-                        <Text
-                          style={[styles.planNumberText, { color: planColor }]}
-                        >
-                          #{index + 1}
-                        </Text>
-                      </View>
+                        <LinearGradient
+                          colors={[planColor + "25", "transparent"]}
+                          style={styles.planCardAccent}
+                        />
 
-                      {/* Plan Header */}
-                      <View style={styles.planHeader}>
-                        <View
+                        <View style={styles.planCardHeader}>
+                          <LinearGradient
+                            colors={[planColor + "25", planColor + "10"]}
+                            style={styles.planCardIcon}
+                          >
+                            <MaterialCommunityIcons
+                              name={getPlanIcon(planItem) as any}
+                              size={26}
+                              color={planColor}
+                            />
+                          </LinearGradient>
+                          <View
+                            style={[
+                              styles.planCardBadge,
+                              { backgroundColor: planColor + "15" },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.planCardBadgeText,
+                                { color: planColor },
+                              ]}
+                            >
+                              #{index + 1}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text
                           style={[
-                            styles.planIconLarge,
-                            {
-                              backgroundColor:
-                                planColor + (isDark ? "20" : "10"),
-                              borderWidth: 2,
-                              borderColor: planColor + (isDark ? "40" : "30"),
-                            },
+                            styles.planCardTitle,
+                            { color: currentColors.text },
                           ]}
                         >
-                          <MaterialCommunityIcons
-                            name={getPlanIcon(planItem) as any}
-                            size={28}
+                          {planItem.title}
+                        </Text>
+                        <Text
+                          style={[styles.planCardFocus, { color: planColor }]}
+                        >
+                          {planItem.focus}
+                        </Text>
+
+                        <View style={styles.planCardFooter}>
+                          <View style={styles.planCardStat}>
+                            <Ionicons
+                              name="calendar-outline"
+                              size={14}
+                              color={currentColors.primary}
+                            />
+                            <Text
+                              style={[
+                                styles.planCardStatText,
+                                { color: isDark ? "#aaa" : "#666" },
+                              ]}
+                            >
+                              {planItem.days.length} days/week
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={18}
                             color={planColor}
                           />
                         </View>
-                        <View style={styles.planTitleContainer}>
-                          <Text
-                            style={[
-                              styles.planTitle,
-                              { color: currentColors.text },
-                            ]}
-                          >
-                            {planItem.title}
-                          </Text>
-                          <View
-                            style={[
-                              styles.focusBadge,
-                              {
-                                backgroundColor: isDark
-                                  ? "rgba(255, 107, 107, 0.15)"
-                                  : "rgba(255, 107, 107, 0.08)",
-                              },
-                            ]}
-                          >
-                            <Ionicons name="flame" size={12} color="#FF6B6B" />
-                            <Text
-                              style={[
-                                styles.planFocus,
-                                {
-                                  color: isDark
-                                    ? "rgba(255, 255, 255, 0.8)"
-                                    : "rgba(0, 0, 0, 0.7)",
-                                },
-                              ]}
-                            >
-                              {planItem.focus}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Divider */}
-                      <View
-                        style={[
-                          styles.cardDivider,
-                          {
-                            backgroundColor: planColor + (isDark ? "20" : "15"),
-                          },
-                        ]}
-                      />
-
-                      {/* Days Section */}
-                      <View style={styles.daysSection}>
-                        <View style={styles.daysSectionHeader}>
-                          <Ionicons
-                            name="calendar-outline"
-                            size={16}
-                            color={currentColors.primary}
-                          />
-                          <Text
-                            style={[
-                              styles.daysSectionTitle,
-                              { color: currentColors.text },
-                            ]}
-                          >
-                            Training Schedule
-                          </Text>
-                          <View
-                            style={[
-                              styles.daysCount,
-                              {
-                                backgroundColor: isDark
-                                  ? "rgba(57, 255, 20, 0.15)"
-                                  : "rgba(57, 255, 20, 0.1)",
-                              },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.daysCountText,
-                                { color: currentColors.primary },
-                              ]}
-                            >
-                              {planItem.days.length}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.daysContainer}>
-                          {planItem.days.map((day, dayIndex) => (
-                            <View key={dayIndex} style={styles.dayItem}>
-                              <View
-                                style={[
-                                  styles.dayDot,
-                                  { backgroundColor: planColor },
-                                ]}
-                              />
-                              <View style={styles.dayContent}>
-                                <Text
-                                  style={[
-                                    styles.dayText,
-                                    {
-                                      color: isDark
-                                        ? "rgba(255, 255, 255, 0.9)"
-                                        : "rgba(0, 0, 0, 0.8)",
-                                    },
-                                  ]}
-                                >
-                                  {day}
-                                </Text>
-                              </View>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-
-                      {/* Tips Section */}
-                      <View
-                        style={[
-                          styles.tipsContainer,
-                          {
-                            backgroundColor: isDark
-                              ? "rgba(255, 193, 7, 0.1)"
-                              : "rgba(255, 193, 7, 0.05)",
-                            borderColor: isDark
-                              ? "rgba(255, 193, 7, 0.25)"
-                              : "rgba(255, 193, 7, 0.15)",
-                          },
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.tipIconWrapper,
-                            {
-                              backgroundColor: isDark
-                                ? "rgba(255, 193, 7, 0.2)"
-                                : "rgba(255, 193, 7, 0.15)",
-                            },
-                          ]}
-                        >
-                          <Ionicons name="bulb" size={18} color="#FFC107" />
-                        </View>
-                        <View style={styles.tipsContent}>
-                          <Text
-                            style={[
-                              styles.tipsLabel,
-                              {
-                                color: isDark
-                                  ? "rgba(255, 193, 7, 0.9)"
-                                  : "rgba(255, 193, 7, 0.8)",
-                              },
-                            ]}
-                          >
-                            Pro Tips
-                          </Text>
-                          <Text
-                            style={[
-                              styles.tipsText,
-                              {
-                                color: isDark
-                                  ? "rgba(255, 255, 255, 0.8)"
-                                  : "rgba(0, 0, 0, 0.7)",
-                              },
-                            ]}
-                          >
-                            {planItem.tips}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
           )}
 
-          {/* 👇 View All Exercises Button - Add this NEW button */}
+          {/* View All Exercises Button */}
           {workoutPlans.length > 0 && (
             <TouchableOpacity
               style={[
                 styles.viewAllButton,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.1)"
-                    : "rgba(57, 255, 20, 0.05)",
-                  borderColor: currentColors.primary,
-                },
+                { borderColor: currentColors.primary },
               ]}
               onPress={() =>
                 router.push({
                   pathname: "/exercise-details",
-                  params: { type: "all", planType: type },
+                  params: { type: "all" },
                 })
               }
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
+              <LinearGradient
+                colors={[currentColors.primary + "12", "transparent"]}
+                style={styles.viewAllGradient}
+              />
               <View
                 style={[
                   styles.viewAllIcon,
-                  { backgroundColor: currentColors.primary + "20" },
+                  { backgroundColor: currentColors.primary + "15" },
                 ]}
               >
                 <Ionicons
                   name="library"
-                  size={24}
+                  size={22}
                   color={currentColors.primary}
                 />
               </View>
@@ -639,174 +460,103 @@ export default function PlanScreen() {
                     { color: isDark ? "#aaa" : "#666" },
                   ]}
                 >
-                  See all exercises from all {type} plans combined
+                  See all exercises from all plans combined
                 </Text>
               </View>
-              <View
-                style={[
-                  styles.viewAllChevron,
-                  { backgroundColor: currentColors.primary + "15" },
-                ]}
-              >
-                <Ionicons
-                  name="arrow-forward"
-                  size={20}
-                  color={currentColors.primary}
-                />
-              </View>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={currentColors.primary}
+              />
             </TouchableOpacity>
           )}
-          {/* Info Card */}
+
+          {/* Guidelines Section - RESTORED */}
           <View
             style={[
-              styles.infoCard,
-              {
-                backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                borderColor: isDark
-                  ? "rgba(57, 255, 20, 0.2)"
-                  : "rgba(57, 255, 20, 0.12)",
-                shadowColor: currentColors.primary,
-              },
+              styles.guidelinesCard,
+              { borderColor: currentColors.primary + "25" },
             ]}
           >
-            <View style={styles.infoHeader}>
-              <View
-                style={[
-                  styles.infoIconWrapper,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.15)"
-                      : "rgba(57, 255, 20, 0.08)",
-                    borderWidth: 2,
-                    borderColor: isDark
-                      ? "rgba(57, 255, 20, 0.25)"
-                      : "rgba(57, 255, 20, 0.15)",
-                  },
+            <View style={styles.guidelinesHeader}>
+              <LinearGradient
+                colors={[
+                  currentColors.primary + "20",
+                  currentColors.primary + "08",
                 ]}
+                style={styles.guidelinesIcon}
               >
                 <Ionicons
                   name="information-circle"
                   size={22}
                   color={currentColors.primary}
                 />
-              </View>
-              <View style={styles.infoHeaderText}>
-                <Text style={[styles.infoTitle, { color: currentColors.text }]}>
+              </LinearGradient>
+              <View>
+                <Text
+                  style={[
+                    styles.guidelinesTitle,
+                    { color: currentColors.text },
+                  ]}
+                >
                   Important Guidelines
                 </Text>
                 <Text
                   style={[
-                    styles.infoSubtitle,
-                    {
-                      color: isDark
-                        ? "rgba(255, 255, 255, 0.5)"
-                        : "rgba(0, 0, 0, 0.45)",
-                    },
+                    styles.guidelinesSubtitle,
+                    { color: isDark ? "#777" : "#aaa" },
                   ]}
                 >
                   Read before starting
                 </Text>
               </View>
             </View>
-
             <View
               style={[
                 styles.divider,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(57, 255, 20, 0.15)"
-                    : "rgba(57, 255, 20, 0.08)",
-                },
+                { backgroundColor: currentColors.primary + "15" },
               ]}
             />
-
             <View style={styles.guidelinesList}>
-              <View style={styles.guidelineItem}>
-                <View
-                  style={[
-                    styles.guidelineDot,
-                    { backgroundColor: currentColors.primary },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: isDark
-                        ? "rgba(255, 255, 255, 0.8)"
-                        : "rgba(0, 0, 0, 0.7)",
-                    },
-                  ]}
-                >
-                  Follow your chosen plan consistently for 6-8 weeks
-                </Text>
-              </View>
-              <View style={styles.guidelineItem}>
-                <View
-                  style={[
-                    styles.guidelineDot,
-                    { backgroundColor: currentColors.primary },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: isDark
-                        ? "rgba(255, 255, 255, 0.8)"
-                        : "rgba(0, 0, 0, 0.7)",
-                    },
-                  ]}
-                >
-                  Track your progress and adjust weights progressively
-                </Text>
-              </View>
-              <View style={styles.guidelineItem}>
-                <View
-                  style={[
-                    styles.guidelineDot,
-                    { backgroundColor: currentColors.primary },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: isDark
-                        ? "rgba(255, 255, 255, 0.8)"
-                        : "rgba(0, 0, 0, 0.7)",
-                    },
-                  ]}
-                >
-                  Ensure proper nutrition and recovery for best results
-                </Text>
-              </View>
+              {[
+                "Follow your chosen plan consistently for 6-8 weeks",
+                "Track your progress and adjust weights progressively",
+                "Ensure proper nutrition and recovery for best results",
+              ].map((text, i) => (
+                <View key={i} style={styles.guidelineItem}>
+                  <View
+                    style={[
+                      styles.guidelineDot,
+                      { backgroundColor: currentColors.primary },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.guidelineText,
+                      { color: isDark ? "#ccc" : "#666" },
+                    ]}
+                  >
+                    {text}
+                  </Text>
+                </View>
+              ))}
             </View>
           </View>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - RESTORED */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[
                 styles.secondaryButton,
-                {
-                  backgroundColor: isDark ? currentColors.card : "#FFFFFF",
-                  borderColor: isDark
-                    ? "rgba(57, 255, 20, 0.25)"
-                    : "rgba(57, 255, 20, 0.2)",
-                },
+                { borderColor: currentColors.primary + "30" },
               ]}
-              activeOpacity={0.8}
               onPress={() => router.push("/workout")}
+              activeOpacity={0.8}
             >
               <View
                 style={[
                   styles.secondaryButtonIcon,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(57, 255, 20, 0.12)"
-                      : "rgba(57, 255, 20, 0.08)",
-                  },
+                  { backgroundColor: currentColors.primary + "12" },
                 ]}
               >
                 <Ionicons
@@ -828,55 +578,227 @@ export default function PlanScreen() {
             <TouchableOpacity
               style={[
                 styles.primaryButton,
-                {
-                  backgroundColor: currentColors.primary,
-                  shadowColor: currentColors.primary,
-                },
+                { backgroundColor: currentColors.primary },
               ]}
-              activeOpacity={0.85}
               onPress={() => router.push("/")}
+              activeOpacity={0.85}
             >
               <MaterialCommunityIcons
                 name="home"
-                size={24}
-                color={isDark ? currentColors.background : "#FFFFFF"}
+                size={20}
+                color={isDark ? "#000" : "#fff"}
               />
               <Text
                 style={[
                   styles.primaryButtonText,
-                  {
-                    color: isDark ? currentColors.background : "#FFFFFF",
-                  },
+                  { color: isDark ? "#000" : "#fff" },
                 ]}
               >
                 Back to Home
               </Text>
               <Ionicons
                 name="arrow-forward"
-                size={20}
-                color={isDark ? currentColors.background : "#FFFFFF"}
+                size={16}
+                color={isDark ? "#000" : "#fff"}
               />
             </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>
+
+      {/* Plan Details Modal - Button at Top */}
+      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeModal}>
+        <Pressable style={styles.modalOverlay} onPress={closeModal}>
+          <Animated.View style={[styles.modalContent, { transform: [{ scale: modalScale }], backgroundColor: isDark ? "#0e0e0e" : "#fff" }]}>
+            {selectedPlan && (
+              <>
+                {/* Modal Header with Action Buttons at Top */}
+                <LinearGradient colors={[getPlanColor(selectedPlan) + "20", "transparent"]} style={styles.modalHeader}>
+                  {/* Left: Close Button */}
+                  <TouchableOpacity onPress={closeModal} style={styles.modalCloseBtn}>
+                    <Ionicons name="close" size={22} color={currentColors.text} />
+                  </TouchableOpacity>
+                  
+                  {/* Right: View Exercises Button */}
+                  <TouchableOpacity
+                    style={[styles.modalActionBtn, { backgroundColor: getPlanColor(selectedPlan) }]}
+                    onPress={() => {
+                      closeModal();
+                      router.push({ pathname: "/exercise-details", params: { type: selectedPlan.title } });
+                    }}
+                  >
+                    <Ionicons name="play-circle" size={16} color="#000" />
+                    <Text style={styles.modalActionBtnText}>View Exercises</Text>
+                  </TouchableOpacity>
+                  
+                  {/* Center Content */}
+                  <LinearGradient colors={[getPlanColor(selectedPlan) + "25", getPlanColor(selectedPlan) + "08"]} style={styles.modalIcon}>
+                    <MaterialCommunityIcons name={getPlanIcon(selectedPlan) as any} size={32} color={getPlanColor(selectedPlan)} />
+                  </LinearGradient>
+                  <Text style={[styles.modalTitle, { color: currentColors.text }]}>{selectedPlan.title}</Text>
+                  <View style={[styles.modalFocusBadge, { backgroundColor: getPlanColor(selectedPlan) + "15" }]}>
+                    <Text style={[styles.modalFocusText, { color: getPlanColor(selectedPlan) }]}>{selectedPlan.focus}</Text>
+                  </View>
+                </LinearGradient>
+
+                {/* Scrollable Modal Body */}
+                <ScrollView 
+                  showsVerticalScrollIndicator={true} 
+                  style={styles.modalScrollView}
+                  contentContainerStyle={styles.modalScrollContent}
+                >
+                  {/* Description */}
+                  <View style={styles.modalSection}>
+                    <Text style={[styles.modalSectionTitle, { color: currentColors.text }]}>About this plan</Text>
+                    <Text style={[styles.modalDescription, { color: isDark ? "#ccc" : "#666" }]}>{selectedPlan.description}</Text>
+                  </View>
+
+                  {/* Weekly Schedule */}
+                  <View style={styles.modalSection}>
+                    <Text style={[styles.modalSectionTitle, { color: currentColors.text }]}>Weekly Schedule</Text>
+                    <View style={styles.scheduleList}>
+                      {selectedPlan.days.map((day, idx) => (
+                        <View key={idx} style={[styles.scheduleItem, { borderBottomColor: currentColors.primary + "15" }]}>
+                          <View style={[styles.scheduleDot, { backgroundColor: getPlanColor(selectedPlan) }]} />
+                          <Text style={[styles.scheduleText, { color: currentColors.text }]}>{day}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Pro Tips */}
+                  <View style={[styles.modalSection, styles.tipsSection, { backgroundColor: getPlanColor(selectedPlan) + "08", borderColor: getPlanColor(selectedPlan) + "20" }]}>
+                    <View style={styles.tipsHeader}>
+                      <Ionicons name="bulb" size={20} color="#FFC107" />
+                      <Text style={[styles.tipsTitle, { color: currentColors.text }]}>Pro Tips</Text>
+                    </View>
+                    <Text style={[styles.tipsText, { color: isDark ? "#ccc" : "#666" }]}>{selectedPlan.tips}</Text>
+                  </View>
+                </ScrollView>
+              </>
+            )}
+          </Animated.View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
-// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 16, fontSize: 16, fontWeight: "600" },
+
+  header: {
+    paddingTop: Platform.OS === "ios" ? 52 : 42,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
   },
-  topBar: {
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 50 : 40,
-    paddingBottom: 18,
-    borderBottomWidth: 1,
+  },
+  logoContainer: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoIconWrapper: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logo: { fontSize: 22, fontWeight: "800", letterSpacing: 0.5 },
+  themeToggle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  scrollContent: { paddingHorizontal: 18, paddingBottom: 40, paddingTop: 16 },
+
+  heroCard: {
+    borderRadius: 28,
+    padding: 24,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    position: "relative",
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  heroGlow1: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    top: -60,
+    right: -60,
+  },
+  heroGlow2: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    bottom: -50,
+    left: -50,
+  },
+  heroContent: { alignItems: "center" },
+  heroIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  heroSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  heroBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+  },
+  heroBadgeText: { fontSize: 12, fontWeight: "700" },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 18,
+    gap: 12,
+  },
+  sectionLine: { flex: 1, height: 1.5 },
+  sectionTitle: { fontSize: 13, fontWeight: "700", letterSpacing: 1 },
+
+  plansGrid: { gap: 14, marginBottom: 20 },
+  planCard: {
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    position: "relative",
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -884,463 +806,128 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 8,
       },
-      android: {
-        elevation: 3,
-      },
+      android: { elevation: 3 },
     }),
   },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  logoIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logo: {
-    fontSize: 24,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  themeToggle: {
+  planCardAccent: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 40,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  topRightSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginRight: 52,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  backText: {
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  scrollContainer: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  heroCard: {
-    borderRadius: 28,
-    padding: 36,
-    marginBottom: 24,
-    borderWidth: 1.5,
-    position: "relative",
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  decorCircle: {
-    position: "absolute",
-    borderRadius: 1000,
-  },
-  decorCircle1: {
-    width: 220,
-    height: 220,
-    top: -60,
-    right: -60,
-  },
-  decorCircle2: {
-    width: 160,
-    height: 160,
-    bottom: -50,
-    left: -50,
-  },
-  heroContent: {
-    alignItems: "center",
-    zIndex: 1,
-  },
-  iconCircle: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 10,
-    letterSpacing: 0.5,
-    textAlign: "center",
-  },
-  heroSubtitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 18,
-    lineHeight: 22,
-  },
-  heroBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
-  },
-  heroBadgeText: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  plansContainer: {
-    gap: 20,
-    marginBottom: 24,
-  },
-  planCardWrapper: {
-    position: "relative",
-  },
-  planCard: {
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 2,
-    position: "relative",
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  accentBar: {
-    position: "absolute",
-    left: 0,
     top: 0,
-    bottom: 0,
-    width: 4,
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
+    left: 0,
+    right: 0,
+    height: 3,
   },
-  planNumber: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  planNumberText: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  planHeader: {
+  planCardHeader: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
-    marginBottom: 18,
-  },
-  planIconLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 12,
   },
-  planTitleContainer: {
-    flex: 1,
-    paddingRight: 40,
-  },
-  planTitle: {
-    fontSize: 19,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-    marginBottom: 8,
-    lineHeight: 26,
-  },
-  focusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    alignSelf: "flex-start",
-  },
-  planFocus: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontStyle: "italic",
-  },
-  cardDivider: {
-    height: 2,
-    borderRadius: 1,
-    marginBottom: 20,
-  },
-  daysSection: {
-    marginBottom: 18,
-  },
-  daysSectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
-  },
-  daysSectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    flex: 1,
-  },
-  daysCount: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  daysCountText: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  daysContainer: {
-    gap: 14,
-  },
-  dayItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  dayDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 6,
-  },
-  dayContent: {
-    flex: 1,
-  },
-  dayText: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
-  },
-  tipsContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    borderRadius: 14,
-    gap: 12,
-    borderWidth: 1.5,
-  },
-  tipIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tipsContent: {
-    flex: 1,
-  },
-  tipsLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  tipsText: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
-  },
-  infoCard: {
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginBottom: 16,
-  },
-  infoIconWrapper: {
+  planCardIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  infoHeaderText: {
-    flex: 1,
-  },
-  infoTitle: {
-    fontSize: 19,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  infoSubtitle: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginTop: 3,
-  },
-  divider: {
-    height: 1.5,
-    borderRadius: 1,
-    marginBottom: 20,
-  },
-  guidelinesList: {
-    gap: 14,
-  },
-  guidelineItem: {
+  planCardBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  planCardBadgeText: { fontSize: 11, fontWeight: "700" },
+  planCardTitle: { fontSize: 17, fontWeight: "800", marginBottom: 4 },
+  planCardFocus: { fontSize: 12, fontWeight: "600", marginBottom: 12 },
+  planCardFooter: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
   },
-  guidelineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 7,
-  },
-  infoText: {
-    fontSize: 14,
-    lineHeight: 22,
-    fontWeight: "500",
-    flex: 1,
-  },
-  actionButtons: {
-    gap: 12,
-  },
-  primaryButton: {
+  planCardStat: { flexDirection: "row", alignItems: "center", gap: 5 },
+  planCardStatText: { fontSize: 12, fontWeight: "500" },
+
+  viewAllButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 18,
-    borderRadius: 20,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
     gap: 12,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 14,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    marginBottom: 24,
+    position: "relative",
+    overflow: "hidden",
   },
-  primaryButtonText: {
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+  viewAllGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
+  viewAllIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewAllTextContainer: { flex: 1 },
+  viewAllTitle: { fontSize: 14, fontWeight: "800", marginBottom: 2 },
+  viewAllSubtitle: { fontSize: 11, fontWeight: "500" },
+
+  guidelinesCard: {
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1.5,
+  },
+  guidelinesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 14,
+  },
+  guidelinesIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  guidelinesTitle: { fontSize: 16, fontWeight: "800" },
+  guidelinesSubtitle: { fontSize: 11, fontWeight: "500", marginTop: 2 },
+  divider: { height: 1, marginBottom: 16 },
+  guidelinesList: { gap: 12 },
+  guidelineItem: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  guidelineDot: { width: 7, height: 7, borderRadius: 3.5, marginTop: 6 },
+  guidelineText: { fontSize: 13, lineHeight: 20, fontWeight: "500", flex: 1 },
+
+  actionButtons: { gap: 12, marginBottom: 8 },
   secondaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 18,
     borderWidth: 1.5,
     gap: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   secondaryButtonIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
   },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
+  secondaryButtonText: { fontSize: 14, fontWeight: "700" },
+  primaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 15,
+    borderRadius: 20,
+    gap: 10,
   },
+  primaryButtonText: { fontSize: 15, fontWeight: "800" },
 
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: "600",
-  },
   emptyContainer: {
     alignItems: "center",
-    justifyContent: "center",
     padding: 40,
     marginBottom: 24,
     borderWidth: 2,
@@ -1359,59 +946,142 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 20,
   },
-  emptyButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+  emptyButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
+  emptyButtonText: { color: "#000", fontWeight: "700", fontSize: 14 },
+
+    // Modal Styles - Button at Top
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: "rgba(0,0,0,0.85)", 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
-  emptyButtonText: {
-    color: "#000000",
-    fontWeight: "700",
-    fontSize: 14,
+  modalContent: { 
+    width: width - 32, 
+    maxHeight: "85%", 
+    borderRadius: 28, 
+    overflow: "hidden",
   },
-  viewAllButton: {
+  modalHeader: { 
+    alignItems: "center", 
+    paddingTop: 20, 
+    paddingBottom: 16, 
+    borderBottomWidth: 1, 
+    borderBottomColor: "rgba(0,0,0,0.05)",
+    position: "relative",
+  },
+  modalCloseBtn: { 
+    position: "absolute", 
+    top: 16, 
+    left: 16, 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    backgroundColor: "rgba(0,0,0,0.05)",
+    zIndex: 10,
+  },
+  modalActionBtn: {
+    position: "absolute",
+    top: 16,
+    right: 16,
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 2,
-    marginBottom: 20,
-    gap: 16,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    zIndex: 10,
   },
-  viewAllIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  viewAllTextContainer: {
-    flex: 1,
-  },
-  viewAllTitle: {
-    fontSize: 16,
+  modalActionBtnText: {
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 4,
+    color: "#000",
   },
-  viewAllSubtitle: {
-    fontSize: 13,
-    fontWeight: "500",
+  modalIcon: { 
+    width: 64, 
+    height: 64, 
+    borderRadius: 32, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginBottom: 12,
+    marginTop: 8,
   },
-  viewAllChevron: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+  modalTitle: { 
+    fontSize: 22, 
+    fontWeight: "800", 
+    marginBottom: 6, 
+    textAlign: "center" 
+  },
+  modalFocusBadge: { 
+    paddingHorizontal: 14, 
+    paddingVertical: 5, 
+    borderRadius: 14 
+  },
+  modalFocusText: { 
+    fontSize: 12, 
+    fontWeight: "700" 
+  },
+  modalScrollView: { 
+    maxHeight: "70%" 
+  },
+  modalScrollContent: { 
+    padding: 20,
+    paddingBottom: 30,
+  },
+  modalSection: { 
+    marginBottom: 20 
+  },
+  modalSectionTitle: { 
+    fontSize: 15, 
+    fontWeight: "700", 
+    marginBottom: 10, 
+    letterSpacing: 0.3 
+  },
+  modalDescription: { 
+    fontSize: 14, 
+    lineHeight: 21, 
+    fontWeight: "500" 
+  },
+  scheduleList: { 
+    gap: 10 
+  },
+  scheduleItem: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 12, 
+    paddingBottom: 8, 
+    borderBottomWidth: 1 
+  },
+  scheduleDot: { 
+    width: 7, 
+    height: 7, 
+    borderRadius: 3.5 
+  },
+  scheduleText: { 
+    fontSize: 14, 
+    fontWeight: "500" 
+  },
+  tipsSection: { 
+    padding: 14, 
+    borderRadius: 16, 
+    borderWidth: 1.5, 
+    marginBottom: 20 
+  },
+  tipsHeader: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 8, 
+    marginBottom: 8 
+  },
+  tipsTitle: { 
+    fontSize: 13, 
+    fontWeight: "700" 
+  },
+  tipsText: { 
+    fontSize: 13, 
+    lineHeight: 19, 
+    fontWeight: "500" 
   },
 });

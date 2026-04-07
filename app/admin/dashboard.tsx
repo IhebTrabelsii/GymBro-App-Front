@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     users: 0,
     workouts: 0,
-    news: 0,
+    food: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,75 +57,77 @@ export default function AdminDashboard() {
       console.error("Error loading user data:", error);
     }
   };
-// Define the type for your dashboard response
-type DashboardResponse = {
-  users: number;
-  workouts: number;
-  news: number;
-  error?: string;
-};
+  // Define the type for your dashboard response
+  type DashboardResponse = {
+    users: number;
+    workouts: number;
+    food: number;
+    error?: string;
+  };
 
-const fetchStats = async () => {
-  try {
-    const token = await AsyncStorage.getItem("userToken");
-    
-    if (!token) {
-      setError("No authentication token found");
-      setLoading(false);
-      return;
-    }
+  const fetchStats = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
 
-    const response = await fetch("http://localhost:3000/api/admin/dashboard", {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Type assertion here
-    const data = await response.json() as DashboardResponse;
-
-    if (response.ok) {
-      setStats({
-        users: data.users ?? 0,
-        workouts: data.workouts ?? 0,
-        news: data.news ?? 0,
-      });
-      console.log("DASHBOARD STATS:", data);
-    } else {
-      setError(data.error || "Failed to fetch dashboard");
-      
-      if (response.status === 401) {
-        Alert.alert("Session Expired", "Please login again");
-        await AsyncStorage.multiRemove(["userToken", "username", "userRole"]);
-        router.replace("/login");
+      if (!token) {
+        setError("No authentication token found");
+        setLoading(false);
+        return;
       }
+
+      const response = await fetch(
+        "http://localhost:3000/api/admin/dashboard",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      // Type assertion here
+      const data = (await response.json()) as DashboardResponse;
+
+      if (response.ok) {
+        setStats({
+          users: data.users ?? 0,
+          workouts: data.workouts ?? 0,
+          food: data.food ?? 0,
+        });
+        console.log("DASHBOARD STATS:", data);
+      } else {
+        setError(data.error || "Failed to fetch dashboard");
+
+        if (response.status === 401) {
+          Alert.alert("Session Expired", "Please login again");
+          await AsyncStorage.multiRemove(["userToken", "username", "userRole"]);
+          router.replace("/login");
+        }
+      }
+    } catch (error) {
+      console.error("DASHBOARD ERROR:", error);
+      setError("Network error occurred");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("DASHBOARD ERROR:", error);
-    setError("Network error occurred");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const handleLogout = async () => {
-  try {
-    // ✅ Clear stored login info
-    await AsyncStorage.removeItem("userToken");
-    await AsyncStorage.removeItem("username");
-    await AsyncStorage.removeItem("userRole");
+  const handleLogout = async () => {
+    try {
+      // ✅ Clear stored login info
+      await AsyncStorage.removeItem("userToken");
+      await AsyncStorage.removeItem("username");
+      await AsyncStorage.removeItem("userRole");
 
-    console.log("User logged out!");
+      console.log("User logged out!");
 
-    // ✅ Redirect to login screen
-    router.replace("/login");
-  } catch (error) {
-    console.log("Logout error:", error);
-    Alert.alert("Error", "Failed to logout.");
-  }
-};
-
+      // ✅ Redirect to login screen
+      router.replace("/login");
+    } catch (error) {
+      console.log("Logout error:", error);
+      Alert.alert("Error", "Failed to logout.");
+    }
+  };
 
   const handleButtonPress = () => {
     scaleValue.value = withSpring(0.95, {}, () => {
@@ -298,9 +300,9 @@ const handleLogout = async () => {
                   color: primaryColor,
                 },
                 {
-                  title: "News Articles",
-                  value: stats.news,
-                  icon: "newspaper",
+                  title: "Nutrition",
+                  value: stats.food,
+                  icon: "food-bank",
                   color: primaryColor,
                 },
               ].map((stat, index) => (
@@ -410,10 +412,24 @@ const handleLogout = async () => {
                 color: primaryColor,
               },
               {
-                title: "Manage News",
-                description: "Add or edit fitness news",
-                icon: "newspaper-outline",
-                route: "/admin/news",
+                title: "Manage Foods",
+                description: "Add, edit, or delete food items",
+                icon: "restaurant-outline",
+                route: "/admin/foods",
+                color: primaryColor,
+              },
+              {
+                title: "Manage Plan Exercises",
+                description: "Add or remove exercises from workout plans",
+                icon: "barbell-outline",
+                route: "/admin/manage-plan-exercises",
+                color: primaryColor,
+              },
+              {
+                title: "Manage Exercises",
+                description: "Add, edit, or delete exercises",
+                icon: "fitness-outline",
+                route: "/admin/manage-exercises",
                 color: primaryColor,
               },
             ].map((option, index) => (

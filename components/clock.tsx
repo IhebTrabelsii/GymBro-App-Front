@@ -38,6 +38,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#39FF14',
+    color: '#46d74d',
   },
 });

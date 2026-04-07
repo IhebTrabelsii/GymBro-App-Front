@@ -89,16 +89,6 @@ export default function TabLayout() {
           tabBarLabel: "AI Coach",
         }}
       />
-
-      {/* <Tabs.Screen
-        name="news" 
-        options={{
-          title: "Gym News",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="newspaper" size={size} color={color} />
-          ),
-        }}
-      /> */}
     </Tabs>
   );
 }
