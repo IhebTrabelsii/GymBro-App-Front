@@ -21,7 +21,6 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 const { width } = Dimensions.get("window");
 const API_BASE_URL = "http://192.168.100.143:3000";
 
-// ==================== Types ====================
 interface UserProfile {
   username: string;
   email: string;
@@ -48,7 +47,6 @@ interface UpdateResponse {
   message: string;
 }
 
-// ==================== Main Component ====================
 export default function EditProfileScreen() {
   const router = useRouter();
   const { theme } = useSimpleTheme();
@@ -59,7 +57,6 @@ export default function EditProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  // Form fields
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
@@ -71,7 +68,6 @@ export default function EditProfileScreen() {
   const [notifications, setNotifications] = useState(true);
   const [privacy, setPrivacy] = useState<"public" | "private">("public");
 
-  // Fetch current profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -85,12 +81,11 @@ export default function EditProfileScreen() {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        const data = (await res.json()) as ProfileResponse; // ✅ FIXED: Type assertion
+        const data = (await res.json()) as ProfileResponse; 
 
         if (res.ok) {
           const user = data.user;
           setProfile(user);
-          // Populate form
           setFullName(user.fullName || "");
           setBio(user.bio || "");
           setLocation(user.location || "");
@@ -121,7 +116,6 @@ export default function EditProfileScreen() {
       const token = await AsyncStorage.getItem("userToken");
       if (!token) throw new Error("No token");
 
-      // ✅ FIXED: Format updates to match backend expectations
       const updates = {
         fullName: fullName.trim() || undefined,
         bio: bio.trim() || undefined,
@@ -130,8 +124,8 @@ export default function EditProfileScreen() {
         weight: weight ? parseFloat(weight) : undefined,
         fitnessLevel,
         goals: goals.length > 0 ? goals : undefined,
-        notifications, // ✅ Direct field - backend will map to preferences.notifications
-        privacy,       // ✅ Direct field - backend will map to preferences.privacy
+        notifications, 
+        privacy,       
       };
 
       const res = await fetch(`${API_BASE_URL}/api/users/profile`, {
@@ -143,7 +137,7 @@ export default function EditProfileScreen() {
         body: JSON.stringify(updates),
       });
 
-      const data = (await res.json()) as UpdateResponse; // ✅ FIXED: Type assertion
+      const data = (await res.json()) as UpdateResponse; 
 
       if (res.ok) {
         Alert.alert("Success", data.message || "Profile updated successfully");
@@ -179,7 +173,7 @@ export default function EditProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Header */}
+      {}
       <View style={[styles.header, { borderBottomColor: isDark ? "rgba(57,255,20,0.2)" : "rgba(57,255,20,0.1)" }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="close" size={24} color={currentColors.text} />
@@ -198,7 +192,7 @@ export default function EditProfileScreen() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Avatar placeholder (for future) */}
+          {}
           <View style={styles.avatarSection}>
             <View
               style={[
@@ -218,7 +212,7 @@ export default function EditProfileScreen() {
             </Text>
           </View>
 
-          {/* Basic Information */}
+          {}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Basic Information</Text>
 
@@ -265,7 +259,7 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Body Metrics */}
+          {}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Body Metrics</Text>
 
@@ -298,7 +292,7 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Fitness Level */}
+          {}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Fitness Level</Text>
 
@@ -330,7 +324,7 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Goals */}
+          {}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Fitness Goals</Text>
 
@@ -373,7 +367,7 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Preferences */}
+          {}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Preferences</Text>
 
@@ -439,7 +433,7 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Save Button (bottom) */}
+          {}
           <TouchableOpacity
             style={[
               styles.bottomSaveButton,
@@ -459,7 +453,6 @@ export default function EditProfileScreen() {
   );
 }
 
-// ==================== STYLES ====================
 const styles = StyleSheet.create({
   container: {
     flex: 1,

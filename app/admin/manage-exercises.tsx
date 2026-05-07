@@ -322,7 +322,7 @@ const deleteExercise = (exercise: Exercise) => {
 
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Header */}
+      {}
       <LinearGradient
         colors={isDark ? ["#0a0a0a", "#000000"] : ["#ffffff", "#f8f9fa"]}
         style={styles.header}
@@ -340,7 +340,7 @@ const deleteExercise = (exercise: Exercise) => {
         </View>
       </LinearGradient>
 
-      {/* Category Stats Row */}
+      {}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsRow}>
         <TouchableOpacity
           style={[
@@ -380,7 +380,7 @@ const deleteExercise = (exercise: Exercise) => {
         ))}
       </ScrollView>
 
-      {/* Search Bar */}
+      {}
       <View
         style={[
           styles.searchContainer,
@@ -400,7 +400,7 @@ const deleteExercise = (exercise: Exercise) => {
         />
       </View>
 
-      {/* Exercises List */}
+      {}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -465,7 +465,7 @@ const deleteExercise = (exercise: Exercise) => {
         ))}
       </ScrollView>
 
-      {/* Add/Edit Modal */}
+      {}
       <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View
@@ -487,7 +487,7 @@ const deleteExercise = (exercise: Exercise) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Name */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Name *</Text>
                 <TextInput
@@ -499,7 +499,7 @@ const deleteExercise = (exercise: Exercise) => {
                 />
               </View>
 
-              {/* Category & SubCategory Row */}
+              {}
               <View style={styles.row}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, { color: currentColors.text }]}>Category *</Text>
@@ -524,7 +524,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </View>
               </View>
 
-              {/* SubCategory */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Sub-Category</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -547,7 +547,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </ScrollView>
               </View>
 
-              {/* Difficulty */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Difficulty</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -570,7 +570,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </ScrollView>
               </View>
 
-              {/* Sets & Reps */}
+              {}
               <View style={styles.row}>
                 <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                   <Text style={[styles.inputLabel, { color: currentColors.text }]}>Sets</Text>
@@ -593,7 +593,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </View>
               </View>
 
-              {/* Rest */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Rest</Text>
                 <TextInput
@@ -605,7 +605,7 @@ const deleteExercise = (exercise: Exercise) => {
                 />
               </View>
 
-              {/* Muscle Groups */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Muscle Groups</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -628,7 +628,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </ScrollView>
               </View>
 
-              {/* Equipment */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Equipment</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -651,7 +651,7 @@ const deleteExercise = (exercise: Exercise) => {
                 </ScrollView>
               </View>
 
-              {/* Description */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Description *</Text>
                 <TextInput
@@ -665,7 +665,7 @@ const deleteExercise = (exercise: Exercise) => {
                 />
               </View>
 
-              {/* Tips */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Tips (one per line)</Text>
                 <TextInput
@@ -679,7 +679,7 @@ const deleteExercise = (exercise: Exercise) => {
                 />
               </View>
 
-              {/* Video URL */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: currentColors.text }]}>Video URL</Text>
                 <TextInput
@@ -691,7 +691,7 @@ const deleteExercise = (exercise: Exercise) => {
                 />
               </View>
 
-              {/* Save Button */}
+              {}
               <TouchableOpacity
                 style={[styles.saveButton, { backgroundColor: currentColors.primary, opacity: submitting ? 0.7 : 1 }]}
                 onPress={saveExercise}

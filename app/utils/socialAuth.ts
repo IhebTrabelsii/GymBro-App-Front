@@ -3,11 +3,10 @@ import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { Alert, Platform } from "react-native";
 
-// Define types for the responses
 type GoogleUserInfo = {
   email: string;
   name: string;
-  sub: string; // Google ID
+  sub: string; 
   picture?: string;
 };
 
@@ -25,7 +24,6 @@ type BackendResponse = {
   error?: string;
 };
 
-// Google OAuth configuration
 
 const googleConfig = {
   expoClientId:
@@ -39,7 +37,6 @@ const googleConfig = {
   scopes: ["profile", "email"],
 };
 
-// Google Sign In (Works on Android & iOS)
 export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
     const redirectUri = AuthSession.makeRedirectUri({
@@ -47,7 +44,6 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
       path: "auth/google",
     });
     
-    // 👇 LOGS DÉTAILLÉS
     console.log('========== GOOGLE AUTH DEBUG ==========');
     console.log('1. REDIRECT URI:', redirectUri);
     console.log('2. SCHEME:', "gymbro");
@@ -55,7 +51,6 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     console.log('4. PLATFORM:', Platform.OS);
     console.log('5. CLIENT ID:', googleConfig.webClientId);
     
-    // ALERT pour voir l'URI sur mobile
     Alert.alert(
       "Redirect URI", 
       `Copie cette URI dans Google Console:\n\n${redirectUri}`,
@@ -80,7 +75,6 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     if (result.type === "success") {
       console.log('8. RESULT URL:', result.url);
       
-      // Parse the URL to get the token
       const params = new URLSearchParams(result.url.split("#")[1]);
       const accessToken = params.get("access_token");
       const error = params.get("error");
@@ -154,9 +148,7 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     return { success: false, error: errorMessage };
   }
 };
-// Apple Sign In (iOS ONLY)
 export const signInWithApple = async (): Promise<AuthResponse> => {
-  // Check if running on iOS
   if (Platform.OS !== "ios") {
     return {
       success: false,
@@ -165,7 +157,6 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
   }
 
   try {
-    // Dynamically import Apple module only on iOS
     const { AppleAuthentication } = require("expo-apple-authentication");
 
     const credential = await AppleAuthentication.signInAsync({
@@ -196,7 +187,6 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
     return { success: false, error: "Authentication failed" };
   } catch (error: any) {
     console.error("Apple Sign In error:", error);
-    // Handle user cancellation gracefully
     if (error.code === "ERR_REQUEST_CANCELED") {
       return { success: false, error: "Sign in was cancelled" };
     }
@@ -206,7 +196,6 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
   }
 };
 
-// Helper to check if Apple Sign In is available
 export const isAppleSignInAvailable = (): boolean => {
   return Platform.OS === "ios";
 };

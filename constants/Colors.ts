@@ -1,17 +1,16 @@
 export const Colors = {
  light: {
-    background: '#FFFFFF',      // Pure white background
-    card: '#FFFFFF',            // White cards (consistent)
-    text: '#1A1A1A',            // Dark gray for readability
-    border: '#EEF2F6',          // Very soft border
-    primary: '#2E7D32',         // Rich green (lighter than before, still professional)
-    notification: '#FF6B6B',    // Soft red
-    secondary: '#F8F9FA',       // Light gray for secondary
-    accent: '#4CAF50',          // Brighter green accent
-    gradient1: '#2E7D32',       // Gradient start
-    gradient2: '#4CAF50',       // Gradient end
+    background: '#FFFFFF',      
+    card: '#FFFFFF',            
+    text: '#1A1A1A',            
+    border: '#EEF2F6',          
+    primary: '#2E7D32',         
+    notification: '#FF6B6B',    
+    secondary: '#F8F9FA',       
+    accent: '#4CAF50',          
+    gradient1: '#2E7D32',       
+    gradient2: '#4CAF50',       
     
-    // Additional light mode enhancements
     cardShadow: 'rgba(0, 0, 0, 0.03)',
     inputBackground: '#FFFFFF',
     inputBorder: '#E2E8F0',
@@ -21,18 +20,18 @@ export const Colors = {
     warning: '#F59E0B',
     error: '#EF4444',
     info: '#3B82F6',
-    buttonText: '#FFFFFF',      // White text on buttons
+    buttonText: '#FFFFFF',      
   },
   dark: {
-    background: '#000000',      // Pure black background
-    text: '#FFFFFF',            // Pure white text
-    primary: '#00FF41',         // Vibrant neon green
-    card: '#0A0A0A',            // Almost black cards
-    border: '#1A1A1A',          // Subtle dark border
-    secondary: '#151515',       // Slightly lighter black
-    accent: '#7FFF00',          // Bright lime accent
-    gradient1: '#00FF41',       // Gradient start
-    gradient2: '#7FFF00',       // Gradient end
-    glow: 'rgba(0, 255, 65, 0.3)', // Neon glow effect
+    background: '#000000',      
+    text: '#FFFFFF',            
+    primary: '#00FF41',         
+    card: '#0A0A0A',            
+    border: '#1A1A1A',          
+    secondary: '#151515',       
+    accent: '#7FFF00',          
+    gradient1: '#00FF41',       
+    gradient2: '#7FFF00',       
+    glow: 'rgba(0, 255, 65, 0.3)', 
   },
 };

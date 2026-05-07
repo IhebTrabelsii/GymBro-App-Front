@@ -21,7 +21,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
 
-// Define types
 type User = {
   _id: string;
   username?: string;
@@ -255,7 +254,7 @@ export default function AdminUsers() {
 
   return (
     <LinearGradient colors={["#000000", "#0a0a0a"]} style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={primaryColor} />
@@ -264,7 +263,7 @@ export default function AdminUsers() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Search Bar */}
+      {}
       <View style={[styles.searchContainer, { borderColor: primaryColor + "40" }]}>
         <Ionicons name="search" size={20} color={primaryColor} />
         <TextInput
@@ -281,7 +280,7 @@ export default function AdminUsers() {
         ) : null}
       </View>
 
-      {/* Stats */}
+      {}
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { borderColor: primaryColor + "30" }]}>
           <Text style={styles.statNumber}>{users.length}</Text>
@@ -295,7 +294,7 @@ export default function AdminUsers() {
         </View>
       </View>
 
-      {/* Users List */}
+      {}
       <FlatList
         data={filteredUsers}
         renderItem={renderUserCard}
@@ -312,7 +311,7 @@ export default function AdminUsers() {
         }
       />
 
-      {/* Delete Confirmation Modal */}
+      {}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { borderColor: primaryColor + "40" }]}>
@@ -339,7 +338,7 @@ export default function AdminUsers() {
         </View>
       </Modal>
 
-      {/* Edit User Modal */}
+      {}
       <Modal visible={editModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.editModal, { borderColor: primaryColor + "40" }]}>

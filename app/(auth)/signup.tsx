@@ -1,72 +1,159 @@
-import { Colors } from '@/constants/Colors';
-import { Feather, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Colors } from "../../constants/Colors";
+import { Feather, FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState, useRef, useEffect } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { useSimpleTheme } from '../../context/SimpleThemeContext';
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 import { signInWithApple, signInWithGoogle } from "../utils/socialAuth";
 
-Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
-// Email validation function
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 };
 
-// Password validation function
 const validatePassword = (password: string): { isValid: boolean; message: string } => {
   if (!password || password.length < 6) {
-    return { isValid: false, message: 'Password must be at least 6 characters' };
+    return { isValid: false, message: "Password must be at least 6 characters" };
   }
-  return { isValid: true, message: '' };
+  return { isValid: true, message: "" };
 };
 
-// Helper to check if Apple Sign In is available
-const isAppleSignInAvailable = (): boolean => {
-  return Platform.OS === 'ios';
+const isAppleSignInAvailable = (): boolean => Platform.OS === "ios";
+
+const Particle = ({ color, delay, x, size }: { color: string; delay: number; x: number; size: number }) => {
+  const anim = useRef(new Animated.Value(0)).current;
+  const opAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const run = () => {
+      anim.setValue(0);
+      opAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(anim, { toValue: 1, duration: 4000 + delay * 600, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(opAnim, { toValue: 0.6, duration: 800, useNativeDriver: true }),
+          Animated.timing(opAnim, { toValue: 0, duration: 3200 + delay * 600, useNativeDriver: true }),
+        ]),
+      ]).start(() => run());
+    };
+    const t = setTimeout(run, delay * 400);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <Animated.View style={{
+      position: "absolute",
+      left: x,
+      bottom: -20,
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      opacity: opAnim,
+      transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [0, -(height * 0.55)] }) }],
+    }} />
+  );
 };
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { theme, toggleTheme } = useSimpleTheme();
   const currentColors = Colors[theme];
-  const isDark = theme === 'dark';
-  
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const isDark = theme === "dark";
+const gymBroLogo  = require("@/assets/images/sections/Icon_gym_bro.png");
+const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   
-  // Validation states
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [touchedEmail, setTouchedEmail] = useState(false);
   const [touchedPassword, setTouchedPassword] = useState(false);
 
+  const [fullNameFocused, setFullNameFocused] = useState(false);
+  const [phoneFocused, setPhoneFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const fadeAnim    = useRef(new Animated.Value(0)).current;
+  const slideAnim   = useRef(new Animated.Value(60)).current;
+  const logoScale   = useRef(new Animated.Value(0.5)).current;
+  const logoBounce  = useRef(new Animated.Value(0)).current;
+  const glowAnim    = useRef(new Animated.Value(0)).current;
+  const cardSlide   = useRef(new Animated.Value(80)).current;
+  const cardFade    = useRef(new Animated.Value(0)).current;
+  const btnPulse    = useRef(new Animated.Value(1)).current;
+  const emailShake  = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.spring(logoScale, { toValue: 1, tension: 55, friction: 7, useNativeDriver: true }),
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(cardFade, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(cardSlide, { toValue: 0, tension: 55, friction: 10, useNativeDriver: true }),
+      ]),
+    ]).start();
+
+    Animated.loop(Animated.sequence([
+      Animated.timing(logoBounce, { toValue: -8, duration: 2000, useNativeDriver: true }),
+      Animated.timing(logoBounce, { toValue: 0, duration: 2000, useNativeDriver: true }),
+    ])).start();
+
+    Animated.loop(Animated.sequence([
+      Animated.timing(glowAnim, { toValue: 1, duration: 2200, useNativeDriver: true }),
+      Animated.timing(glowAnim, { toValue: 0, duration: 2200, useNativeDriver: true }),
+    ])).start();
+
+    Animated.loop(Animated.sequence([
+      Animated.timing(btnPulse, { toValue: 1.03, duration: 1500, useNativeDriver: true }),
+      Animated.timing(btnPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
+    ])).start();
+  }, []);
+
+  const shakeEmail = () => {
+    Animated.sequence([
+      Animated.timing(emailShake, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(emailShake, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(emailShake, { toValue: 6, duration: 60, useNativeDriver: true }),
+      Animated.timing(emailShake, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(emailShake, { toValue: 0, duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
+
   const handleEmailChange = (text: string) => {
     setEmail(text);
     setTouchedEmail(true);
-    if (text.trim() === '') {
-      setEmailError('Email is required');
+    if (text.trim() === "") {
+      setEmailError("Email is required");
     } else if (!validateEmail(text)) {
-      setEmailError('Please enter a valid email (e.g., name@example.com)');
+      setEmailError("Please enter a valid email (e.g., name@example.com)");
     } else {
       setEmailError(null);
     }
@@ -82,34 +169,32 @@ export default function SignUpScreen() {
   const isFormValid = fullName.trim() && phone.trim() && email.trim() && password.trim() && !emailError && !passwordError;
 
   const handleSignUp = async () => {
-    // Mark fields as touched to show validation errors
     setTouchedEmail(true);
     setTouchedPassword(true);
     
-    // Validate email
     if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError("Please enter a valid email address");
+      shakeEmail();
     }
     
-    // Validate password
     const { isValid: isPasswordValid, message: passwordMessage } = validatePassword(password);
     if (!isPasswordValid) {
       setPasswordError(passwordMessage);
     }
 
     if (!isFormValid) {
-      Alert.alert('Error', 'Please fix the errors before continuing');
+      Alert.alert("Error", "Please fix the errors before continuing");
       return;
     }
     
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.100.143:3000/api/users/signup', {
-        method: 'POST',
+      const response = await fetch("http://192.168.100.143:3000/api/users/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ username: fullName, phone, email, password })
       });
@@ -122,16 +207,16 @@ export default function SignUpScreen() {
       }
 
       if (!response.ok) {
-        throw new Error((data as { error?: string }).error || 'Signup failed');
+        throw new Error((data as { error?: string }).error || "Signup failed");
       }
 
-      Alert.alert('Success', 'Signup successful! You can now log in.');
-      router.push('/login');
+      Alert.alert("Success", "Signup successful! You can now log in.");
+      router.push("/login");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setError(error.message || 'Something went wrong');
+        setError(error.message || "Something went wrong");
       } else {
-        setError('Something went wrong');
+        setError("Something went wrong");
       }
     } finally {
       setLoading(false);
@@ -145,10 +230,7 @@ export default function SignUpScreen() {
     if (result.success) {
       router.replace("/");
     } else {
-      Alert.alert(
-        "Google Sign In Failed",
-        result.error || "Something went wrong",
-      );
+      Alert.alert("Google Sign In Failed", result.error || "Something went wrong");
     }
     setSocialLoading(null);
   };
@@ -160,793 +242,605 @@ export default function SignUpScreen() {
     if (result.success) {
       router.replace("/");
     } else {
-      // Don't show error for platform unavailability
-      if (result.error !== 'Apple Sign In is only available on iOS devices') {
-        Alert.alert(
-          "Apple Sign In Failed",
-          result.error || "Something went wrong",
-        );
+      if (result.error !== "Apple Sign In is only available on iOS devices") {
+        Alert.alert("Apple Sign In Failed", result.error || "Something went wrong");
       }
     }
     setSocialLoading(null);
   };
 
+  const primary = currentColors.primary;
+
+  const particles = [
+    { x: width * 0.08, size: 5, delay: 0 },
+    { x: width * 0.22, size: 3, delay: 1 },
+    { x: width * 0.38, size: 6, delay: 2 },
+    { x: width * 0.55, size: 4, delay: 0.5 },
+    { x: width * 0.70, size: 3, delay: 1.5 },
+    { x: width * 0.85, size: 5, delay: 2.5 },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Professional Header - Matching Homepage */}
-      <View style={[styles.topBar, { 
-        backgroundColor: isDark ? currentColors.background : '#FFFFFF',
-        borderBottomColor: isDark ? currentColors.border : 'rgba(57, 255, 20, 0.15)',
+
+      {}
+      {particles.map((p, i) => (
+        <Particle key={i} color={primary} delay={p.delay} x={p.x} size={p.size} />
+      ))}
+
+      {}
+      <Animated.View style={[styles.bgGlow, {
+        backgroundColor: primary,
+        opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.04, 0.10] }),
+      }]} />
+
+      {}
+      <View style={[styles.topBar, {
+        backgroundColor: isDark ? "rgba(6,6,6,0.95)" : "rgba(255,255,255,0.95)",
+        borderBottomColor: isDark ? primary + "18" : primary + "10",
       }]}>
-        <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
-          <View style={styles.logoContainer}>
-            <MaterialCommunityIcons name="dumbbell" size={28} color={currentColors.primary} />
-            <Text style={[styles.logo, { color: currentColors.primary }]}>
-              GymBro
-            </Text>
+        <LinearGradient
+          colors={[primary + "00", primary + "60", primary + "00"]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={styles.topBarLine}
+        />
+        <TouchableOpacity onPress={() => router.replace("/")} activeOpacity={0.7}>
+          <View style={styles.logoRow}>
+            <LinearGradient colors={[primary + "35", primary + "08"]} style={styles.logoIconWrap}>
+    <Image
+                  source={gymBroLogo}
+                  style={{ width: 32, height: 32, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />            </LinearGradient>
+            <View>
+    <Image
+                  source={gymBroLogoT}
+                  style={{ width: 85, height: 24, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />              <View style={[styles.logoUnderline, { backgroundColor: primary }]} />
+            </View>
           </View>
         </TouchableOpacity>
-        
-        <View style={styles.topRightSection}>
-          <TouchableOpacity 
-            onPress={() => router.back()}
-            style={[styles.backButton, { 
-              backgroundColor: isDark ? currentColors.card : '#F5F5F5',
-              borderWidth: 1.5,
-              borderColor: currentColors.primary,
-            }]}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="arrow-back" size={18} color={currentColors.primary} />
-            <Text style={[styles.backText, { color: currentColors.primary }]}>
-              Back
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={toggleTheme}
-          style={[styles.themeToggle, {
-            backgroundColor: currentColors.primary,
-            shadowColor: currentColors.primary,
-          }]}
+          style={[styles.themeBtn, { backgroundColor: primary, shadowColor: primary }]}
           activeOpacity={0.8}
         >
-          <Ionicons 
-            name={isDark ? 'sunny' : 'moon'} 
-            size={20} 
-            color={isDark ? currentColors.background : '#FFFFFF'} 
-          />
+          <Ionicons name={isDark ? "sunny" : "moon"} size={15} color={isDark ? "#000" : "#fff"} />
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView 
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
-          style={styles.scrollContainer}
+          style={styles.flex}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Hero Section */}
-          <View>
-            <View style={[styles.heroCard, { 
-              backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-              borderColor: isDark ? currentColors.primary : 'rgba(57, 255, 20, 0.2)',
-              shadowColor: isDark ? currentColors.primary : '#000',
-            }]}>
-              <View style={styles.heroContent}>
-                <View style={[styles.iconCircle, { 
-                  backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)' 
-                }]}>
-                  <MaterialCommunityIcons name="account-plus" size={40} color={currentColors.primary} />
-                </View>
-                <Text style={[styles.heroTitle, { color: currentColors.text }]}>
-                  Join GymBro
-                </Text>
-                <Text style={[styles.heroSubtitle, { 
-                  color: isDark ? currentColors.text : '#666' 
-                }]}>
-                  Start your fitness journey with us today
-                </Text>
-              </View>
-            </View>
-          </View>
 
-          {/* Error Message */}
+          {}
+          <Animated.View style={[styles.hero, {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }]}>
+            {}
+            <Animated.View style={[styles.heroGlowRing, {
+              borderColor: primary,
+              opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.55] }),
+              transform: [{ scale: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }],
+            }]} />
+
+            {}
+            <Animated.View style={[{ transform: [{ scale: logoScale }, { translateY: logoBounce }] }]}>
+              <LinearGradient
+                colors={[primary + "30", primary + "08"]}
+                style={styles.heroIconOuter}
+              >
+                <LinearGradient
+                  colors={[primary + "45", primary + "15"]}
+                  style={styles.heroIconInner}
+                >
+                  <MaterialCommunityIcons name="account-plus" size={42} color={primary} />
+                </LinearGradient>
+              </LinearGradient>
+            </Animated.View>
+
+            <Text style={[styles.heroTitle, { color: currentColors.text }]}>
+              Join{"\n"}
+              <Text style={{ color: primary }}>GymBro</Text>
+            </Text>
+            <Text style={[styles.heroSub, { color: isDark ? "#444" : "#bbb" }]}>
+              Start your fitness journey today
+            </Text>
+          </Animated.View>
+
+          {}
           {!!error && (
-            <View>
-              <View style={[styles.errorCard, { 
-                backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-                borderColor: isDark ? '#FF444440' : '#FF444420',
-              }]}>
-                <View style={[styles.errorIcon, { backgroundColor: '#FF444420' }]}>
-                  <Ionicons name="warning" size={20} color="#FF4444" />
-                </View>
-                <Text style={[styles.errorText, { color: isDark ? '#FF6B6B' : '#D32F2F' }]}>
-                  {error}
-                </Text>
+            <Animated.View style={[styles.errorCard, {
+              backgroundColor: isDark ? "#0c0c0c" : "#fff",
+              borderColor: "#FF444440",
+              opacity: cardFade,
+              transform: [{ translateY: cardSlide }],
+            }]}>
+              <View style={[styles.errorIcon, { backgroundColor: "#FF444420" }]}>
+                <Ionicons name="warning" size={16} color="#FF4444" />
               </View>
-            </View>
+              <Text style={[styles.errorText, { color: "#FF4444" }]}>
+                {error}
+              </Text>
+            </Animated.View>
           )}
 
-          {/* Sign Up Form */}
-          <View>
-            <View style={[styles.formCard, { 
-              backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-              borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.15)',
-              shadowColor: isDark ? currentColors.primary : '#000',
-            }]}>
-              {/* Full Name Input */}
-              <View style={styles.inputGroup}>
-                <View style={styles.inputLabelContainer}>
-                  <View style={[styles.inputIcon, { 
-                    backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)' 
-                  }]}>
-                    <Feather name="user" size={18} color={currentColors.primary} />
-                  </View>
-                  <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-                    Full Name
-                  </Text>
-                </View>
-                <TextInput
-                  style={[styles.input, { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    color: currentColors.text,
-                    borderColor: isDark ? currentColors.border : '#E0E0E0',
-                  }]}
-                  placeholder="Enter your full name"
-                  placeholderTextColor={isDark ? '#999' : '#888'}
-                  value={fullName}
-                  onChangeText={setFullName}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  autoCorrect={false}
-                />
-              </View>
+          {}
+          <Animated.View style={[styles.formCard, {
+            backgroundColor: isDark ? "#0c0c0c" : "#fff",
+            borderColor: isDark ? primary + "22" : primary + "12",
+            opacity: cardFade,
+            transform: [{ translateY: cardSlide }],
+          }]}>
+            {}
+            <LinearGradient
+              colors={[primary + "00", primary + "35", primary + "00"]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={styles.cardTopLine}
+            />
 
-              {/* Phone Input */}
-              <View style={styles.inputGroup}>
-                <View style={styles.inputLabelContainer}>
-                  <View style={[styles.inputIcon, { 
-                    backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)' 
-                  }]}>
-                    <Feather name="phone" size={18} color={currentColors.primary} />
-                  </View>
-                  <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-                    Phone Number
-                  </Text>
+            {}
+            <View style={styles.fieldGroup}>
+              <View style={styles.fieldLabelRow}>
+                <View style={[styles.fieldIconBox, {
+                  backgroundColor: fullNameFocused ? primary + "20" : (isDark ? "#111" : "#f5f5f5"),
+                  borderColor: fullNameFocused ? primary + "50" : "transparent",
+                }]}>
+                  <Feather name="user" size={14}
+                    color={fullNameFocused ? primary : (isDark ? "#444" : "#bbb")} />
                 </View>
-                <TextInput
-                  style={[styles.input, { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    color: currentColors.text,
-                    borderColor: isDark ? currentColors.border : '#E0E0E0',
-                  }]}
-                  placeholder="Enter your phone number"
-                  placeholderTextColor={isDark ? '#999' : '#888'}
-                  keyboardType="phone-pad"
-                  value={phone}
-                  onChangeText={setPhone}
-                  autoComplete="tel"
-                />
+                <Text style={[styles.fieldLabel, { color: isDark ? "#555" : "#bbb" }]}>FULL NAME</Text>
+                {fullName.length > 0 && (
+                  <View style={[styles.validBadge, { backgroundColor: primary + "15" }]}>
+                    <Ionicons name="checkmark-circle" size={11} color={primary} />
+                  </View>
+                )}
               </View>
+              <TextInput
+                style={[styles.fieldInput, {
+                  backgroundColor: isDark ? "#111" : "#f8f8f8",
+                  color: currentColors.text,
+                  borderColor: fullNameFocused ? primary + "55" : (isDark ? "#1a1a1a" : "#ebebeb"),
+                }]}
+                placeholder="Your full name"
+                placeholderTextColor={isDark ? "#2a2a2a" : "#ccc"}
+                value={fullName}
+                onChangeText={setFullName}
+                onFocus={() => setFullNameFocused(true)}
+                onBlur={() => setFullNameFocused(false)}
+                autoCapitalize="words"
+                autoComplete="name"
+                autoCorrect={false}
+                selectionColor={primary}
+              />
+            </View>
 
-              {/* Email Input - With Validation */}
-              <View style={styles.inputGroup}>
-                <View style={styles.inputLabelContainer}>
-                  <View style={[styles.inputIcon, { 
-                    backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)' 
-                  }]}>
-                    <Feather name="mail" size={18} color={currentColors.primary} />
+            {}
+            <View style={styles.fieldGroup}>
+              <View style={styles.fieldLabelRow}>
+                <View style={[styles.fieldIconBox, {
+                  backgroundColor: phoneFocused ? primary + "20" : (isDark ? "#111" : "#f5f5f5"),
+                  borderColor: phoneFocused ? primary + "50" : "transparent",
+                }]}>
+                  <Feather name="phone" size={14}
+                    color={phoneFocused ? primary : (isDark ? "#444" : "#bbb")} />
+                </View>
+                <Text style={[styles.fieldLabel, { color: isDark ? "#555" : "#bbb" }]}>PHONE NUMBER</Text>
+                {phone.length > 0 && (
+                  <View style={[styles.validBadge, { backgroundColor: primary + "15" }]}>
+                    <Ionicons name="checkmark-circle" size={11} color={primary} />
                   </View>
-                  <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-                    Email Address
-                  </Text>
+                )}
+              </View>
+              <TextInput
+                style={[styles.fieldInput, {
+                  backgroundColor: isDark ? "#111" : "#f8f8f8",
+                  color: currentColors.text,
+                  borderColor: phoneFocused ? primary + "55" : (isDark ? "#1a1a1a" : "#ebebeb"),
+                }]}
+                placeholder="Your phone number"
+                placeholderTextColor={isDark ? "#2a2a2a" : "#ccc"}
+                value={phone}
+                onChangeText={setPhone}
+                onFocus={() => setPhoneFocused(true)}
+                onBlur={() => setPhoneFocused(false)}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                selectionColor={primary}
+              />
+            </View>
+
+            {}
+            <Animated.View style={{ transform: [{ translateX: emailShake }] }}>
+              <View style={styles.fieldGroup}>
+                <View style={styles.fieldLabelRow}>
+                  <View style={[styles.fieldIconBox, {
+                    backgroundColor: emailFocused ? primary + "20" : (isDark ? "#111" : "#f5f5f5"),
+                    borderColor: emailFocused ? primary + "50" : "transparent",
+                  }]}>
+                    <Ionicons name="mail-outline" size={14}
+                      color={emailFocused ? primary : (isDark ? "#444" : "#bbb")} />
+                  </View>
+                  <Text style={[styles.fieldLabel, { color: isDark ? "#555" : "#bbb" }]}>EMAIL ADDRESS</Text>
+                  {emailError && touchedEmail && (
+                    <View style={styles.errorBadge}>
+                      <Ionicons name="alert-circle" size={11} color="#FF4444" />
+                      <Text style={styles.errorBadgeText}>Invalid</Text>
+                    </View>
+                  )}
+                  {!emailError && email && (
+                    <View style={[styles.validBadge, { backgroundColor: primary + "15" }]}>
+                      <Ionicons name="checkmark-circle" size={11} color={primary} />
+                    </View>
+                  )}
                 </View>
                 <TextInput
-                  style={[
-                    styles.input, 
-                    { 
-                      backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                      color: currentColors.text,
-                      borderColor: emailError && touchedEmail 
-                        ? '#FF4444' 
-                        : (isDark ? currentColors.border : '#E0E0E0'),
-                    }
-                  ]}
-                  placeholder="Enter your email"
-                  placeholderTextColor={isDark ? '#999' : '#888'}
-                  keyboardType="email-address"
+                  style={[styles.fieldInput, {
+                    backgroundColor: isDark ? "#111" : "#f8f8f8",
+                    color: currentColors.text,
+                    borderColor: emailError && touchedEmail
+                      ? "#FF444450"
+                      : emailFocused
+                      ? primary + "55"
+                      : (isDark ? "#1a1a1a" : "#ebebeb"),
+                  }]}
+                  placeholder="your@email.com"
+                  placeholderTextColor={isDark ? "#2a2a2a" : "#ccc"}
                   value={email}
                   onChangeText={handleEmailChange}
-                  onBlur={() => setTouchedEmail(true)}
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={() => { setEmailFocused(false); setTouchedEmail(true); }}
+                  keyboardType="email-address"
                   autoCapitalize="none"
-                  autoComplete="email"
                   autoCorrect={false}
+                  selectionColor={primary}
                 />
                 {emailError && touchedEmail && (
-                  <Text style={styles.errorMessage}>
-                    {emailError}
-                  </Text>
+                  <Text style={styles.errorMsg}>{emailError}</Text>
                 )}
               </View>
+            </Animated.View>
 
-              {/* Password Input - With Validation */}
-              <View style={styles.inputGroup}>
-                <View style={styles.inputLabelContainer}>
-                  <View style={[styles.inputIcon, { 
-                    backgroundColor: isDark ? 'rgba(57, 255, 20, 0.2)' : 'rgba(57, 255, 20, 0.1)' 
-                  }]}>
-                    <Feather name="lock" size={18} color={currentColors.primary} />
-                  </View>
-                  <Text style={[styles.inputLabel, { color: currentColors.text }]}>
-                    Password
-                  </Text>
+            {}
+            <View style={styles.fieldGroup}>
+              <View style={styles.fieldLabelRow}>
+                <View style={[styles.fieldIconBox, {
+                  backgroundColor: passwordFocused ? primary + "20" : (isDark ? "#111" : "#f5f5f5"),
+                  borderColor: passwordFocused ? primary + "50" : "transparent",
+                }]}>
+                  <Ionicons name="lock-closed-outline" size={14}
+                    color={passwordFocused ? primary : (isDark ? "#444" : "#bbb")} />
                 </View>
-                <View style={[
-                  styles.passwordContainer, 
-                  { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    borderColor: passwordError && touchedPassword 
-                      ? '#FF4444' 
-                      : (isDark ? currentColors.border : '#E0E0E0'),
-                  }
-                ]}>
-                  <TextInput
-                    style={[styles.passwordInput, { color: currentColors.text }]}
-                    placeholder="Create a strong password"
-                    placeholderTextColor={isDark ? '#999' : '#888'}
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={handlePasswordChange}
-                    onBlur={() => setTouchedPassword(true)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    textContentType="newPassword"
-                  />
-                  <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeButton}
-                    activeOpacity={0.7}
-                  >
-                    <Feather
-                      name={showPassword ? 'eye-off' : 'eye'}
-                      size={20}
-                      color={isDark ? '#999' : '#666'}
-                    />
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.fieldLabel, { color: isDark ? "#555" : "#bbb" }]}>PASSWORD</Text>
                 {passwordError && touchedPassword && (
-                  <Text style={styles.errorMessage}>
-                    {passwordError}
-                  </Text>
+                  <View style={styles.errorBadge}>
+                    <Ionicons name="alert-circle" size={11} color="#FF4444" />
+                    <Text style={styles.errorBadgeText}>Weak</Text>
+                  </View>
                 )}
-                {password.length > 0 && password.length < 6 && (
-                  <Text style={styles.passwordHint}>
-                    {6 - password.length} more characters needed
-                  </Text>
+                {!passwordError && password.length >= 6 && (
+                  <View style={[styles.validBadge, { backgroundColor: primary + "15" }]}>
+                    <Ionicons name="checkmark-circle" size={11} color={primary} />
+                  </View>
                 )}
               </View>
-
-              {/* Sign Up Button */}
-              <View>
-                <TouchableOpacity
-                  style={[styles.signupButton, { 
-                    backgroundColor: currentColors.primary,
-                    shadowColor: currentColors.primary,
-                    opacity: !isFormValid || loading ? 0.6 : 1,
-                  }]}
-                  onPress={handleSignUp}
-                  disabled={!isFormValid || loading}
-                  activeOpacity={0.85}
-                >
-                  {loading ? (
-                    <ActivityIndicator color={isDark ? currentColors.background : '#FFFFFF'} />
-                  ) : (
-                    <>
-                      <Text style={[styles.signupButtonText, { 
-                        color: isDark ? currentColors.background : '#FFFFFF' 
-                      }]}>
-                        Create Account
-                      </Text>
-                      <Ionicons 
-                        name="arrow-forward" 
-                        size={20} 
-                        color={isDark ? currentColors.background : '#FFFFFF'} 
-                      />
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Divider */}
-          <View>
-            <View style={styles.dividerContainer}>
-              <View style={[styles.divider, { 
-                backgroundColor: isDark ? currentColors.border : '#E0E0E0' 
-              }]} />
-              <Text style={[styles.dividerText, { 
-                color: isDark ? currentColors.text : '#666' 
+              <View style={[styles.passwordRow, {
+                backgroundColor: isDark ? "#111" : "#f8f8f8",
+                borderColor: passwordError && touchedPassword
+                  ? "#FF444450"
+                  : passwordFocused
+                  ? primary + "55"
+                  : (isDark ? "#1a1a1a" : "#ebebeb"),
               }]}>
-                Or sign up with
-              </Text>
-              <View style={[styles.divider, { 
-                backgroundColor: isDark ? currentColors.border : '#E0E0E0' 
-              }]} />
-            </View>
-          </View>
-
-          {/* Social Sign Up */}
-          <View>
-            <View style={[styles.socialCard, { 
-              backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-              borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.15)',
-              shadowColor: isDark ? currentColors.primary : '#000',
-            }]}>
-              <Text style={[styles.socialTitle, { color: currentColors.text }]}>
-                Social Sign Up
-              </Text>
-              <View style={styles.socialButtons}>
-                {/* Google Button - Works on ALL platforms */}
-                <TouchableOpacity 
-                  style={[styles.socialButton, { 
-                    backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                    borderColor: isDark ? currentColors.border : '#E0E0E0',
-                    opacity: socialLoading === "google" ? 0.7 : 1,
-                    flex: isAppleSignInAvailable() ? 1 : 2,
-                  }]}
-                  activeOpacity={0.7}
-                  onPress={handleGoogleSignIn}
-                  disabled={socialLoading !== null}
-                >
-                  {socialLoading === "google" ? (
-                    <ActivityIndicator size="small" color={currentColors.primary} />
-                  ) : (
-                    <FontAwesome name="google" size={22} color="#DB4437" />
-                  )}
-                  <Text style={[styles.socialButtonText, { color: currentColors.text }]}>
-                    {socialLoading === "google" ? "Signing in..." : "Google"}
-                  </Text>
+                <TextInput
+                  style={[styles.passwordInput, { color: currentColors.text }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={isDark ? "#2a2a2a" : "#ccc"}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => { setPasswordFocused(false); setTouchedPassword(true); }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  selectionColor={primary}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={[styles.eyeBtn, { backgroundColor: isDark ? "#1a1a1a" : "#ebebeb" }]} activeOpacity={0.7}>
+                  <Ionicons name={!showPassword ? "eye-off-outline" : "eye-outline"} size={16} color={isDark ? "#555" : "#aaa"} />
                 </TouchableOpacity>
-
-                {/* Apple Button - iOS ONLY */}
-                {isAppleSignInAvailable() && (
-                  <TouchableOpacity 
-                    style={[styles.socialButton, { 
-                      backgroundColor: isDark ? currentColors.background : '#F8F9FA',
-                      borderColor: isDark ? currentColors.border : '#E0E0E0',
-                      opacity: socialLoading === "apple" ? 0.7 : 1,
-                      flex: 1,
-                    }]}
-                    activeOpacity={0.7}
-                    onPress={handleAppleSignIn}
-                    disabled={socialLoading !== null}
-                  >
-                    {socialLoading === "apple" ? (
-                      <ActivityIndicator size="small" color={currentColors.primary} />
-                    ) : (
-                      <FontAwesome name="apple" size={22} color={currentColors.text} />
-                    )}
-                    <Text style={[styles.socialButtonText, { color: currentColors.text }]}>
-                      {socialLoading === "apple" ? "Signing in..." : "Apple"}
-                    </Text>
-                  </TouchableOpacity>
-                )}
               </View>
-              
-              {/* Optional note for Android users */}
-              {!isAppleSignInAvailable() && (
-                <Text style={[styles.noteText, { color: isDark ? '#888' : '#666' }]}>
-                  Apple Sign In is available on iOS devices
+              {passwordError && touchedPassword && (
+                <Text style={styles.errorMsg}>{passwordError}</Text>
+              )}
+              {password.length > 0 && password.length < 6 && (
+                <Text style={styles.passwordHint}>
+                  {6 - password.length} more characters needed
                 </Text>
               )}
             </View>
-          </View>
 
-          {/* Login Link */}
-          <View>
-            <View style={styles.loginContainer}>
-              <Text style={[styles.loginText, { color: isDark ? currentColors.text : '#666' }]}>
-                Already have an account?
-              </Text>
-              <TouchableOpacity 
-                onPress={() => router.push('/login')}
-                activeOpacity={0.7}
+            {}
+            <Animated.View style={{ transform: [{ scale: isFormValid ? btnPulse : new Animated.Value(1) }] }}>
+              <TouchableOpacity
+                style={[styles.signInBtn, { shadowColor: primary, opacity: isFormValid ? 1 : 0.45 }]}
+                onPress={handleSignUp}
+                disabled={loading || !isFormValid}
+                activeOpacity={0.85}
               >
-                <Text style={[styles.loginLink, { color: currentColors.primary }]}>
-                  Sign in now
+                <LinearGradient
+                  colors={[primary, primary + "cc"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {}
+                <Animated.View style={[styles.btnShimmer, {
+                  opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] }),
+                }]} />
+                {loading ? (
+                  <ActivityIndicator color={isDark ? "#000" : "#fff"} />
+                ) : (
+                  <>
+                    <View style={[styles.btnIconWrap, { backgroundColor: "rgba(0,0,0,0.15)" }]}>
+                      <Ionicons name="person-add-outline" size={18} color={isDark ? "#000" : "#fff"} />
+                    </View>
+                    <Text style={[styles.signInBtnText, { color: isDark ? "#000" : "#fff" }]}>Create Account</Text>
+                    <View style={[styles.btnArrow, { backgroundColor: "rgba(0,0,0,0.12)" }]}>
+                      <Ionicons name="arrow-forward" size={14} color={isDark ? "#000" : "#fff"} />
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
+
+          {}
+          <Animated.View style={[styles.dividerRow, { opacity: cardFade }]}>
+            <View style={[styles.divLine, { backgroundColor: isDark ? "#1a1a1a" : "#ebebeb" }]} />
+            <View style={[styles.divPill, { backgroundColor: isDark ? "#111" : "#f5f5f5", borderColor: isDark ? "#1e1e1e" : "#e8e8e8" }]}>
+              <Text style={[styles.divText, { color: isDark ? "#333" : "#ccc" }]}>or sign up with</Text>
+            </View>
+            <View style={[styles.divLine, { backgroundColor: isDark ? "#1a1a1a" : "#ebebeb" }]} />
+          </Animated.View>
+
+          {}
+          <Animated.View style={[styles.socialCard, {
+            backgroundColor: isDark ? "#0c0c0c" : "#fff",
+            borderColor: isDark ? primary + "18" : primary + "0c",
+            opacity: cardFade,
+            transform: [{ translateY: cardSlide }],
+          }]}>
+            <View style={styles.socialBtns}>
+              <TouchableOpacity
+                style={[styles.socialBtn, {
+                  backgroundColor: isDark ? "#111" : "#f8f8f8",
+                  borderColor: isDark ? "#1e1e1e" : "#ebebeb",
+                  flex: isAppleSignInAvailable() ? 1 : 2,
+                  opacity: socialLoading === "google" ? 0.7 : 1,
+                }]}
+                onPress={handleGoogleSignIn}
+                disabled={socialLoading !== null}
+                activeOpacity={0.78}
+              >
+                {socialLoading === "google" ? (
+                  <ActivityIndicator size="small" color={primary} />
+                ) : (
+                  <FontAwesome name="google" size={18} color="#DB4437" />
+                )}
+                <Text style={[styles.socialBtnText, { color: isDark ? "#666" : "#aaa" }]}>
+                  {socialLoading === "google" ? "Signing in…" : "Google"}
                 </Text>
               </TouchableOpacity>
-            </View>
-          </View>
 
-          {/* Back to Home */}
-          <View>
-            <TouchableOpacity 
-              style={[styles.homeButton, { 
-                backgroundColor: isDark ? currentColors.card : '#FFFFFF',
-                borderColor: isDark ? 'rgba(57, 255, 20, 0.3)' : 'rgba(57, 255, 20, 0.2)',
-              }]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/')}
-            >
-              <MaterialCommunityIcons name="home" size={20} color={currentColors.primary} />
-              <Text style={[styles.homeButtonText, { color: currentColors.text }]}>
-                Back to Home
+              {isAppleSignInAvailable() && (
+                <TouchableOpacity
+                  style={[styles.socialBtn, {
+                    backgroundColor: isDark ? "#111" : "#f8f8f8",
+                    borderColor: isDark ? "#1e1e1e" : "#ebebeb",
+                    flex: 1,
+                    opacity: socialLoading === "apple" ? 0.7 : 1,
+                  }]}
+                  onPress={handleAppleSignIn}
+                  disabled={socialLoading !== null}
+                  activeOpacity={0.78}
+                >
+                  {socialLoading === "apple" ? (
+                    <ActivityIndicator size="small" color={primary} />
+                  ) : (
+                    <FontAwesome name="apple" size={18} color={isDark ? "#fff" : "#000"} />
+                  )}
+                  <Text style={[styles.socialBtnText, { color: isDark ? "#666" : "#aaa" }]}>
+                    {socialLoading === "apple" ? "Signing in…" : "Apple"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {!isAppleSignInAvailable() && (
+              <Text style={[styles.noteText, { color: isDark ? "#2a2a2a" : "#ddd" }]}>
+                Apple Sign In available on iOS
               </Text>
-            </TouchableOpacity>
-          </View>
+            )}
+          </Animated.View>
+
+          {}
+{}
+<Animated.View style={[styles.signupRow, { opacity: cardFade }]}>
+  <Text style={[styles.signupText, { color: isDark ? "#333" : "#ccc" }]}>
+    Already have an account?
+  </Text>
+  <TouchableOpacity onPress={() => router.push("../login")} activeOpacity={0.7}>
+    <View style={[styles.signupLink, { borderColor: primary + "40", backgroundColor: primary + "10" }]}>
+      <Text style={[styles.signupLinkText, { color: primary }]}>Sign in now</Text>
+      <Ionicons name="arrow-forward-circle" size={14} color={primary} />
+    </View>
+  </TouchableOpacity>
+</Animated.View>
+
+          {}
+          <Text style={[styles.version, { color: isDark ? "#1e1e1e" : "#e8e8e8" }]}>GymBro v1.0.0</Text>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
-// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
-  // ... keep all your existing styles above
-  container: {
-    flex: 1,
+  flex: { flex: 1 },
+  container: { flex: 1, overflow: "hidden" },
+
+  bgGlow: {
+    position: "absolute",
+    width: width * 1.4,
+    height: width * 1.4,
+    borderRadius: width * 0.7,
+    top: -width * 0.5,
+    left: -width * 0.2,
   },
+
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 18, paddingTop: Platform.OS === "ios" ? 52 : 42,
+    paddingBottom: 13, borderBottomWidth: 1, overflow: "hidden", position: "relative",
     ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 2,
-      },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 4 },
     }),
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logo: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  themeToggle: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 40,
-    right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
+  topBarLine: { position: "absolute", top: 0, left: 0, right: 0, height: 2 },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 9 },
+  logoIconWrap: { width: 30, height: 30, borderRadius: 9, justifyContent: "center", alignItems: "center" },
+  logoText: { fontSize: 19, fontWeight: "900", letterSpacing: 0.3 },
+  logoUnderline: { height: 2, width: 20, borderRadius: 1, marginTop: 1 },
+  themeBtn: {
+    width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center",
     ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
+      ios: { shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6 },
+      android: { elevation: 5 },
     }),
   },
-  topRightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+
+  scrollContent: { paddingTop: 10, paddingHorizontal: 20, paddingBottom: 40 },
+
+  hero: { alignItems: "center", paddingTop: 28, paddingBottom: 32 },
+  heroGlowRing: {
+    position: "absolute",
+    top: 20,
+    width: 130, height: 130, borderRadius: 65, borderWidth: 1.5,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+  heroIconOuter: {
+    width: 110, height: 110, borderRadius: 55,
+    justifyContent: "center", alignItems: "center", marginBottom: 22,
   },
-  backText: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  keyboardContainer: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  heroCard: {
-    borderRadius: 24,
-    padding: 28,
-    marginBottom: 20,
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  heroContent: {
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+  heroIconInner: {
+    width: 86, height: 86, borderRadius: 43,
+    justifyContent: "center", alignItems: "center",
   },
   heroTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 8,
-    letterSpacing: 0.3,
-    textAlign: 'center',
+    fontSize: 38, fontWeight: "900", textAlign: "center",
+    letterSpacing: -1, lineHeight: 44, marginBottom: 10,
   },
-  heroSubtitle: {
-    fontSize: 15,
-    fontWeight: '500',
-    opacity: 0.8,
-    textAlign: 'center',
-  },
+  heroSub: { fontSize: 14, fontWeight: "500", textAlign: "center" },
+
   errorCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 16, padding: 14, marginBottom: 16,
     borderWidth: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
-  errorIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-    lineHeight: 20,
-  },
+  errorIcon: { width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center" },
+  errorText: { fontSize: 13, fontWeight: "600", flex: 1 },
+
   formCard: {
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 1.5,
+    borderRadius: 24, padding: 20, marginBottom: 16,
+    borderWidth: 1.5, overflow: "hidden", position: "relative",
     ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.07, shadowRadius: 18 },
+      android: { elevation: 4 },
     }),
   },
-  inputGroup: {
-    marginBottom: 20,
+  cardTopLine: { position: "absolute", top: 0, left: 0, right: 0, height: 2 },
+
+  fieldGroup: { marginBottom: 16 },
+  fieldLabelRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
+  fieldIconBox: {
+    width: 28, height: 28, borderRadius: 9,
+    justifyContent: "center", alignItems: "center", borderWidth: 1,
   },
-  inputLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
+  fieldLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1.2, flex: 1 },
+  errorBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "#FF444415", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8,
   },
-  inputIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+  errorBadgeText: { fontSize: 9, fontWeight: "700", color: "#FF4444" },
+  validBadge: { width: 18, height: 18, borderRadius: 9, justifyContent: "center", alignItems: "center" },
+  fieldInput: {
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14,
+    fontSize: 15, fontWeight: "600", borderWidth: 1.5,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+  errorMsg: { color: "#FF4444", fontSize: 11, fontWeight: "600", marginTop: 5, marginLeft: 4 },
+
+  passwordRow: {
+    flexDirection: "row", alignItems: "center",
+    borderRadius: 14, paddingHorizontal: 14, borderWidth: 1.5,
   },
-  input: {
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1.5,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    borderWidth: 1.5,
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 16,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  // New styles for validation
-  errorMessage: {
-    color: '#FF4444',
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  passwordHint: {
-    color: '#FFA500',
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 8,
-    fontStyle: 'italic',
-  },
-  signupButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 8,
-    gap: 10,
+  passwordInput: { flex: 1, paddingVertical: 14, fontSize: 15, fontWeight: "600" },
+  eyeBtn: { width: 32, height: 32, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+  passwordHint: { color: "#FFA500", fontSize: 11, fontWeight: "500", marginTop: 5, marginLeft: 4, fontStyle: "italic" },
+
+  signInBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 16, borderRadius: 20, gap: 10,
+    overflow: "hidden", position: "relative", marginTop: 8,
     ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 6,
-      },
+      ios: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.38, shadowRadius: 20 },
+      android: { elevation: 10 },
     }),
   },
-  signupButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+  btnShimmer: {
+    position: "absolute", top: 0, left: "-20%", width: "40%", height: "100%",
+    backgroundColor: "#fff", transform: [{ skewX: "-20deg" }],
   },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
+  btnIconWrap: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
+  signInBtnText: { fontSize: 16, fontWeight: "900", letterSpacing: 0.3 },
+  btnArrow: { width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center" },
+
+  dividerRow: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 },
+  divLine: { flex: 1, height: 1 },
+  divPill: {
+    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, borderWidth: 1,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    borderRadius: 0.5,
-  },
-  dividerText: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginHorizontal: 16,
-    opacity: 0.7,
-  },
+  divText: { fontSize: 11, fontWeight: "600" },
+
   socialCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 20, padding: 16, marginBottom: 20,
     borderWidth: 1.5,
     ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.04, shadowRadius: 10 },
+      android: { elevation: 2 },
     }),
   },
-  socialTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-    letterSpacing: 0.3,
+  socialBtns: { flexDirection: "row", gap: 10 },
+  socialBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 13, borderRadius: 14, borderWidth: 1.5, gap: 8,
   },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
+  socialBtnText: { fontSize: 13, fontWeight: "700" },
+  noteText: { fontSize: 11, textAlign: "center", marginTop: 10, fontStyle: "italic" },
+
+  signupRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 },
+  signupText: { fontSize: 14, fontWeight: "500" },
+  signupLink: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1.5,
   },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    gap: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  socialButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  noteText: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    gap: 6,
-  },
-  loginText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  loginLink: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  homeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    gap: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  homeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  signupLinkText: { fontSize: 13, fontWeight: "800" },
+
+  version: { textAlign: "center", fontSize: 10, fontWeight: "600", letterSpacing: 0.5 },
 });

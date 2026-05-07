@@ -10,13 +10,26 @@
     "backgroundColor": "#ffffff",
     "ios": {
       "usesAppleSignIn": true,
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "GymBro needs camera access to check your exercise form and analyze your movements.",
+        "NSMicrophoneUsageDescription": "GymBro needs microphone access for video recording during form analysis."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.anonymous.GymBro"
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +46,35 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow GymBro to access your camera to check your exercise form and analyze your movements.",
+          "microphonePermission": "Allow GymBro to access your microphone for video recording during form analysis.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow GymBro to access your photos to upload exercise videos for form analysis.",
+          "cameraPermission": "Allow GymBro to access your camera to record exercise videos."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow GymBro to access your microphone for video recording."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#39FF14",
+          "sounds": []
         }
       ]
     ],

@@ -24,7 +24,6 @@ import { useSimpleTheme } from '../../context/SimpleThemeContext';
 
 const { width } = Dimensions.get('window');
 
-// Types
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
 
 type Plan = {
@@ -110,7 +109,6 @@ export default function PremiumScreen() {
   const [showD17Form, setShowD17Form] = useState(false);
   const [currency, setCurrency] = useState<'USD' | 'TND'>('USD');
 
-  // D17 Form state
   const [d17Form, setD17Form] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -119,7 +117,6 @@ export default function PremiumScreen() {
 
   const primaryColor = '#39FF14';
 
-  // Payment methods with both international and local options
   const PAYMENT_METHODS: PaymentMethod[] = [
     {
       id: 'card',
@@ -149,7 +146,6 @@ export default function PremiumScreen() {
     
     if (methodId === 'card') {
       setCurrency('USD');
-      // On web, simulate card payment
       Alert.alert(
         'Payment Demo',
         'This is a demo payment. In production, you would be redirected to Stripe.',
@@ -164,7 +160,6 @@ export default function PremiumScreen() {
   };
 
   const handleD17Payment = async () => {
-    // Validate D17 form
     if (!d17Form.cardNumber || !d17Form.expiryDate || !d17Form.cvv) {
       Alert.alert('Error', 'Please fill in all card details');
       return;
@@ -178,7 +173,6 @@ export default function PremiumScreen() {
     setLoading(true);
 
     try {
-      // Simulate D17 payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       await handleSuccessfulPayment();
     } catch (error) {
@@ -193,7 +187,6 @@ export default function PremiumScreen() {
     try {
       const token = await AsyncStorage.getItem('userToken');
       
-      // Upgrade user plan in backend
       const response = await fetch('http://192.168.100.143:3000/api/users/upgrade', {
         method: 'POST',
         headers: {
@@ -208,7 +201,6 @@ export default function PremiumScreen() {
       const data = (await response.json()) as UpgradeResponse;
 
       if (response.ok && data.success) {
-        // Update stored user data
         const userData = await AsyncStorage.getItem('userData');
         if (userData) {
           const user = JSON.parse(userData);
@@ -255,7 +247,7 @@ export default function PremiumScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#f5f5f5' }]}>
-      {/* Header */}
+      {}
       <View style={[styles.header, { borderBottomColor: primaryColor + '20' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={primaryColor} />
@@ -270,7 +262,7 @@ export default function PremiumScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Hero Section */}
+        {}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.heroSection}>
           <View style={[styles.crownIcon, { backgroundColor: primaryColor + '20' }]}>
             <MaterialCommunityIcons name="crown" size={32} color={primaryColor} />
@@ -283,7 +275,7 @@ export default function PremiumScreen() {
           </Text>
         </Animated.View>
 
-        {/* Currency Toggle */}
+        {}
         <View style={styles.currencyToggle}>
           <TouchableOpacity
             style={[
@@ -309,7 +301,7 @@ export default function PremiumScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Plans */}
+        {}
         <View style={styles.plansContainer}>
           {PLANS.map((plan, index) => (
             <Animated.View key={plan.id} entering={FadeInUp.delay(200 + index * 100)}>
@@ -377,7 +369,7 @@ export default function PremiumScreen() {
           ))}
         </View>
 
-        {/* Features Summary */}
+        {}
         <Animated.View
           entering={FadeInDown.delay(500)}
           style={[
@@ -408,7 +400,7 @@ export default function PremiumScreen() {
           </View>
         </Animated.View>
 
-        {/* Guarantee */}
+        {}
         <Animated.View entering={FadeInDown.delay(600)} style={styles.guaranteeSection}>
           <Ionicons name="shield" size={20} color={primaryColor} />
           <Text style={[styles.guaranteeText, { color: isDark ? '#888' : '#666' }]}>
@@ -416,7 +408,7 @@ export default function PremiumScreen() {
           </Text>
         </Animated.View>
 
-        {/* Subscribe Button */}
+        {}
         <Animated.View entering={FadeInUp.delay(700)} style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.subscribeButton, { backgroundColor: primaryColor }]}
@@ -438,7 +430,7 @@ export default function PremiumScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Payment Method Modal */}
+      {}
       <Modal visible={showPaymentModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: isDark ? '#111' : '#FFF' }]}>

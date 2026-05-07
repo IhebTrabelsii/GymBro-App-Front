@@ -29,7 +29,6 @@ export default function Clock({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',

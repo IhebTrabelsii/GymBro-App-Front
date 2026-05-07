@@ -8,6 +8,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,7 +30,8 @@ export default function ForgotPasswordScreen() {
   const { theme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const isDark = theme === 'dark';
-
+const gymBroLogo  = require("@/assets/images/sections/Icon_gym_bro.png");
+const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -88,9 +90,15 @@ export default function ForgotPasswordScreen() {
       }]}>
         <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
           <View style={styles.logoContainer}>
-            <MaterialCommunityIcons name="dumbbell" size={28} color={currentColors.primary} />
-            <Text style={[styles.logo, { color: currentColors.primary }]}>GymBro</Text>
-          </View>
+    <Image
+                  source={gymBroLogo}
+                  style={{ width: 32, height: 32, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />     <Image
+                  source={gymBroLogoT}
+                  style={{ width: 85, height: 24, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />          </View>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>

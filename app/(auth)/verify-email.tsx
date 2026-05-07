@@ -17,7 +17,6 @@ import { useSimpleTheme } from '../../context/SimpleThemeContext';
 
 const { width } = Dimensions.get('window');
 
-// Define types for API response
 type VerifyEmailResponse = {
   success: boolean;
   message?: string;
@@ -70,7 +69,6 @@ export default function VerifyEmailScreen() {
 
   const handleResendEmail = async () => {
     try {
-      // You might want to pass email from signup or store it
       Alert.alert('Info', 'Please go to signup to resend verification email');
       router.push('/signup');
     } catch (error) {

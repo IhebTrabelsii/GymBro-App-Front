@@ -68,7 +68,6 @@ const hexToRgba = (hex: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-// Exercise Detail Modal
 const ExerciseDetailModal = ({ visible, exercise, onClose, theme, colors }: any) => {
   const isDark = theme === "dark";
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -318,7 +317,7 @@ export default function ExerciseDetailsScreen() {
   return (
     <SafeAreaView style={[styles.safeContainer, { backgroundColor: currentColors.background }]}>
       <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-        {/* Header */}
+        {}
         <LinearGradient colors={isDark ? ['#0a0a0a', '#000000'] : ['#ffffff', '#f8f9fa']} style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -345,7 +344,7 @@ export default function ExerciseDetailsScreen() {
           </View>
         </LinearGradient>
 
-        {/* Hero Stats Banner */}
+        
         <LinearGradient colors={[planData.color + '15', planData.color + '05']} style={styles.heroStats}>
           <View style={styles.heroStatItem}>
             <Ionicons name="barbell-outline" size={20} color={planData.color} />
@@ -375,66 +374,85 @@ export default function ExerciseDetailsScreen() {
               <View style={[styles.sectionLine, { backgroundColor: planData.color + '30' }]} />
             </View>
 
-            {planData.exercises.map((exercise: Exercise, index: number) => (
-              <Animated.View
-                key={exercise.id}
-                style={{
-                  transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 30], outputRange: [0, 10 * (index + 1)] }) }],
-                }}
+{planData.exercises.map((exercise: Exercise, index: number) => (
+  <Animated.View
+    key={exercise.id}
+    style={{
+      transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 30], outputRange: [0, 10 * (index + 1)] }) }],
+    }}
+  >
+    <TouchableOpacity activeOpacity={0.9}>
+      <LinearGradient
+        colors={isDark ? ['#0e0e0e', '#080808'] : ['#ffffff', '#f8f8f8']}
+        style={[styles.exerciseCard, { borderColor: planData.color + '30' }]}
+      >
+        <LinearGradient colors={[planData.color + '15', 'transparent']} style={styles.exerciseCardAccent} />
+        
+        <View style={styles.exerciseCardContent}>
+          <TouchableOpacity onPress={() => openExerciseDetails(exercise)} style={styles.exerciseImageContainer}>
+            <Image source={{ uri: exercise.imageUrl }} style={styles.exerciseImage} resizeMode="cover" />
+            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.exerciseImageOverlay} />
+            <View style={[styles.exerciseBadge, { backgroundColor: planData.color }]}>
+              <Ionicons name="play" size={12} color="#000" />
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.exerciseInfo}>
+            <TouchableOpacity onPress={() => openExerciseDetails(exercise)}>
+              <Text style={[styles.exerciseName, { color: currentColors.text }]} numberOfLines={1}>
+                {exercise.name}
+              </Text>
+            </TouchableOpacity>
+            
+            <View style={styles.exerciseMetaRow}>
+              <View style={styles.exerciseMetaItem}>
+                <Ionicons name="repeat" size={12} color={planData.color} />
+                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.sets} sets</Text>
+              </View>
+              <View style={styles.exerciseMetaItem}>
+                <Ionicons name="barbell" size={12} color={planData.color} />
+                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.reps}</Text>
+              </View>
+              <View style={styles.exerciseMetaItem}>
+                <Ionicons name="timer" size={12} color={planData.color} />
+                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.rest}</Text>
+              </View>
+            </View>
+
+            <View style={styles.exerciseBottomRow}>
+              <View style={styles.difficultyBadge}>
+                <View style={[styles.difficultyDot, { 
+                  backgroundColor: exercise.difficulty === 'Beginner' ? '#4CAF50' : 
+                                exercise.difficulty === 'Intermediate' ? '#FF9800' : '#F44336'
+                }]} />
+                <Text style={[styles.difficultyText, { color: isDark ? '#aaa' : '#666' }]}>{exercise.difficulty}</Text>
+              </View>
+
+              {/* ✅ NEW: Form Check Button */}
+              <TouchableOpacity
+                style={[styles.formCheckBtn, { backgroundColor: planData.color + '15' }]}
+                onPress={() => router.push({
+                  pathname: "/form-check",
+                  params: { exercise: exercise.name, planTitle: type }
+                })}
               >
-                <TouchableOpacity onPress={() => openExerciseDetails(exercise)} activeOpacity={0.9}>
-                  <LinearGradient
-                    colors={isDark ? ['#0e0e0e', '#080808'] : ['#ffffff', '#f8f8f8']}
-                    style={[styles.exerciseCard, { borderColor: planData.color + '30' }]}
-                  >
-                    <LinearGradient colors={[planData.color + '15', 'transparent']} style={styles.exerciseCardAccent} />
-                    
-                    <View style={styles.exerciseCardContent}>
-                      <View style={styles.exerciseImageContainer}>
-                        <Image source={{ uri: exercise.imageUrl }} style={styles.exerciseImage} resizeMode="cover" />
-                        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.exerciseImageOverlay} />
-                        <View style={[styles.exerciseBadge, { backgroundColor: planData.color }]}>
-                          <Ionicons name="play" size={12} color="#000" />
-                        </View>
-                      </View>
+                <Ionicons name="scan" size={12} color={planData.color} />
+                <Text style={[styles.formCheckBtnText, { color: planData.color }]}>Check Form</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-                      <View style={styles.exerciseInfo}>
-                        <Text style={[styles.exerciseName, { color: currentColors.text }]} numberOfLines={1}>
-                          {exercise.name}
-                        </Text>
-                        
-                        <View style={styles.exerciseMetaRow}>
-                          <View style={styles.exerciseMetaItem}>
-                            <Ionicons name="repeat" size={12} color={planData.color} />
-                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.sets} sets</Text>
-                          </View>
-                          <View style={styles.exerciseMetaItem}>
-                            <Ionicons name="barbell" size={12} color={planData.color} />
-                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.reps}</Text>
-                          </View>
-                          <View style={styles.exerciseMetaItem}>
-                            <Ionicons name="timer" size={12} color={planData.color} />
-                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.rest}</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.difficultyBadge}>
-                          <View style={[styles.difficultyDot, { 
-                            backgroundColor: exercise.difficulty === 'Beginner' ? '#4CAF50' : 
-                                          exercise.difficulty === 'Intermediate' ? '#FF9800' : '#F44336'
-                          }]} />
-                          <Text style={[styles.difficultyText, { color: isDark ? '#aaa' : '#666' }]}>{exercise.difficulty}</Text>
-                        </View>
-                      </View>
-
-                      <View style={[styles.exerciseArrow, { backgroundColor: planData.color + '15' }]}>
-                        <Ionicons name="chevron-forward" size={20} color={planData.color} />
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
+          <TouchableOpacity 
+            style={[styles.exerciseArrow, { backgroundColor: planData.color + '15' }]}
+            onPress={() => openExerciseDetails(exercise)}
+          >
+            <Ionicons name="chevron-forward" size={20} color={planData.color} />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  </Animated.View>
+))}
           </Animated.View>
         </ScrollView>
 
@@ -729,4 +747,22 @@ const styles = StyleSheet.create({
   expertTipContent: { flex: 1 },
   expertTipLabel: { fontSize: 12, fontWeight: "700", marginBottom: 4, textTransform: "uppercase" },
   expertTipText: { fontSize: 14, lineHeight: 20 },
+  exerciseBottomRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginTop: 6,
+},
+formCheckBtn: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 4,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 12,
+},
+formCheckBtnText: {
+  fontSize: 10,
+  fontWeight: "700",
+},
 });

@@ -19,13 +19,11 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const API_BASE_URL = "http://192.168.100.143:3000";
 
-// ==================== Types ====================
 interface ChangePasswordResponse {
   success: boolean;
   message: string;
 }
 
-// ==================== Main Component ====================
 export default function ChangePasswordScreen() {
   const router = useRouter();
   const { theme } = useSimpleTheme();
@@ -41,7 +39,6 @@ export default function ChangePasswordScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChangePassword = async () => {
-    // ========== VALIDATION ==========
     if (!currentPassword.trim()) {
       Alert.alert("Error", "Please enter your current password");
       return;
@@ -70,7 +67,6 @@ export default function ChangePasswordScreen() {
     setLoading(true);
 
     try {
-      // ========== GET TOKEN ==========
       const token = await AsyncStorage.getItem("userToken");
       if (!token) {
         Alert.alert("Session Expired", "Please login again");
@@ -78,7 +74,6 @@ export default function ChangePasswordScreen() {
         return;
       }
 
-      // ========== SEND REQUEST ==========
       const response = await fetch(`${API_BASE_URL}/api/users/change-password`, {
         method: "PUT",
         headers: {
@@ -93,14 +88,11 @@ export default function ChangePasswordScreen() {
 
       const data = (await response.json()) as ChangePasswordResponse;
 
-      // ========== HANDLE RESPONSE ==========
       if (response.ok && data.success) {
-        // Clear password fields
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
         
-        // Show success message
         Alert.alert(
           "✅ Success", 
           data.message || "Your password has been changed successfully",
@@ -112,7 +104,6 @@ export default function ChangePasswordScreen() {
           ]
         );
       } else {
-        // Show error message from server
         Alert.alert(
           "❌ Error", 
           data.message || "Failed to change password. Please try again."
@@ -131,7 +122,7 @@ export default function ChangePasswordScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-      {/* Header */}
+      {}
       <View style={[styles.header, { borderBottomColor: isDark ? "rgba(57,255,20,0.2)" : "rgba(57,255,20,0.1)" }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={24} color={currentColors.text} />
@@ -142,7 +133,7 @@ export default function ChangePasswordScreen() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Info Card */}
+          {}
           <View style={[styles.infoCard, { backgroundColor: isDark ? "rgba(57,255,20,0.1)" : "rgba(57,255,20,0.05)" }]}>
             <Ionicons name="shield-checkmark-outline" size={24} color={currentColors.primary} />
             <Text style={[styles.infoText, { color: isDark ? "rgba(255,255,255,0.8)" : "#666" }]}>
@@ -151,7 +142,7 @@ export default function ChangePasswordScreen() {
           </View>
 
           <View style={[styles.card, { backgroundColor: isDark ? currentColors.card : "#FFFFFF" }]}>
-            {/* Current Password */}
+            {}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "rgba(255,255,255,0.7)" : "#666" }]}>
                 CURRENT PASSWORD
@@ -182,7 +173,7 @@ export default function ChangePasswordScreen() {
               </View>
             </View>
 
-            {/* New Password */}
+            {}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "rgba(255,255,255,0.7)" : "#666" }]}>
                 NEW PASSWORD
@@ -213,7 +204,7 @@ export default function ChangePasswordScreen() {
               </View>
             </View>
 
-            {/* Confirm Password */}
+            {}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "rgba(255,255,255,0.7)" : "#666" }]}>
                 CONFIRM NEW PASSWORD
@@ -246,7 +237,7 @@ export default function ChangePasswordScreen() {
               </View>
             </View>
 
-            {/* Password Strength Indicator */}
+            {}
             <View style={styles.strengthContainer}>
               <View style={styles.strengthBars}>
                 {[1, 2, 3].map((level) => (
@@ -277,7 +268,7 @@ export default function ChangePasswordScreen() {
               </Text>
             </View>
 
-            {/* Requirements Checklist */}
+            {}
             <View style={styles.requirements}>
               <Text style={[styles.requirementsTitle, { color: currentColors.text }]}>
                 Password requirements:
@@ -315,7 +306,7 @@ export default function ChangePasswordScreen() {
             </View>
           </View>
 
-          {/* Update Button */}
+          {}
           <TouchableOpacity
             style={[
               styles.updateButton,

@@ -103,7 +103,6 @@ export default function AdminPlanExercisesScreen() {
     icon: "fitness",
   });
   const [creating, setCreating] = useState(false);
-  // Fetch all plans with their exercises
   const fetchPlans = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -145,7 +144,7 @@ export default function AdminPlanExercisesScreen() {
 
       if (data.success) {
         Alert.alert("Success", data.message);
-        fetchPlans(); // Refresh the list
+        fetchPlans(); 
       } else {
         Alert.alert("Error", data.error || "Failed to refresh exercises");
       }

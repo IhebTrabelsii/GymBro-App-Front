@@ -50,7 +50,6 @@ export default function ResetPasswordScreen() {
   const primaryColor = '#39FF14';
 
   useEffect(() => {
-    // Check if token exists
     if (!token) {
       setTokenValid(false);
       Alert.alert(
@@ -67,7 +66,6 @@ export default function ResetPasswordScreen() {
     const { isValid, message } = validatePassword(text);
     setPasswordError(isValid ? null : message);
     
-    // Also check if confirm password matches
     if (confirmPassword && text !== confirmPassword) {
       setConfirmError('Passwords do not match');
     } else if (confirmPassword && text === confirmPassword) {
@@ -109,7 +107,6 @@ export default function ResetPasswordScreen() {
     setLoading(true);
 
     try {
-      // For web, token comes as string, for mobile it might be array
       const tokenValue = Array.isArray(token) ? token[0] : token;
       
       const response = await fetch(`http://192.168.100.143:3000/api/users/reset-password/${tokenValue}`, {
@@ -133,7 +130,7 @@ export default function ResetPasswordScreen() {
   };
 
   if (!tokenValid) {
-    return null; // Will redirect via the Alert above
+    return null; 
   }
 
   if (resetSuccess) {
@@ -214,7 +211,7 @@ export default function ResetPasswordScreen() {
               Enter your new password below.
             </Text>
 
-            {/* New Password */}
+            {}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: currentColors.text }]}>New Password</Text>
               <View style={[
@@ -249,7 +246,7 @@ export default function ResetPasswordScreen() {
               )}
             </View>
 
-            {/* Confirm Password */}
+            {}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: currentColors.text }]}>Confirm Password</Text>
               <View style={[

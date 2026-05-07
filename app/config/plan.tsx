@@ -196,7 +196,7 @@ export default function PlanScreen() {
         <Animated.View
           style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
         >
-          {/* Hero Section */}
+          {/* Hero Card */}
           <LinearGradient
             colors={isDark ? ["#0a0a0a", "#050505"] : ["#ffffff", "#fafafa"]}
             style={[
@@ -267,7 +267,38 @@ export default function PlanScreen() {
             </View>
           </LinearGradient>
 
-          {/* Plan Cards */}
+          {/* AI Form Check Button - NEW */}
+          <TouchableOpacity
+            style={[
+              styles.formCheckButton,
+              { 
+                backgroundColor: isDark ? '#1a1a1a' : '#f0f0f0',
+                borderColor: currentColors.primary + '40'
+              },
+            ]}
+            onPress={() => router.push("/form-check")}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={[currentColors.primary + '15', 'transparent']}
+              style={styles.formCheckGradient}
+            />
+            <View style={[styles.formCheckIcon, { backgroundColor: currentColors.primary + '15' }]}>
+              <Ionicons name="scan" size={28} color={currentColors.primary} />
+            </View>
+            <View style={styles.formCheckTextContainer}>
+              <Text style={[styles.formCheckTitle, { color: currentColors.text }]}>
+                AI Form Check
+              </Text>
+              <Text style={[styles.formCheckSubtitle, { color: isDark ? '#aaa' : '#666' }]}>
+                Get real-time feedback on your exercise form
+              </Text>
+            </View>
+            <View style={[styles.formCheckArrow, { backgroundColor: currentColors.primary + '15' }]}>
+              <Ionicons name="arrow-forward" size={18} color={currentColors.primary} />
+            </View>
+          </TouchableOpacity>
+
           {workoutPlans.length === 0 ? (
             <View
               style={[
@@ -417,7 +448,7 @@ export default function PlanScreen() {
             </>
           )}
 
-          {/* View All Exercises Button */}
+          {/* View All Exercises */}
           {workoutPlans.length > 0 && (
             <TouchableOpacity
               style={[
@@ -471,7 +502,7 @@ export default function PlanScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Guidelines Section - RESTORED */}
+          {/* Guidelines */}
           <View
             style={[
               styles.guidelinesCard,
@@ -543,7 +574,7 @@ export default function PlanScreen() {
             </View>
           </View>
 
-          {/* Action Buttons - RESTORED */}
+          {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[
@@ -606,20 +637,17 @@ export default function PlanScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Plan Details Modal - Button at Top */}
+      {/* Plan Details Modal */}
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeModal}>
         <Pressable style={styles.modalOverlay} onPress={closeModal}>
           <Animated.View style={[styles.modalContent, { transform: [{ scale: modalScale }], backgroundColor: isDark ? "#0e0e0e" : "#fff" }]}>
             {selectedPlan && (
               <>
-                {/* Modal Header with Action Buttons at Top */}
                 <LinearGradient colors={[getPlanColor(selectedPlan) + "20", "transparent"]} style={styles.modalHeader}>
-                  {/* Left: Close Button */}
                   <TouchableOpacity onPress={closeModal} style={styles.modalCloseBtn}>
                     <Ionicons name="close" size={22} color={currentColors.text} />
                   </TouchableOpacity>
                   
-                  {/* Right: View Exercises Button */}
                   <TouchableOpacity
                     style={[styles.modalActionBtn, { backgroundColor: getPlanColor(selectedPlan) }]}
                     onPress={() => {
@@ -631,7 +659,6 @@ export default function PlanScreen() {
                     <Text style={styles.modalActionBtnText}>View Exercises</Text>
                   </TouchableOpacity>
                   
-                  {/* Center Content */}
                   <LinearGradient colors={[getPlanColor(selectedPlan) + "25", getPlanColor(selectedPlan) + "08"]} style={styles.modalIcon}>
                     <MaterialCommunityIcons name={getPlanIcon(selectedPlan) as any} size={32} color={getPlanColor(selectedPlan)} />
                   </LinearGradient>
@@ -641,19 +668,16 @@ export default function PlanScreen() {
                   </View>
                 </LinearGradient>
 
-                {/* Scrollable Modal Body */}
                 <ScrollView 
                   showsVerticalScrollIndicator={true} 
                   style={styles.modalScrollView}
                   contentContainerStyle={styles.modalScrollContent}
                 >
-                  {/* Description */}
                   <View style={styles.modalSection}>
                     <Text style={[styles.modalSectionTitle, { color: currentColors.text }]}>About this plan</Text>
                     <Text style={[styles.modalDescription, { color: isDark ? "#ccc" : "#666" }]}>{selectedPlan.description}</Text>
                   </View>
 
-                  {/* Weekly Schedule */}
                   <View style={styles.modalSection}>
                     <Text style={[styles.modalSectionTitle, { color: currentColors.text }]}>Weekly Schedule</Text>
                     <View style={styles.scheduleList}>
@@ -666,7 +690,6 @@ export default function PlanScreen() {
                     </View>
                   </View>
 
-                  {/* Pro Tips */}
                   <View style={[styles.modalSection, styles.tipsSection, { backgroundColor: getPlanColor(selectedPlan) + "08", borderColor: getPlanColor(selectedPlan) + "20" }]}>
                     <View style={styles.tipsHeader}>
                       <Ionicons name="bulb" size={20} color="#FFC107" />
@@ -782,6 +805,52 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   heroBadgeText: { fontSize: 12, fontWeight: "700" },
+
+  // AI Form Check Button Styles
+  formCheckButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    marginBottom: 24,
+    gap: 14,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  formCheckGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  formCheckIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formCheckTextContainer: {
+    flex: 1,
+  },
+  formCheckTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  formCheckSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  formCheckArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   sectionHeader: {
     flexDirection: "row",
@@ -949,7 +1018,6 @@ const styles = StyleSheet.create({
   emptyButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
   emptyButtonText: { color: "#000", fontWeight: "700", fontSize: 14 },
 
-    // Modal Styles - Button at Top
   modalOverlay: { 
     flex: 1, 
     backgroundColor: "rgba(0,0,0,0.85)", 

@@ -9,6 +9,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -30,7 +31,6 @@ const validateEmail = (email: string): boolean => {
 
 const isAppleSignInAvailable = (): boolean => Platform.OS === "ios";
 
-// ── Floating particle dot ────────────────────────────────────────────────────
 const Particle = ({ color, delay, x, size }: { color: string; delay: number; x: number; size: number }) => {
   const anim = useRef(new Animated.Value(0)).current;
   const opAnim = useRef(new Animated.Value(0)).current;
@@ -71,8 +71,8 @@ export default function LoginScreen() {
   const { theme, toggleTheme } = useSimpleTheme();
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
-
-  // ── Original state (unchanged) ─────────────────────────────────────────────
+const gymBroLogo  = require("@/assets/images/sections/Icon_gym_bro.png");
+const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure]     = useState(true);
@@ -81,7 +81,6 @@ export default function LoginScreen() {
   const [emailError, setEmailError]       = useState<string | null>(null);
   const [touchedEmail, setTouchedEmail]   = useState(false);
 
-  // ── Animation refs ────────────────────────────────────────────────────────
   const fadeAnim    = useRef(new Animated.Value(0)).current;
   const slideAnim   = useRef(new Animated.Value(60)).current;
   const logoScale   = useRef(new Animated.Value(0.5)).current;
@@ -92,12 +91,10 @@ export default function LoginScreen() {
   const btnPulse    = useRef(new Animated.Value(1)).current;
   const emailShake  = useRef(new Animated.Value(0)).current;
 
-  // ── Focus states for input highlights ────────────────────────────────────
   const [emailFocused, setEmailFocused]       = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
   useEffect(() => {
-    // Staggered entrance
     Animated.sequence([
       Animated.spring(logoScale, { toValue: 1, tension: 55, friction: 7, useNativeDriver: true }),
       Animated.parallel([
@@ -110,19 +107,16 @@ export default function LoginScreen() {
       ]),
     ]).start();
 
-    // Logo float
     Animated.loop(Animated.sequence([
       Animated.timing(logoBounce, { toValue: -8, duration: 2000, useNativeDriver: true }),
       Animated.timing(logoBounce, { toValue: 0, duration: 2000, useNativeDriver: true }),
     ])).start();
 
-    // Glow pulse
     Animated.loop(Animated.sequence([
       Animated.timing(glowAnim, { toValue: 1, duration: 2200, useNativeDriver: true }),
       Animated.timing(glowAnim, { toValue: 0, duration: 2200, useNativeDriver: true }),
     ])).start();
 
-    // Button pulse
     Animated.loop(Animated.sequence([
       Animated.timing(btnPulse, { toValue: 1.03, duration: 1500, useNativeDriver: true }),
       Animated.timing(btnPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
@@ -139,7 +133,6 @@ export default function LoginScreen() {
     ]).start();
   };
 
-  // ── Original handlers (unchanged) ─────────────────────────────────────────
   const handleEmailChange = (text: string) => {
     setEmail(text);
     setTouchedEmail(true);
@@ -225,12 +218,10 @@ export default function LoginScreen() {
       Alert.alert("Apple Sign In Failed", result.error || "Something went wrong");
     setSocialLoading(null);
   };
-  // ─────────────────────────────────────────────────────────────────────────
 
   const isFormValid = !!email && !!password && !emailError;
   const primary = currentColors.primary;
 
-  // Particle positions
   const particles = [
     { x: width * 0.08, size: 5, delay: 0 },
     { x: width * 0.22, size: 3, delay: 1 },
@@ -243,18 +234,18 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { backgroundColor: currentColors.background }]}>
 
-      {/* ── Floating particles ──────────────────────────────────────────── */}
+      {}
       {particles.map((p, i) => (
         <Particle key={i} color={primary} delay={p.delay} x={p.x} size={p.size} />
       ))}
 
-      {/* ── Background radial glow ──────────────────────────────────────── */}
+      {}
       <Animated.View style={[styles.bgGlow, {
         backgroundColor: primary,
         opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.04, 0.10] }),
       }]} />
 
-      {/* ══ TOP BAR ════════════════════════════════════════════════════════ */}
+      {}
       <View style={[styles.topBar, {
         backgroundColor: isDark ? "rgba(6,6,6,0.95)" : "rgba(255,255,255,0.95)",
         borderBottomColor: isDark ? primary + "18" : primary + "10",
@@ -267,11 +258,17 @@ export default function LoginScreen() {
         <TouchableOpacity onPress={() => router.replace("/")} activeOpacity={0.7}>
           <View style={styles.logoRow}>
             <LinearGradient colors={[primary + "35", primary + "08"]} style={styles.logoIconWrap}>
-              <MaterialCommunityIcons name="dumbbell" size={17} color={primary} />
-            </LinearGradient>
+    <Image
+                  source={gymBroLogo}
+                  style={{ width: 32, height: 32, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />            </LinearGradient>
             <View>
-              <Text style={[styles.logoText, { color: primary }]}>GymBro</Text>
-              <View style={[styles.logoUnderline, { backgroundColor: primary }]} />
+     <Image
+                  source={gymBroLogoT}
+                  style={{ width: 85, height: 24, tintColor: currentColors.primary }}
+                  resizeMode="contain"
+                />              <View style={[styles.logoUnderline, { backgroundColor: primary }]} />
             </View>
           </View>
         </TouchableOpacity>
@@ -293,19 +290,19 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
 
-          {/* ══ HERO SECTION ════════════════════════════════════════════════ */}
+          {}
           <Animated.View style={[styles.hero, {
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }],
           }]}>
-            {/* Glow ring behind icon */}
+            {}
             <Animated.View style={[styles.heroGlowRing, {
               borderColor: primary,
               opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.55] }),
               transform: [{ scale: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }],
             }]} />
 
-            {/* Icon */}
+            {}
             <Animated.View style={[{ transform: [{ scale: logoScale }, { translateY: logoBounce }] }]}>
               <LinearGradient
                 colors={[primary + "30", primary + "08"]}
@@ -329,21 +326,21 @@ export default function LoginScreen() {
             </Text>
           </Animated.View>
 
-          {/* ══ FORM CARD ═══════════════════════════════════════════════════ */}
+          {}
           <Animated.View style={[styles.formCard, {
             backgroundColor: isDark ? "#0c0c0c" : "#fff",
             borderColor: isDark ? primary + "22" : primary + "12",
             opacity: cardFade,
             transform: [{ translateY: cardSlide }],
           }]}>
-            {/* Card top accent */}
+            {}
             <LinearGradient
               colors={[primary + "00", primary + "35", primary + "00"]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.cardTopLine}
             />
 
-            {/* ── Email ─────────────────────────────────────────────────── */}
+            {}
             <Animated.View style={{ transform: [{ translateX: emailShake }] }}>
               <View style={styles.fieldGroup}>
                 <View style={styles.fieldLabelRow}>
@@ -394,7 +391,7 @@ export default function LoginScreen() {
               </View>
             </Animated.View>
 
-            {/* ── Password ──────────────────────────────────────────────── */}
+            {}
             <View style={styles.fieldGroup}>
               <View style={styles.fieldLabelRow}>
                 <View style={[styles.fieldIconBox, {
@@ -429,7 +426,7 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            {/* Forgot password */}
+            {}
             <TouchableOpacity
               style={styles.forgotRow}
               onPress={() => router.push("/forgot-password")}
@@ -439,7 +436,7 @@ export default function LoginScreen() {
               <Ionicons name="chevron-forward" size={12} color={primary} />
             </TouchableOpacity>
 
-            {/* ── Sign In Button ────────────────────────────────────────── */}
+            {}
             <Animated.View style={{ transform: [{ scale: isFormValid ? btnPulse : new Animated.Value(1) }] }}>
               <TouchableOpacity
                 style={[styles.signInBtn, { shadowColor: primary, opacity: isFormValid ? 1 : 0.45 }]}
@@ -452,7 +449,7 @@ export default function LoginScreen() {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
-                {/* Shimmer */}
+                {}
                 <Animated.View style={[styles.btnShimmer, {
                   opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] }),
                 }]} />
@@ -473,7 +470,7 @@ export default function LoginScreen() {
             </Animated.View>
           </Animated.View>
 
-          {/* ══ DIVIDER ═════════════════════════════════════════════════════ */}
+          {}
           <Animated.View style={[styles.dividerRow, { opacity: cardFade }]}>
             <View style={[styles.divLine, { backgroundColor: isDark ? "#1a1a1a" : "#ebebeb" }]} />
             <View style={[styles.divPill, { backgroundColor: isDark ? "#111" : "#f5f5f5", borderColor: isDark ? "#1e1e1e" : "#e8e8e8" }]}>
@@ -482,7 +479,7 @@ export default function LoginScreen() {
             <View style={[styles.divLine, { backgroundColor: isDark ? "#1a1a1a" : "#ebebeb" }]} />
           </Animated.View>
 
-          {/* ══ SOCIAL CARD ═════════════════════════════════════════════════ */}
+          {}
           <Animated.View style={[styles.socialCard, {
             backgroundColor: isDark ? "#0c0c0c" : "#fff",
             borderColor: isDark ? primary + "18" : primary + "0c",
@@ -542,7 +539,7 @@ export default function LoginScreen() {
             )}
           </Animated.View>
 
-          {/* ══ SIGN UP LINK ════════════════════════════════════════════════ */}
+          {}
           <Animated.View style={[styles.signupRow, { opacity: cardFade }]}>
             <Text style={[styles.signupText, { color: isDark ? "#333" : "#ccc" }]}>
               Don't have an account?
@@ -555,7 +552,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Version */}
+          {}
           <Text style={[styles.version, { color: isDark ? "#1e1e1e" : "#e8e8e8" }]}>GymBro v1.0.0</Text>
 
         </ScrollView>
@@ -568,7 +565,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, overflow: "hidden" },
 
-  // Background glow
   bgGlow: {
     position: "absolute",
     width: width * 1.4,
@@ -578,7 +574,6 @@ const styles = StyleSheet.create({
     left: -width * 0.2,
   },
 
-  // ── Top bar ────────────────────────────────────────────────────────────────
   topBar: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 18, paddingTop: Platform.OS === "ios" ? 52 : 42,
@@ -601,10 +596,8 @@ const styles = StyleSheet.create({
     }),
   },
 
-  // ── Scroll ─────────────────────────────────────────────────────────────────
   scrollContent: { paddingTop: 10, paddingHorizontal: 20, paddingBottom: 40 },
 
-  // ── Hero ───────────────────────────────────────────────────────────────────
   hero: { alignItems: "center", paddingTop: 28, paddingBottom: 32 },
   heroGlowRing: {
     position: "absolute",
@@ -625,7 +618,6 @@ const styles = StyleSheet.create({
   },
   heroSub: { fontSize: 14, fontWeight: "500", textAlign: "center" },
 
-  // ── Form card ──────────────────────────────────────────────────────────────
   formCard: {
     borderRadius: 24, padding: 20, marginBottom: 16,
     borderWidth: 1.5, overflow: "hidden", position: "relative",
@@ -636,7 +628,6 @@ const styles = StyleSheet.create({
   },
   cardTopLine: { position: "absolute", top: 0, left: 0, right: 0, height: 2 },
 
-  // Field
   fieldGroup: { marginBottom: 16 },
   fieldLabelRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
   fieldIconBox: {
@@ -656,7 +647,6 @@ const styles = StyleSheet.create({
   },
   errorMsg: { color: "#FF4444", fontSize: 11, fontWeight: "600", marginTop: 5, marginLeft: 4 },
 
-  // Password
   passwordRow: {
     flexDirection: "row", alignItems: "center",
     borderRadius: 14, paddingHorizontal: 14, borderWidth: 1.5,
@@ -664,14 +654,12 @@ const styles = StyleSheet.create({
   passwordInput: { flex: 1, paddingVertical: 14, fontSize: 15, fontWeight: "600" },
   eyeBtn: { width: 32, height: 32, borderRadius: 10, justifyContent: "center", alignItems: "center" },
 
-  // Forgot
   forgotRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "flex-end",
     gap: 3, marginBottom: 18, marginTop: 4,
   },
   forgotText: { fontSize: 13, fontWeight: "700" },
 
-  // Sign in button
   signInBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     paddingVertical: 16, borderRadius: 20, gap: 10,
@@ -689,7 +677,6 @@ const styles = StyleSheet.create({
   signInBtnText: { fontSize: 16, fontWeight: "900", letterSpacing: 0.3 },
   btnArrow: { width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center" },
 
-  // ── Divider ────────────────────────────────────────────────────────────────
   dividerRow: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 },
   divLine: { flex: 1, height: 1 },
   divPill: {
@@ -697,7 +684,6 @@ const styles = StyleSheet.create({
   },
   divText: { fontSize: 11, fontWeight: "600" },
 
-  // ── Social card ────────────────────────────────────────────────────────────
   socialCard: {
     borderRadius: 20, padding: 16, marginBottom: 20,
     borderWidth: 1.5,
@@ -714,7 +700,6 @@ const styles = StyleSheet.create({
   socialBtnText: { fontSize: 13, fontWeight: "700" },
   noteText: { fontSize: 11, textAlign: "center", marginTop: 10, fontStyle: "italic" },
 
-  // ── Sign up row ────────────────────────────────────────────────────────────
   signupRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 },
   signupText: { fontSize: 14, fontWeight: "500" },
   signupLink: {

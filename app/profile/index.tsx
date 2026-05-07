@@ -3,6 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { notifyStreakUpdate,notifyMissionComplete  } from '../../services/notificationService';
 import { Linking } from 'react-native';
 import {
   ActivityIndicator,
@@ -22,10 +23,8 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 
-// API URL
 const API_BASE_URL = "http://192.168.100.143:3000";
 
-// ==================== Types ====================
 interface UserProfile {
   _id: string;
   username: string;
@@ -128,7 +127,6 @@ interface ClaimRewardResponse {
 }
 
 
-// Animated Stat Card
 const AnimatedStatCard = ({
   icon,
   iconColor,
@@ -140,6 +138,7 @@ const AnimatedStatCard = ({
 }: any) => {
   const animatedValue = useRef(new Animated.Value(0)).current;
   const [displayValue, setDisplayValue] = useState(0);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -169,7 +168,7 @@ const AnimatedStatCard = ({
         { backgroundColor: isDark ? colors.card : "#FFFFFF" },
       ]}
     >
-      {/* Subtle corner accent */}
+      {}
       <View style={[styles.statCornerAccent, { backgroundColor: iconColor }]} />
       <View style={[styles.statIcon, { backgroundColor: iconColor + "18" }]}>
         <Ionicons name={icon} size={22} color={iconColor} />
@@ -184,7 +183,6 @@ const AnimatedStatCard = ({
   );
 };
 
-// Section Header Component
 const SectionHeader = ({
   icon,
   title,
@@ -221,7 +219,6 @@ const SectionHeader = ({
   </View>
 );
 
-// Glass Card Component
 const GlassCard = ({ children, style, colors, borderColor }: any) => (
   <View
     style={[
@@ -237,7 +234,6 @@ const GlassCard = ({ children, style, colors, borderColor }: any) => (
   </View>
 );
 
-// Progress Bar Component
 const ProgressBar = ({ progress, color, height = 8 }: any) => (
   <View style={[styles.progressBarContainer, { height }]}>
     <View
@@ -252,7 +248,6 @@ const ProgressBar = ({ progress, color, height = 8 }: any) => (
   </View>
 );
 
-// ==================== Main Component ====================
 export default function ProfileScreen() {
   const router = useRouter();
   const { theme } = useSimpleTheme();
@@ -260,7 +255,6 @@ export default function ProfileScreen() {
   const isDark = theme === "dark";
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // State
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -279,10 +273,22 @@ export default function ProfileScreen() {
     rewardClaimed: false,
   });
 
-  // Header animation
+useEffect(() => {
+  const ensureMissions = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (token) {
+        await fetch("http://192.168.100.143:3000/api/users/ensure-missions", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error("Error ensuring missions:", error);
+    }
+  };
+  ensureMissions();
+}, []);
 
-
-  // ========== Fetch Functions ==========
 const fetchProfile = async () => {
   try {
     setError(null);
@@ -302,23 +308,6 @@ const fetchProfile = async () => {
     }
     setProfile(profileData.user);
 
-    // ❌ REMOVE or COMMENT OUT this entire stats fetch block
-    // try {
-    //   const statsRes = await fetch(`${API_BASE_URL}/api/users/stats`, {
-    //     headers: { Authorization: `Bearer ${token}` },
-    //   });
-    //   const statsData = (await statsRes.json()) as StatsResponse;
-    //   if (statsRes.ok) setStats(statsData.stats);
-    // } catch (err) {
-    //   setStats({
-    //     totalWorkouts: 0,
-    //     currentStreak: 0,
-    //     longestStreak: 0,
-    //     totalPRs: 0,
-    //     totalMinutes: 0,
-    //     achievements: 0,
-    //   });
-    // }
     
   } catch (err: any) {
     setError(err.message || "Network error");
@@ -344,7 +333,6 @@ const fetchProfile = async () => {
 
       if (response.ok) {
         const data = (await response.json()) as ActivityResponse;
-        // 🔍 ADD THIS DEBUG LOG
         console.log("🔍 STREAK DEBUG:", {
           currentStreak: data.activity?.currentStreak,
           longestStreak: data.activity?.longestStreak,
@@ -352,41 +340,49 @@ const fetchProfile = async () => {
           fullActivity: data.activity,
         });
 
-        if (data.success && data.activity) {
-          setStats({
-            totalWorkouts: data.activity.weeklyProgress?.completedWorkouts || 0,
-            currentStreak: data.activity.currentStreak || 0,
-            longestStreak: data.activity.longestStreak || 0,
-            totalPRs: 0,
-            totalMinutes: 0,
-            achievements: data.activity.achievements?.length || 0,
-          });
+        
+if (data.success && data.activity) {
+  setStats({
+    totalWorkouts: data.activity.weeklyProgress?.completedWorkouts || 0,
+    currentStreak: data.activity.currentStreak || 0,
+    longestStreak: data.activity.longestStreak || 0,
+    totalPRs: 0,
+    totalMinutes: 0,
+    achievements: data.activity.achievements?.length || 0,
+  });
 
-          setMissions(data.activity.missions || []);
-          setAchievements(data.activity.achievements || []);
-          setWeeklyCupsCompleted(data.activity.weeklyCupsCompleted || 0);
-          setMonthlyRewardClaimed(data.activity.monthlyRewardClaimed || false);
-          setAiMessages(data.activity.aiMessagesRemaining || 10);
-          setWeeklyProgress(
-            data.activity.weeklyProgress || {
-              weekStart: new Date(),
-              completedWorkouts: 0,
-              weeklyGoal: 4,
-              rewardClaimed: false,
-            },
-          );
-        } else {
-          console.log(" Activity response success=false or missing activity");
-        }
+  // ✅ Add streak notification here - check if streak increased
+  const previousStreak = stats?.currentStreak || 0;
+  const newStreak = data.activity.currentStreak || 0;
+  
+  if (newStreak > previousStreak) {
+    await notifyStreakUpdate(newStreak);
+  }
+
+  setMissions(data.activity.missions || []);
+  setAchievements(data.activity.achievements || []);
+  setWeeklyCupsCompleted(data.activity.weeklyCupsCompleted || 0);
+  setMonthlyRewardClaimed(data.activity.monthlyRewardClaimed || false);
+  setAiMessages(data.activity.aiMessagesRemaining || 10);
+  setWeeklyProgress(
+    data.activity.weeklyProgress || {
+      weekStart: new Date(),
+      completedWorkouts: 0,
+      weeklyGoal: 4,
+      rewardClaimed: false,
+    },
+  );
+} else {
+  console.log(" Activity response success=false or missing activity");
+}
       } else {
         console.log(" Activity response not OK:", response.status);
       }
     } catch (err) {
       console.log("Activity fetch error:", err);
     }
+    
   };
-  // ========== Handlers ==========
-  // ========== HANDLERS ==========
   const handleCheckIn = async () => {
     setCheckingIn(true);
     try {
@@ -439,7 +435,6 @@ const fetchProfile = async () => {
         await fetchActivity();
         await fetchProfile();
       } else {
-        // ✅ Now 'error' exists on the type
         const errorMsg =
           data.error || data.message || "Already checked in today!";
         if (errorMsg === "Already checked in today!") {
@@ -474,7 +469,6 @@ const fetchProfile = async () => {
         },
       );
 
-      // ✅ ADD TYPE ASSERTION HERE
       const data = (await response.json()) as ClaimRewardResponse;
 
       if (response.ok && data.success) {
@@ -567,10 +561,10 @@ const fetchProfile = async () => {
   const handleEditProfile = () => router.push("./profile/edit-profile");
   const handleChangePassword = () => router.push("./profile/change-password");
   const handleNotificationSettings = () =>
-    router.push("./profile/notification-settings");
-  const handlePrivacySettings = () => router.push("./profile/privacy-settings");
+    router.push("./profile/notifications");
+  const handlePrivacySettings = () => router.push("./settings/privacy-policy");
+  const handleSettingsSettings = () => router.push("/settings");
 
-  // View Monthly Report in Browser
 const viewMonthlyReport = async () => {
   try {
     const token = await AsyncStorage.getItem("userToken");
@@ -584,7 +578,6 @@ const viewMonthlyReport = async () => {
       return;
     }
 
-    // Get previous month (last month)
     const now = new Date();
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const year = prevMonth.getFullYear();
@@ -594,7 +587,6 @@ const viewMonthlyReport = async () => {
 const reportUrl = `${API_BASE_URL}/reports/${profile._id}_${year}_${month}.html`;    
     console.log("Opening report:", reportUrl);
     
-    // Check if report exists first
     const checkResponse = await fetch(reportUrl, { method: 'HEAD' });
     
     if (checkResponse.ok) {
@@ -623,14 +615,13 @@ useEffect(() => {
   useFocusEffect(
     useCallback(() => {
       const refreshData = async () => {
-        await fetchActivity(); // Refresh activity first
-        await fetchProfile(); // Then refresh profile
+        await fetchActivity(); 
+        await fetchProfile(); 
       };
       refreshData();
     }, []),
   );
 
-  // Loading / Error states
   if (loading) {
     return (
       <View
@@ -712,9 +703,9 @@ useEffect(() => {
           />
         }
       >
-        {/* ========== PROFILE HERO ========== */}
+        {}
         <View style={styles.profileHero}>
-          {/* Radial glow behind avatar */}
+          {}
           <View
             style={[
               styles.heroGlowBehind,
@@ -722,7 +713,7 @@ useEffect(() => {
             ]}
           />
 
-          {/* Top actions row */}
+          {}
           <View style={styles.heroTopRow}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -756,16 +747,16 @@ useEffect(() => {
             </TouchableOpacity>
           </View>
 
-          {/* Avatar */}
+          {}
           <View style={styles.avatarWrapper}>
-            {/* Outer ring */}
+            {}
             <View
               style={[
                 styles.avatarRingOuter,
                 { borderColor: currentColors.primary + "30" },
               ]}
             />
-            {/* Inner ring */}
+            {}
             <View
               style={[
                 styles.avatarRingInner,
@@ -785,7 +776,7 @@ useEffect(() => {
                 {profile.username.charAt(0).toUpperCase()}
               </Text>
             </LinearGradient>
-            {/* Level badge */}
+            {}
             <View
               style={[
                 styles.levelBadge,
@@ -798,7 +789,7 @@ useEffect(() => {
             </View>
           </View>
 
-          {/* Name & role */}
+          {}
           <Text style={[styles.userName, { color: currentColors.text }]}>
             {profile.fullName || profile.username}
           </Text>
@@ -857,7 +848,7 @@ useEffect(() => {
             </Text>
           )}
 
-          {/* Meta chips */}
+          {}
           <View style={styles.metaRow}>
             {profile.location && (
               <View
@@ -912,7 +903,7 @@ useEffect(() => {
           </View>
         </View>
 
-        {/* ========== STATS GRID ========== */}
+        {}
         <View style={styles.statsGrid}>
           <AnimatedStatCard
             icon="flame"
@@ -952,7 +943,7 @@ useEffect(() => {
           />
         </View>
 
-        {/* ========== DAILY CHECK-IN ========== */}
+        {}
         <View style={styles.checkInSection}>
           <TouchableOpacity
             style={[styles.checkInButton, { opacity: checkingIn ? 0.72 : 1 }]}
@@ -988,7 +979,7 @@ useEffect(() => {
           </TouchableOpacity>
         </View>
 
-        {/* ========== WEEKLY PROGRESS ========== */}
+        {}
         <GlassCard
           colors={currentColors}
           borderColor={currentColors.primary + "35"}
@@ -1066,7 +1057,7 @@ useEffect(() => {
             )}
         </GlassCard>
 
-        {/* ========== ACTIVE MISSIONS ========== */}
+        {}
         {missions.length > 0 && (
           <GlassCard colors={currentColors}>
             <SectionHeader
@@ -1163,7 +1154,7 @@ useEffect(() => {
           </GlassCard>
         )}
 
-        {/* ========== AI MESSAGES ========== */}
+        {}
         <View
           style={[
             styles.aiCard,
@@ -1173,7 +1164,7 @@ useEffect(() => {
             },
           ]}
         >
-          {/* Decorative stripe */}
+          {}
           <LinearGradient
             colors={[currentColors.primary + "25", "transparent"]}
             start={{ x: 0, y: 0 }}
@@ -1219,7 +1210,7 @@ useEffect(() => {
           </View>
         </View>
 
-        {/* ========== FITNESS METRICS ========== */}
+        {}
         {(profile.height || profile.weight) && (
           <GlassCard colors={currentColors}>
             <SectionHeader
@@ -1379,7 +1370,7 @@ useEffect(() => {
           </GlassCard>
         )}
 
-        {/* ========== HABIT CUPS ========== */}
+        {}
         <GlassCard
           colors={currentColors}
           borderColor={currentColors.primary + "35"}
@@ -1517,7 +1508,7 @@ useEffect(() => {
           )}
         </GlassCard>
 
-        {/* ========== MONTHLY REPORT BUTTON ========== */}
+        {}
 <View style={styles.reportSection}>
   <TouchableOpacity
     style={[
@@ -1543,9 +1534,9 @@ useEffect(() => {
 </View>
 
 
-  {/* ... rest of account settings ... */}
+  {}
 
-        {/* ========== ACCOUNT SETTINGS ========== */}
+        {}
         <View style={styles.settingsSection}>
           <Text
             style={[styles.settingsHeader, { color: isDark ? "#777" : "#bbb" }]}
@@ -1577,6 +1568,12 @@ useEffect(() => {
               title: "Privacy",
               subtitle: "Control profile visibility",
               onPress: handlePrivacySettings,
+            },
+                        {
+              icon: "settings-outline",
+              title: "Settings",
+              subtitle: "Control profile visibility",
+              onPress: handleSettingsSettings,
             },
           ].map((item, index) => (
             <TouchableOpacity
@@ -1631,7 +1628,7 @@ useEffect(() => {
           ))}
         </View>
 
-        {/* Logout */}
+        {}
         <TouchableOpacity
           style={[
             styles.logoutButton,
@@ -1657,7 +1654,6 @@ useEffect(() => {
   );
 }
 
-// ==================== STYLES ====================
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
@@ -1683,7 +1679,6 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingBottom: 48 },
 
-  // ── Animated header ──────────────────────────────
 
   headerContent: {
     flexDirection: "row",
@@ -1699,7 +1694,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 17, fontWeight: "700", letterSpacing: 0.3 },
 
-  // ── Profile hero ────────────────────────────────
   profileHero: {
     marginTop: Platform.OS === "ios" ? 60 : 50,
     marginHorizontal: 20,
@@ -1742,7 +1736,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // avatar
   avatarWrapper: {
     position: "relative",
     width: 104,
@@ -1824,7 +1817,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
 
-  // meta chips
   metaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1841,7 +1833,6 @@ const styles = StyleSheet.create({
   },
   metaChipText: { fontSize: 12, fontWeight: "500" },
 
-  // ── Stats grid ──────────────────────────────────
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1898,7 +1889,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
 
-  // ── Check-in ─────────────────────────────────────
   checkInSection: {
     marginHorizontal: 20,
     marginBottom: 20,
@@ -1960,7 +1950,6 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 
-  // ── Glass card ───────────────────────────────────
   glassCard: {
     marginHorizontal: 20,
     marginBottom: 16,
@@ -1978,7 +1967,6 @@ const styles = StyleSheet.create({
     }),
   },
 
-  // ── Section header ───────────────────────────────
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2009,7 +1997,6 @@ const styles = StyleSheet.create({
   },
   sectionCount: { fontSize: 14, fontWeight: "700" },
 
-  // ── Weekly card ──────────────────────────────────
   weeklyHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2037,7 +2024,6 @@ const styles = StyleSheet.create({
   },
   weeklyCountText: { fontSize: 16, fontWeight: "800" },
 
-  // progress bar
   progressBarContainer: {
     backgroundColor: "rgba(128,128,128,0.12)",
     borderRadius: 6,
@@ -2045,7 +2031,6 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: "100%", borderRadius: 6 },
 
-  // claim button
   claimButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -2057,7 +2042,6 @@ const styles = StyleSheet.create({
   },
   claimButtonText: { fontSize: 13, fontWeight: "700", color: "#000" },
 
-  // ── Missions ─────────────────────────────────────
   missionItem: {
     flexDirection: "row",
     gap: 12,
@@ -2088,7 +2072,6 @@ const styles = StyleSheet.create({
   missionDesc: { fontSize: 12, marginBottom: 8, lineHeight: 17 },
   missionProgressText: { fontSize: 10, fontWeight: "500", marginTop: 5 },
 
-  // ── AI card ──────────────────────────────────────
   aiCard: {
     marginHorizontal: 20,
     marginBottom: 16,
@@ -2129,7 +2112,6 @@ const styles = StyleSheet.create({
   aiCount: { fontSize: 32, fontWeight: "800", lineHeight: 34 },
   aiRemaining: { fontSize: 11, fontWeight: "500" },
 
-  // ── Fitness metrics ──────────────────────────────
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -2151,7 +2133,6 @@ const styles = StyleSheet.create({
   metricValue: { fontSize: 22, fontWeight: "700" },
   metricUnit: { fontSize: 12, fontWeight: "500" },
 
-  // ── Cups ─────────────────────────────────────────
   cupDescription: { fontSize: 12, textAlign: "center", marginBottom: 16 },
   cupsRow: {
     flexDirection: "row",
@@ -2202,7 +2183,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ── Account settings ─────────────────────────────
   settingsSection: {
     marginHorizontal: 20,
     marginBottom: 16,
@@ -2240,7 +2220,6 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 14, fontWeight: "700", marginBottom: 1 },
   settingSubtitle: { fontSize: 11, fontWeight: "500" },
 
-  // ── Logout ───────────────────────────────────────
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",

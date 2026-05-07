@@ -58,5 +58,4 @@ export function useSimpleTheme() {
   return useContext(ThemeContext);
 }
 
-// ✅ ADD THIS DEFAULT EXPORT
 export default SimpleThemeProvider;

@@ -71,14 +71,13 @@ const ACTIVITY_LEVELS = [
   },
 ] as const;
 
-// ── BMI Gauge visual ─────────────────────────────────────────────────────────
 const BMIGauge = ({ bmi, color }: { bmi: number; color: string }) => {
   const pct = Math.min(Math.max((bmi - 10) / (45 - 10), 0), 1);
   const filledWidth = pct * (width - 88);
   return (
     <View style={gaugeStyles.wrap}>
       <View style={gaugeStyles.track}>
-        {/* Segment fills */}
+        {}
         <View
           style={[gaugeStyles.seg, { backgroundColor: "#3B82F6", flex: 8.5 }]}
         />
@@ -91,7 +90,7 @@ const BMIGauge = ({ bmi, color }: { bmi: number; color: string }) => {
         <View
           style={[gaugeStyles.seg, { backgroundColor: "#EF4444", flex: 15 }]}
         />
-        {/* Thumb */}
+        {}
         <View
           style={[
             gaugeStyles.thumb,
@@ -146,7 +145,6 @@ const gaugeStyles = StyleSheet.create({
   labelText: { fontSize: 9, color: "#888", fontWeight: "600" },
 });
 
-// ── InputField — defined OUTSIDE CalculatorScreen to prevent remount on every keystroke ──
 const InputField = ({
   label,
   icon,
@@ -222,7 +220,6 @@ export default function CalculatorScreen() {
   const currentColors = Colors[theme];
   const isDark = theme === "dark";
 
-  // ─── Form state (unchanged) ───────────────────────────────────────────────
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("male");
   const [weight, setWeight] = useState("");
@@ -234,7 +231,6 @@ export default function CalculatorScreen() {
     calories?: number;
   }>({});
 
-  // ─── Animation refs (unchanged) ──────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -295,7 +291,6 @@ export default function CalculatorScreen() {
     checkToken();
   }, []);
 
-  // ─── All original logic intact ────────────────────────────────────────────
   const getBMICategory = useCallback((bmi: number) => {
     if (bmi < 18.5) return BMI_CATEGORIES.UNDERWEIGHT;
     if (bmi < 25) return BMI_CATEGORIES.NORMAL;
@@ -437,7 +432,6 @@ export default function CalculatorScreen() {
     setHeight("");
     setResults({});
     scaleAnim.setValue(0.95);
-    // Do NOT reset fadeAnim — it would fade out the entire form
   }, []);
 
   const bmiCategory = useMemo(
@@ -454,13 +448,12 @@ export default function CalculatorScreen() {
       !isNaN(parseFloat(height)),
     [age, weight, height],
   );
-  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* ── HEADER ───────────────────────────────────────────────────────── */}
+      {}
       <View
         style={[
           styles.header,
@@ -472,7 +465,7 @@ export default function CalculatorScreen() {
           },
         ]}
       >
-        {/* Top accent line */}
+        {}
         <LinearGradient
           colors={[
             currentColors.primary + "00",
@@ -555,7 +548,7 @@ export default function CalculatorScreen() {
         <Animated.View
           style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
         >
-          {/* ── INPUT CARD ─────────────────────────────────────────────────── */}
+          {}
           <View
             style={[
               styles.formCard,
@@ -565,7 +558,7 @@ export default function CalculatorScreen() {
               },
             ]}
           >
-            {/* Section label */}
+            {}
             <View style={styles.formCardHeader}>
               <Text
                 style={[
@@ -583,7 +576,7 @@ export default function CalculatorScreen() {
               />
             </View>
 
-            {/* Age */}
+            {}
             <InputField
               label="Age"
               icon="person-outline"
@@ -596,7 +589,7 @@ export default function CalculatorScreen() {
               textColor={currentColors.text}
             />
 
-            {/* Gender toggle */}
+            {}
             <View style={styles.inputWrapper}>
               <Text
                 style={[styles.inputLabel, { color: isDark ? "#777" : "#aaa" }]}
@@ -659,7 +652,7 @@ export default function CalculatorScreen() {
               </View>
             </View>
 
-            {/* Weight & Height side by side */}
+            {}
             <View style={styles.dualRow}>
               <View style={{ flex: 1 }}>
                 <InputField
@@ -690,7 +683,7 @@ export default function CalculatorScreen() {
               </View>
             </View>
 
-            {/* Activity level */}
+            {}
             <View style={styles.inputWrapper}>
               <Text
                 style={[styles.inputLabel, { color: isDark ? "#777" : "#aaa" }]}
@@ -783,7 +776,7 @@ export default function CalculatorScreen() {
             </View>
           </View>
 
-          {/* ── CALCULATE BUTTON ───────────────────────────────────────────── */}
+          {}
           <Animated.View style={{ transform: [{ scale: buttonPulse }] }}>
             <TouchableOpacity
               style={[
@@ -850,7 +843,7 @@ export default function CalculatorScreen() {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* ── RESULTS ────────────────────────────────────────────────────── */}
+          {}
           {results.bmi && bmiCategory && (
             <Animated.View
               style={{
@@ -858,7 +851,7 @@ export default function CalculatorScreen() {
                 transform: [{ scale: scaleAnim }, { translateY: resultSlide }],
               }}
             >
-              {/* BMI Card */}
+              {}
               <View
                 style={[
                   styles.resultCard,
@@ -870,7 +863,7 @@ export default function CalculatorScreen() {
                   },
                 ]}
               >
-                {/* Color top strip */}
+                {}
                 <View
                   style={[
                     styles.resultCardStrip,
@@ -948,9 +941,9 @@ export default function CalculatorScreen() {
                 <BMIGauge bmi={results.bmi} color={bmiCategory.color} />
               </View>
 
-              {/* BMR + Calories row */}
+              {}
               <View style={styles.metricsRow}>
-                {/* BMR */}
+                {}
                 <View
                   style={[
                     styles.metricCard,
@@ -1009,7 +1002,7 @@ export default function CalculatorScreen() {
                   </Text>
                 </View>
 
-                {/* Calories */}
+                {}
                 <View
                   style={[
                     styles.metricCard,
@@ -1073,7 +1066,7 @@ export default function CalculatorScreen() {
                 </View>
               </View>
 
-              {/* Calorie targets breakdown */}
+              {}
               <View
                 style={[
                   styles.targetCard,
@@ -1161,7 +1154,7 @@ export default function CalculatorScreen() {
                 ))}
               </View>
 
-              {/* Disclaimer */}
+              {}
               <View
                 style={[
                   styles.disclaimer,
@@ -1201,7 +1194,6 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  // ── Header ─────────────────────────────────────────────────────────────────
   header: {
     paddingTop: Platform.OS === "ios" ? 56 : 42,
     paddingBottom: 16,
@@ -1265,10 +1257,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // ── Scroll ─────────────────────────────────────────────────────────────────
   scrollContainer: { padding: 18, paddingBottom: 44 },
 
-  // ── Form card ──────────────────────────────────────────────────────────────
   formCard: {
     borderRadius: 24,
     padding: 18,
@@ -1293,7 +1283,6 @@ const styles = StyleSheet.create({
   formCardLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
   formCardLine: { flex: 1, height: 1 },
 
-  // ── Input field ────────────────────────────────────────────────────────────
   inputWrapper: { marginBottom: 16 },
   inputLabelRow: {
     flexDirection: "row",
@@ -1335,7 +1324,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 13, fontSize: 16, fontWeight: "700" },
   inputUnit: { fontSize: 12, fontWeight: "600", marginLeft: 6 },
 
-  // ── Gender ────────────────────────────────────────────────────────────────
   genderTrack: {
     flexDirection: "row",
     borderRadius: 14,
@@ -1354,10 +1342,8 @@ const styles = StyleSheet.create({
   },
   genderTabText: { fontSize: 14, fontWeight: "700" },
 
-  // ── Dual row ──────────────────────────────────────────────────────────────
   dualRow: { flexDirection: "row" },
 
-  // ── Activity ──────────────────────────────────────────────────────────────
   activityScrollContent: { gap: 10, paddingRight: 4 },
   activityCard: {
     width: width * 0.58,
@@ -1394,7 +1380,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // ── Calculate button ───────────────────────────────────────────────────────
   calculateButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1431,7 +1416,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // ── BMI result card ────────────────────────────────────────────────────────
   resultCard: {
     borderRadius: 22,
     padding: 20,
@@ -1499,7 +1483,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // ── Metrics row ───────────────────────────────────────────────────────────
   metricsRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
   metricCard: {
     borderRadius: 20,
@@ -1545,7 +1528,6 @@ const styles = StyleSheet.create({
   metricCardUnit: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   metricCardSub: { fontSize: 10, fontWeight: "500", marginTop: 4 },
 
-  // ── Calorie target card ───────────────────────────────────────────────────
   targetCard: {
     borderRadius: 20,
     padding: 18,
@@ -1581,7 +1563,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 
-  // ── Disclaimer ────────────────────────────────────────────────────────────
   disclaimer: {
     flexDirection: "row",
     alignItems: "center",

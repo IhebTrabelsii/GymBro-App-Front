@@ -1,9 +1,13 @@
-// app/admin/dashboard.tsx - COMPLETE FIXED VERSION
-import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Feather,
+  Ionicons,
+  MaterialIcons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,39 +18,184 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Animated,
 } from "react-native";
-import Animated, {
-  FadeInDown,
-  FadeInUp,
-  SlideInLeft,
-  SlideInRight,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { Colors } from "../../constants/Colors";
+import { LineChart, PieChart } from "react-native-chart-kit";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+
+const Particle = ({
+  color,
+  delay,
+  x,
+  size,
+}: {
+  color: string;
+  delay: number;
+  x: number;
+  size: number;
+}) => {
+  const anim = useRef(new Animated.Value(0)).current;
+  const opAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const run = () => {
+      anim.setValue(0);
+      opAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 4000 + delay * 600,
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(opAnim, {
+            toValue: 0.6,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opAnim, {
+            toValue: 0,
+            duration: 3200 + delay * 600,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => run());
+    };
+    const t = setTimeout(run, delay * 400);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: x,
+        bottom: -20,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        opacity: opAnim,
+        transform: [
+          {
+            translateY: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -(height * 0.55)],
+            }),
+          },
+        ],
+      }}
+    />
+  );
+};
+
+type DashboardResponse = {
+  users: number;
+  workouts: number;
+  food: number;
+  error?: string;
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState({
-    users: 0,
-    workouts: 0,
-    food: 0,
-  });
+  const { theme, toggleTheme } = useSimpleTheme();
+  const currentColors = Colors[theme];
+  const isDark = theme === "dark";
+  const primary = currentColors.primary;
+
+  const [stats, setStats] = useState({ users: 0, workouts: 0, food: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [activeChart, setActiveChart] = useState<"users" | "workouts">("users");
 
-  const scaleValue = useSharedValue(1);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(60)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scaleValue.value }],
-  }));
+  const userGrowthData = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    datasets: [{ data: [45, 52, 68, 85, 102, stats.users] }],
+  };
+
+  const workoutActivityData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [{ data: [12, 19, 15, 17, 14, 22, stats.workouts] }],
+  };
+
+  const pieData = [
+    {
+      name: "Users",
+      population: stats.users,
+      color: primary,
+      legendFontColor: isDark ? "#fff" : "#333",
+      legendFontSize: 12,
+    },
+    {
+      name: "Workouts",
+      population: stats.workouts,
+      color: "#FFA726",
+      legendFontColor: isDark ? "#fff" : "#333",
+      legendFontSize: 12,
+    },
+    {
+      name: "Food",
+      population: stats.food,
+      color: "#42A5F5",
+      legendFontColor: isDark ? "#fff" : "#333",
+      legendFontSize: 12,
+    },
+  ];
+
+  const chartConfig = {
+    backgroundColor: isDark ? "#0c0c0c" : "#fff",
+    backgroundGradientFrom: isDark ? "#0c0c0c" : "#fff",
+    backgroundGradientTo: isDark ? "#0c0c0c" : "#fff",
+    decimalPlaces: 0,
+    color: (opacity = 1) => primary,
+    labelColor: (opacity = 1) =>
+      isDark
+        ? `rgba(255, 255, 255, ${opacity * 0.7})`
+        : `rgba(0, 0, 0, ${opacity * 0.7})`,
+    style: { borderRadius: 16 },
+    propsForDots: { r: "5", strokeWidth: "2", stroke: primary },
+  };
 
   useEffect(() => {
     fetchStats();
     loadUserData();
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 9,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 2200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 2200,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
   }, []);
 
   const loadUserData = async () => {
@@ -57,35 +206,28 @@ export default function AdminDashboard() {
       console.error("Error loading user data:", error);
     }
   };
-  // Define the type for your dashboard response
-  type DashboardResponse = {
-    users: number;
-    workouts: number;
-    food: number;
-    error?: string;
-  };
 
   const fetchStats = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
-
       if (!token) {
         setError("No authentication token found");
         setLoading(false);
         return;
       }
 
-      const response = await fetch(
-        "http://localhost:3000/api/admin/dashboard",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const apiUrl =
+        Platform.OS === "web"
+          ? "http://localhost:3000/api/admin/dashboard"
+          : "http://192.168.100.143:3000/api/admin/dashboard";
 
-      // Type assertion here
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       const data = (await response.json()) as DashboardResponse;
 
       if (response.ok) {
@@ -94,10 +236,8 @@ export default function AdminDashboard() {
           workouts: data.workouts ?? 0,
           food: data.food ?? 0,
         });
-        console.log("DASHBOARD STATS:", data);
       } else {
         setError(data.error || "Failed to fetch dashboard");
-
         if (response.status === 401) {
           Alert.alert("Session Expired", "Please login again");
           await AsyncStorage.multiRemove(["userToken", "username", "userRole"]);
@@ -105,800 +245,845 @@ export default function AdminDashboard() {
         }
       }
     } catch (error) {
-      console.error("DASHBOARD ERROR:", error);
       setError("Network error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      // ✅ Clear stored login info
-      await AsyncStorage.removeItem("userToken");
-      await AsyncStorage.removeItem("username");
-      await AsyncStorage.removeItem("userRole");
+const handleLogout = async () => {
+  try {
+    await AsyncStorage.removeItem("userToken");
+    await AsyncStorage.removeItem("username");
+    await AsyncStorage.removeItem("userRole");
+    
+    console.log("User logged out!");
+    
+    router.replace("/login");  
+    
+  } catch (error) {
+    console.log("Logout error:", error);
+    Alert.alert("Error", "Failed to logout.");
+  }
+};
+  const handleNavigation = (route: string) => router.push(route as any);
 
-      console.log("User logged out!");
-
-      // ✅ Redirect to login screen
-      router.replace("/login");
-    } catch (error) {
-      console.log("Logout error:", error);
-      Alert.alert("Error", "Failed to logout.");
-    }
-  };
-
-  const handleButtonPress = () => {
-    scaleValue.value = withSpring(0.95, {}, () => {
-      scaleValue.value = withSpring(1);
-    });
-  };
-
-  const handleNavigation = (route: string) => {
-    // Using type assertion for dynamic routes
-    router.push(route as any);
-  };
+  const particles = [
+    { x: width * 0.05, size: 4, delay: 0 },
+    { x: width * 0.15, size: 3, delay: 1 },
+    { x: width * 0.25, size: 5, delay: 2 },
+    { x: width * 0.75, size: 3, delay: 0.5 },
+    { x: width * 0.85, size: 4, delay: 1.5 },
+    { x: width * 0.95, size: 3, delay: 2.5 },
+  ];
 
   if (loading) {
     return (
-      <LinearGradient
-        colors={["#000000", "#0a0a0a", "#000000"]}
-        style={styles.loadingContainer}
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: currentColors.background },
+        ]}
       >
-        <Animated.View entering={FadeInDown.duration(600)}>
-          <ActivityIndicator size="large" color="#39FF14" />
-          <Text style={styles.loadingText}>Loading dashboard...</Text>
-        </Animated.View>
-      </LinearGradient>
+        <ActivityIndicator size="large" color={primary} />
+        <Text style={[styles.loadingText, { color: primary }]}>
+          Loading dashboard...
+        </Text>
+      </View>
     );
   }
 
-  const primaryColor = "#39FF14";
-  const backgroundColor = "#000000";
-  const cardBackground = "rgba(15, 23, 42, 0.7)";
-  const textColor = "#FFFFFF";
-  const secondaryTextColor = "#888888";
-  const borderColor = "rgba(57, 255, 20, 0.2)";
-
   return (
-    <LinearGradient
-      colors={[backgroundColor, "#0a0a0a", backgroundColor]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
+    <View
+      style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      <View style={styles.backgroundOverlay}>
-        <View
-          style={[
-            styles.radialGradient,
-            { backgroundColor: "rgba(57, 255, 20, 0.03)" },
-          ]}
+      {particles.map((p, i) => (
+        <Particle
+          key={i}
+          color={primary}
+          delay={p.delay}
+          x={p.x}
+          size={p.size}
         />
+      ))}
+
+      <Animated.View
+        style={[
+          styles.bgGlow,
+          {
+            backgroundColor: primary,
+            opacity: glowAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.03, 0.08],
+            }),
+          },
+        ]}
+      />
+
+      {}
+      <View
+        style={[
+          styles.topBar,
+          {
+            backgroundColor: isDark
+              ? "rgba(6,6,6,0.95)"
+              : "rgba(255,255,255,0.95)",
+            borderBottomColor: isDark ? primary + "18" : primary + "10",
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[primary + "00", primary + "60", primary + "00"] as const}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.topBarLine}
+        />
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          activeOpacity={0.7}
+        >
+          <View style={styles.logoRow}>
+            <LinearGradient
+              colors={[primary + "35", primary + "08"] as const}
+              style={styles.logoIconWrap}
+            >
+              <MaterialCommunityIcons
+                name="dumbbell"
+                size={17}
+                color={primary}
+              />
+            </LinearGradient>
+            <View>
+              <Text style={[styles.logoText, { color: primary }]}>GymBro</Text>
+              <View
+                style={[styles.logoUnderline, { backgroundColor: primary }]}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+        <View style={styles.topRightSection}>
+          <View
+            style={[
+              styles.adminBadge,
+              { borderColor: primary + "30", backgroundColor: primary + "15" },
+            ]}
+          >
+            <Text style={[styles.adminBadgeText, { color: primary }]}>
+              Admin
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={toggleTheme}
+            style={[styles.themeBtn, { backgroundColor: primary }]}
+          >
+            <Ionicons
+              name={isDark ? "sunny" : "moon"}
+              size={15}
+              color={isDark ? "#000" : "#fff"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.contentWrapper}>
-          {/* Header */}
-          <Animated.View
-            entering={FadeInDown.duration(600).springify()}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Animated.View
+          style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+        >
+          {}
+          <View style={styles.welcomeSection}>
+            <Text style={[styles.welcomeText, { color: currentColors.text }]}>
+              Welcome back, {user?.username || "Admin"} 👋
+            </Text>
+            <Text
+              style={[
+                styles.welcomeSubtext,
+                { color: isDark ? "#444" : "#bbb" },
+              ]}
+            >
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </Text>
+          </View>
+
+          {}
+          <View style={styles.statsRow}>
+            <TouchableOpacity
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={() => setActiveChart("users")}
+            >
+              <LinearGradient
+                colors={[primary + "15", primary + "05"] as const}
+                style={StyleSheet.absoluteFillObject}
+                pointerEvents="none"
+              />
+              <View style={styles.statIconContainer}>
+                <Ionicons name="people" size={28} color={primary} />
+              </View>
+              <Text style={[styles.statValue, { color: currentColors.text }]}>
+                {stats.users.toLocaleString()}
+              </Text>
+              <Text
+                style={[styles.statTitle, { color: isDark ? "#555" : "#bbb" }]}
+              >
+                Total Users
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={() => setActiveChart("workouts")}
+            >
+              <LinearGradient
+                colors={[primary + "15", primary + "05"] as const}
+                style={StyleSheet.absoluteFillObject}
+                pointerEvents="none"
+              />
+              <View style={styles.statIconContainer}>
+                <Ionicons name="barbell" size={28} color={primary} />
+              </View>
+              <Text style={[styles.statValue, { color: currentColors.text }]}>
+                {stats.workouts.toLocaleString()}
+              </Text>
+              <Text
+                style={[styles.statTitle, { color: isDark ? "#555" : "#bbb" }]}
+              >
+                Workout Plans
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[primary + "15", primary + "05"] as const}
+                style={StyleSheet.absoluteFillObject}
+                pointerEvents="none"
+              />
+              <View style={styles.statIconContainer}>
+                <Ionicons name="restaurant" size={28} color={primary} />
+              </View>
+              <Text style={[styles.statValue, { color: currentColors.text }]}>
+                {stats.food.toLocaleString()}
+              </Text>
+              <Text
+                style={[styles.statTitle, { color: isDark ? "#555" : "#bbb" }]}
+              >
+                Nutrition Items
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {}
+          <View
             style={[
-              styles.headerCard,
+              styles.chartCard,
               {
-                backgroundColor: cardBackground,
-                borderColor: borderColor,
+                backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                borderColor: isDark ? primary + "22" : primary + "12",
               },
             ]}
           >
             <LinearGradient
-              colors={["rgba(57, 255, 20, 0.1)", "transparent"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+              colors={[primary + "08", "transparent"] as const}
               style={StyleSheet.absoluteFillObject}
               pointerEvents="none"
             />
 
-            <View style={styles.headerContent}>
-              <Animated.View
-                entering={SlideInLeft.duration(500).delay(200)}
-                style={styles.headerTextContainer}
-              >
-                <Text style={[styles.welcomeText, { color: textColor }]}>
-                  Welcome back, {user?.username || "Admin"}! 👋
-                </Text>
-                <View style={styles.dateContainer}>
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: primaryColor },
-                    ]}
-                  />
-                  <Text
-                    style={[styles.dateText, { color: secondaryTextColor }]}
-                  >
-                    {new Date().toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </Text>
-                </View>
-              </Animated.View>
-
-              <Animated.View
-                entering={SlideInRight.duration(500).delay(300)}
-                style={styles.headerButtons}
-              >
-                <Animated.View style={animatedStyle}>
-                  <TouchableOpacity
-                    onPressIn={handleButtonPress}
-                    onPress={() =>
-                      Alert.alert("Info", "Categories management coming soon!")
-                    }
-                    style={[
-                      styles.iconButton,
-                      {
-                        backgroundColor: "rgba(57, 255, 20, 0.1)",
-                        borderColor: "rgba(57, 255, 20, 0.3)",
-                      },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="category"
-                      size={20}
-                      color={primaryColor}
-                    />
-                    <Text style={[styles.buttonText, { color: primaryColor }]}>
-                      Categories
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
-
-                <Animated.View style={animatedStyle}>
-                  <TouchableOpacity
-                    onPressIn={handleButtonPress}
-                    onPress={handleLogout}
-                    style={[
-                      styles.iconButton,
-                      {
-                        backgroundColor: "rgba(239, 68, 68, 0.1)",
-                        borderColor: "rgba(239, 68, 68, 0.3)",
-                      },
-                    ]}
-                  >
-                    <Feather name="log-out" size={20} color="#ef4444" />
-                    <Text style={[styles.buttonText, { color: "#ef4444" }]}>
-                      Logout
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
-              </Animated.View>
-            </View>
-          </Animated.View>
-
-          {/* Stats Grid */}
-          <Animated.View
-            entering={FadeInUp.duration(600).delay(400).springify()}
-            style={styles.statsSection}
-          >
-            <View style={styles.gridContainer}>
-              {[
-                {
-                  title: "Total Users",
-                  value: stats.users,
-                  icon: "people",
-                  color: primaryColor,
-                },
-                {
-                  title: "Workout Plans",
-                  value: stats.workouts,
-                  icon: "barbell",
-                  color: primaryColor,
-                },
-                {
-                  title: "Nutrition",
-                  value: stats.food,
-                  icon: "food-bank",
-                  color: primaryColor,
-                },
-              ].map((stat, index) => (
-                <Animated.View
-                  key={index}
-                  entering={FadeInDown.duration(500)
-                    .delay(index * 100)
-                    .springify()}
-                  style={{ flex: 1, minWidth: width < 768 ? "100%" : "31%" }}
+            <View style={styles.chartHeader}>
+              <View style={styles.chartTitleRow}>
+                <MaterialCommunityIcons
+                  name="chart-line"
+                  size={22}
+                  color={primary}
+                />
+                <Text
+                  style={[styles.chartTitle, { color: currentColors.text }]}
                 >
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={[
-                      styles.statCard,
-                      {
-                        backgroundColor: cardBackground,
-                        borderColor: borderColor,
-                      },
-                    ]}
-                    onPress={() => console.log(`View ${stat.title}`)}
-                  >
-                    <View
-                      style={[
-                        styles.progressBar,
-                        { backgroundColor: "rgba(57, 255, 20, 0.1)" },
-                      ]}
-                    >
-                      <Animated.View
-                        entering={FadeInUp.duration(800).delay(index * 200)}
-                        style={[
-                          styles.progressFill,
-                          {
-                            backgroundColor: stat.color,
-                            width: `${Math.min(100, (stat.value / 100) * 100)}%`,
-                          },
-                        ]}
-                      />
-                    </View>
-
-                    <View style={styles.statIconContainer}>
-                      <Ionicons
-                        name={stat.icon as any}
-                        size={24}
-                        color={stat.color}
-                      />
-                    </View>
-
-                    <Text style={[styles.statValue, { color: textColor }]}>
-                      {stat.value}
-                    </Text>
-
-                    <Text
-                      style={[styles.statLabel, { color: secondaryTextColor }]}
-                    >
-                      {stat.title}
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
-              ))}
-            </View>
-          </Animated.View>
-
-          {/* Error Message */}
-          {error && (
-            <Animated.View
-              entering={FadeInUp.duration(500)}
-              style={[
-                styles.errorContainer,
-                {
-                  backgroundColor: "rgba(255, 68, 68, 0.1)",
-                  borderColor: "rgba(255, 68, 68, 0.3)",
-                },
-              ]}
-            >
-              <Ionicons name="warning" size={24} color="#FF4444" />
-              <Text style={[styles.errorText, { color: "#FF6B6B" }]}>
-                {error}
-              </Text>
-              <TouchableOpacity onPress={fetchStats} style={styles.retryButton}>
-                <Ionicons name="refresh" size={16} color="#FF4444" />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-
-          {/* Management Options */}
-          <Animated.View
-            entering={FadeInUp.duration(600).delay(600).springify()}
-            style={styles.managementSection}
-          >
-            <Text style={[styles.sectionTitle, { color: primaryColor }]}>
-              Management Options
-            </Text>
-
-            {[
-              {
-                title: "Manage Users",
-                description: "View and manage user accounts",
-                icon: "people-outline",
-                route: "/admin/users",
-                color: primaryColor,
-              },
-              {
-                title: "Manage Workouts",
-                description: "Edit workout plans and exercises",
-                icon: "fitness-outline",
-                route: "/admin/workouts",
-                color: primaryColor,
-              },
-              {
-                title: "Manage Foods",
-                description: "Add, edit, or delete food items",
-                icon: "restaurant-outline",
-                route: "/admin/foods",
-                color: primaryColor,
-              },
-              {
-                title: "Manage Plan Exercises",
-                description: "Add or remove exercises from workout plans",
-                icon: "barbell-outline",
-                route: "/admin/manage-plan-exercises",
-                color: primaryColor,
-              },
-              {
-                title: "Manage Exercises",
-                description: "Add, edit, or delete exercises",
-                icon: "fitness-outline",
-                route: "/admin/manage-exercises",
-                color: primaryColor,
-              },
-            ].map((option, index) => (
-              <Animated.View
-                key={index}
-                entering={FadeInDown.duration(400).delay(700 + index * 100)}
-              >
+                  Analytics
+                </Text>
+              </View>
+              <View style={styles.chartTabs}>
                 <TouchableOpacity
                   style={[
-                    styles.optionButton,
-                    {
-                      backgroundColor: cardBackground,
-                      borderColor: borderColor,
+                    styles.chartTab,
+                    activeChart === "users" && {
+                      backgroundColor: primary + "20",
+                      borderColor: primary,
                     },
                   ]}
-                  onPress={() => handleNavigation(option.route)}
-                  activeOpacity={0.8}
+                  onPress={() => setActiveChart("users")}
                 >
-                  <View
+                  <Text
                     style={[
-                      styles.optionIconContainer,
-                      { backgroundColor: "rgba(57, 255, 20, 0.1)" },
+                      styles.chartTabText,
+                      {
+                        color:
+                          activeChart === "users"
+                            ? primary
+                            : isDark
+                              ? "#888"
+                              : "#aaa",
+                      },
                     ]}
                   >
-                    <Ionicons
-                      name={option.icon as any}
-                      size={24}
-                      color={option.color}
-                    />
-                  </View>
-
-                  <View style={styles.optionContent}>
-                    <Text style={[styles.optionTitle, { color: textColor }]}>
-                      {option.title}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.optionDescription,
-                        { color: secondaryTextColor },
-                      ]}
-                    >
-                      {option.description}
-                    </Text>
-                  </View>
-
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={secondaryTextColor}
-                  />
+                    Users
+                  </Text>
                 </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </Animated.View>
+                <TouchableOpacity
+                  style={[
+                    styles.chartTab,
+                    activeChart === "workouts" && {
+                      backgroundColor: primary + "20",
+                      borderColor: primary,
+                    },
+                  ]}
+                  onPress={() => setActiveChart("workouts")}
+                >
+                  <Text
+                    style={[
+                      styles.chartTabText,
+                      {
+                        color:
+                          activeChart === "workouts"
+                            ? primary
+                            : isDark
+                              ? "#888"
+                              : "#aaa",
+                      },
+                    ]}
+                  >
+                    Activity
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-          {/* Quick Stats Info Card */}
-          <Animated.View
-            entering={FadeInUp.duration(600).delay(1000).springify()}
-            style={styles.infoSection}
-          >
+            {activeChart === "users" ? (
+              <LineChart
+                data={userGrowthData}
+                width={width - 60}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+                withDots={false}
+                withInnerLines={false}
+                withOuterLines={true}
+                withVerticalLines={false}
+                withHorizontalLines={true}
+                formatYLabel={(value) => Math.floor(Number(value)).toString()}
+              />
+            ) : (
+              <LineChart
+                data={workoutActivityData}
+                width={width - 60}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+                withDots={false}
+                withInnerLines={false}
+                withOuterLines={true}
+                withVerticalLines={false}
+                withHorizontalLines={true}
+                formatYLabel={(value) => Math.floor(Number(value)).toString()}
+              />
+            )}
+
+            <View style={styles.pieContainer}>
+              <PieChart
+                data={pieData}
+                width={width - 60}
+                height={160}
+                chartConfig={chartConfig}
+                accessor={"population"}
+                backgroundColor={"transparent"}
+                paddingLeft={"15"}
+                absolute
+              />
+            </View>
+          </View>
+
+          {}
+          {error && (
             <View
               style={[
-                styles.infoCard,
+                styles.errorCard,
                 {
-                  backgroundColor: cardBackground,
-                  borderColor: borderColor,
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: "#FF444440",
                 },
               ]}
             >
-              <View style={styles.infoHeader}>
-                <Ionicons name="stats-chart" size={24} color={primaryColor} />
-                <Text style={[styles.infoTitle, { color: textColor }]}>
-                  Quick Stats
+              <View
+                style={[styles.errorIcon, { backgroundColor: "#FF444420" }]}
+              >
+                <Ionicons name="warning" size={16} color="#FF4444" />
+              </View>
+              <Text style={[styles.errorText, { color: "#FF4444", flex: 1 }]}>
+                {error}
+              </Text>
+              <TouchableOpacity onPress={fetchStats} style={styles.retryBtn}>
+                <Ionicons name="refresh" size={18} color={primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {}
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons
+                name="view-dashboard"
+                size={20}
+                color={primary}
+              />
+              <Text
+                style={[styles.sectionTitle, { color: currentColors.text }]}
+              >
+                Management
+              </Text>
+            </View>
+            <View
+              style={[styles.sectionLine, { backgroundColor: primary + "30" }]}
+            />
+          </View>
+
+          {[
+            {
+              title: "Manage Users",
+              icon: "people-outline" as const,
+              route: "/admin/users",
+              description: "View, edit, and manage user accounts",
+            },
+            {
+              title: "Manage Workouts",
+              icon: "fitness-outline" as const,
+              route: "/admin/workouts",
+              description: "Create and edit workout plans",
+            },
+            {
+              title: "Manage Foods",
+              icon: "restaurant-outline" as const,
+              route: "/admin/foods",
+              description: "Add, edit, or delete food items",
+            },
+            {
+              title: "Manage Exercises",
+              icon: "barbell-outline" as const,
+              route: "/admin/manage-exercises",
+              description: "Add, edit, or delete exercises",
+            },
+            {
+              title: "Plan Exercises",
+              icon: "swap-horizontal" as const,
+              route: "/admin/manage-plan-exercises",
+              description: "Link exercises to workout plans",
+            },
+          ].map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.managementCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={() => handleNavigation(item.route)}
+              activeOpacity={0.85}
+            >
+              <View
+                style={[
+                  styles.managementIcon,
+                  { backgroundColor: primary + "15" },
+                ]}
+              >
+                <Ionicons name={item.icon} size={22} color={primary} />
+              </View>
+              <View style={styles.managementContent}>
+                <Text
+                  style={[
+                    styles.managementTitle,
+                    { color: currentColors.text },
+                  ]}
+                >
+                  {item.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.managementDesc,
+                    { color: isDark ? "#555" : "#bbb" },
+                  ]}
+                >
+                  {item.description}
                 </Text>
               </View>
-              <View style={styles.infoContent}>
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[styles.infoLabel, { color: secondaryTextColor }]}
-                  >
-                    Active Today
-                  </Text>
-                  <Text style={[styles.infoValue, { color: textColor }]}>
-                    124 users
-                  </Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[styles.infoLabel, { color: secondaryTextColor }]}
-                  >
-                    New This Week
-                  </Text>
-                  <Text style={[styles.infoValue, { color: textColor }]}>
-                    42 workouts
-                  </Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[styles.infoLabel, { color: secondaryTextColor }]}
-                  >
-                    System Status
-                  </Text>
-                  <View style={styles.statusIndicator}>
-                    <View
-                      style={[
-                        styles.statusDot,
-                        { backgroundColor: primaryColor },
-                      ]}
-                    />
-                    <Text style={[styles.statusText, { color: primaryColor }]}>
-                      All Systems Operational
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </Animated.View>
-        </View>
-      </ScrollView>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={isDark ? "#444" : "#ccc"}
+              />
+            </TouchableOpacity>
+          ))}
 
-      {/* Floating Action Button */}
-      <Animated.View
-        entering={FadeInUp.duration(800).delay(1200)}
-        style={styles.fabContainer}
-      >
-        <TouchableOpacity
-          style={[styles.fabButton, { backgroundColor: primaryColor }]}
-          activeOpacity={0.9}
-          onPress={() =>
-            Alert.alert("Quick Action", "What would you like to do?")
-          }
-        >
-          <Ionicons name="add" size={24} color={backgroundColor} />
-        </TouchableOpacity>
-      </Animated.View>
-    </LinearGradient>
+          {}
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons
+                name="lightning-bolt"
+                size={20}
+                color={primary}
+              />
+              <Text
+                style={[styles.sectionTitle, { color: currentColors.text }]}
+              >
+                Quick Actions
+              </Text>
+            </View>
+            <View
+              style={[styles.sectionLine, { backgroundColor: primary + "30" }]}
+            />
+          </View>
+
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={() =>
+                Alert.alert("Coming Soon", "Export feature coming soon!")
+              }
+            >
+              <View
+                style={[styles.actionIcon, { backgroundColor: primary + "10" }]}
+              >
+                <Ionicons name="download-outline" size={22} color={primary} />
+              </View>
+              <Text style={[styles.actionText, { color: currentColors.text }]}>
+                Export Data
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={() =>
+                Alert.alert("Coming Soon", "Reports feature coming soon!")
+              }
+            >
+              <View
+                style={[styles.actionIcon, { backgroundColor: primary + "10" }]}
+              >
+                <Ionicons
+                  name="document-text-outline"
+                  size={22}
+                  color={primary}
+                />
+              </View>
+              <Text style={[styles.actionText, { color: currentColors.text }]}>
+                Generate Report
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? "#0c0c0c" : "#fff",
+                  borderColor: isDark ? primary + "22" : primary + "12",
+                },
+              ]}
+              onPress={fetchStats}
+            >
+              <View
+                style={[styles.actionIcon, { backgroundColor: primary + "10" }]}
+              >
+                <Ionicons name="refresh-outline" size={22} color={primary} />
+              </View>
+              <Text style={[styles.actionText, { color: currentColors.text }]}>
+                Refresh
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {}
+          <TouchableOpacity
+            style={[styles.logoutButton, { borderColor: "#FF444460" }]}
+            onPress={handleLogout}
+          >
+            <LinearGradient
+              colors={["#FF444415", "#FF444408"] as const}
+              style={StyleSheet.absoluteFillObject}
+              pointerEvents="none"
+            />
+            <Ionicons name="log-out-outline" size={20} color="#FF4444" />
+            <Text style={[styles.logoutText, { color: "#FF4444" }]}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+
+          <Text
+            style={[styles.version, { color: isDark ? "#1e1e1e" : "#e8e8e8" }]}
+          >
+            GymBro Admin Dashboard v1.0.0
+          </Text>
+        </Animated.View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#39FF14",
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  backgroundOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: "hidden",
-  },
-  radialGradient: {
+  container: { flex: 1, overflow: "hidden" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 16, fontSize: 16, fontWeight: "600" },
+  bgGlow: {
     position: "absolute",
+    width: width * 1.4,
+    height: width * 1.4,
+    borderRadius: width * 0.7,
     top: -width * 0.5,
-    right: -width * 0.5,
-    width: width * 2,
-    height: width * 2,
-    borderRadius: width,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  contentWrapper: {
-    maxWidth: 1200,
-    width: "100%",
-    alignSelf: "center",
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    left: -width * 0.2,
   },
 
-  // Header styles
-  headerCard: {
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 30,
-    borderWidth: 1,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  headerContent: {
+  topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    flexWrap: "wrap",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "web" ? 20 : Platform.OS === "ios" ? 52 : 42,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    overflow: "hidden",
+    position: "relative",
   },
-  headerTextContainer: {
-    flex: 1,
-    minWidth: 200,
-  },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  dateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dateText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  headerButtons: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginTop: 12,
-  },
-  iconButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  topBarLine: { position: "absolute", top: 0, left: 0, right: 0, height: 2 },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    alignItems: "center",
   },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: "600",
+  logoText: { fontSize: 20, fontWeight: "900", letterSpacing: 0.3 },
+  logoUnderline: { height: 2, width: 22, borderRadius: 1, marginTop: 1 },
+  topRightSection: { flexDirection: "row", alignItems: "center", gap: 12 },
+  adminBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  adminBadgeText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
+  themeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  // Stats section
-  statsSection: {
-    marginBottom: 30,
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 },
+  welcomeSection: { marginBottom: 28, paddingTop: 8 },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 6,
   },
-  gridContainer: {
+  welcomeSubtext: { fontSize: 14, fontWeight: "500" },
+
+  statsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 16,
-    justifyContent: "space-between",
+    marginBottom: 24,
   },
   statCard: {
+    flex: 1,
+    minWidth: (width - 60) / 3 - 10,
     borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    position: "relative",
+    padding: 20,
+    borderWidth: 1.5,
     overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  progressBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderRadius: 2,
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
   },
+  statIconContainer: { marginBottom: 12 },
   statValue: {
     fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 4,
+    fontWeight: "800",
     letterSpacing: -0.5,
+    marginBottom: 4,
+    textAlign: "center",
   },
-  statLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-
-  // Error container
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-  },
-  errorText: {
-    marginLeft: 12,
-    fontSize: 14,
-    flex: 1,
-    fontWeight: "500",
-  },
-  retryButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 68, 68, 0.2)",
-  },
-
-  // Management section
-  managementSection: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
+  statTitle: {
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 20,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    textAlign: "center",
   },
-  optionButton: {
+
+  chartCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    overflow: "hidden",
+  },
+  chartHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  chartTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  chartTitle: { fontSize: 18, fontWeight: "700", letterSpacing: 0.3 },
+  chartTabs: { flexDirection: "row", gap: 8 },
+  chartTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  chartTabText: { fontSize: 13, fontWeight: "600" },
+  chart: { borderRadius: 16, marginVertical: 8, alignSelf: "center" },
+  pieContainer: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(57, 255, 20, 0.1)",
+  },
+
+  errorCard: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-    borderWidth: 1,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    padding: 14,
+    marginBottom: 24,
+    borderWidth: 1.5,
   },
-  optionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  errorIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 12,
   },
-  optionContent: {
-    flex: 1,
-  },
-  optionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  optionDescription: {
-    fontSize: 14,
+  errorText: { fontSize: 13, fontWeight: "600" },
+  retryBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  // Info section
-  infoSection: {
-    marginBottom: 40,
-  },
-  infoCard: {
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    gap: 12,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  infoContent: {
-    gap: 12,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  statusIndicator: {
+  sectionHeader: { marginBottom: 16, marginTop: 8 },
+  sectionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 8,
   },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", letterSpacing: 0.3 },
+  sectionLine: { height: 2, width: 50, borderRadius: 1 },
 
-  // FAB
-  fabContainer: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
+  managementCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1.5,
   },
-  fabButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  managementIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#39FF14",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    marginRight: 14,
+  },
+  managementContent: { flex: 1 },
+  managementTitle: { fontSize: 15, fontWeight: "700", marginBottom: 4 },
+  managementDesc: { fontSize: 12, fontWeight: "500" },
+
+  actionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 28,
+  },
+  actionCard: {
+    flex: 1,
+    minWidth: (width - 60) / 3 - 10,
+    borderRadius: 14,
+    padding: 14,
+    alignItems: "center",
+    borderWidth: 1.5,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  actionText: { fontSize: 13, fontWeight: "600" },
+
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    marginBottom: 20,
+  },
+  logoutText: { fontSize: 15, fontWeight: "700" },
+  version: {
+    textAlign: "center",
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    marginTop: 10,
   },
 });

@@ -46,7 +46,6 @@ export default function AdminFoodsScreen() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch all foods
   const fetchFoods = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -80,7 +79,6 @@ export default function AdminFoodsScreen() {
     }, []),
   );
 
-  // Open modal for adding/editing
   const openModal = (food: any = null) => {
     if (food) {
       setEditingFood(food);
@@ -112,7 +110,6 @@ export default function AdminFoodsScreen() {
     setModalVisible(true);
   };
 
-  // Save food (create or update)
   const saveFood = async () => {
     if (!formData.name || !formData.calories || !formData.protein) {
       Alert.alert(
@@ -171,7 +168,6 @@ export default function AdminFoodsScreen() {
     }
   };
 
-  // Delete food
   const deleteFood = (food: any) => {
     Alert.alert(
       "Delete Food",
@@ -275,7 +271,7 @@ export default function AdminFoodsScreen() {
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* Header */}
+      {}
       <View
         style={[
           styles.header,
@@ -302,7 +298,7 @@ export default function AdminFoodsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Stats */}
+      {}
       <View
         style={[
           styles.statsCard,
@@ -320,7 +316,7 @@ export default function AdminFoodsScreen() {
         </Text>
       </View>
 
-      {/* Food List */}
+      {}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -357,7 +353,7 @@ export default function AdminFoodsScreen() {
         )}
       </ScrollView>
 
-      {/* Add/Edit Modal */}
+      {}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -384,7 +380,7 @@ export default function AdminFoodsScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Name */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -413,7 +409,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Calories */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -443,7 +439,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Protein */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -472,7 +468,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Carbs */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -501,7 +497,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Fat */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -530,7 +526,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Category */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -574,7 +570,7 @@ export default function AdminFoodsScreen() {
                 </ScrollView>
               </View>
 
-              {/* Image Emoji */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -603,7 +599,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Tags */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -632,7 +628,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Benefit */}
+              {}
               <View style={styles.inputGroup}>
                 <Text
                   style={[styles.inputLabel, { color: currentColors.text }]}
@@ -664,7 +660,7 @@ export default function AdminFoodsScreen() {
                 />
               </View>
 
-              {/* Submit Button */}
+              {}
               <TouchableOpacity
                 style={[
                   styles.submitButton,

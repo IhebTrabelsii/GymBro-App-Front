@@ -22,7 +22,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
 
-// Define types
 type Plan = {
   _id: string;
   title: string;
@@ -76,7 +75,6 @@ export default function AdminWorkouts() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedBodyType, setSelectedBodyType] = useState<string>("All");
 
-  // Form state
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [formData, setFormData] = useState({
     title: '',
@@ -97,7 +95,6 @@ export default function AdminWorkouts() {
   useEffect(() => {
     let filtered = plans;
     
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         (plan) =>
@@ -107,7 +104,6 @@ export default function AdminWorkouts() {
       );
     }
     
-    // Filter by body type
     if (selectedBodyType !== "All") {
       filtered = filtered.filter(plan => plan.bodyType === selectedBodyType);
     }
@@ -228,13 +224,11 @@ export default function AdminWorkouts() {
   };
 
   const savePlan = async () => {
-    // Validation
     if (!formData.title || !formData.description || !formData.focus || !formData.tips) {
       Alert.alert("Error", "Please fill in all required fields");
       return;
     }
 
-    // Filter out empty days
     const validDays = formData.days.filter(day => day.trim() !== '');
     if (validDays.length === 0) {
       Alert.alert("Error", "Please add at least one workout day");

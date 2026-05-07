@@ -86,6 +86,7 @@ export default function AICoachTab() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [messageCount, setMessageCount] = useState({ used: 0, total: 10, remaining: 10 });
   const [showChat, setShowChat] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
 const primaryColor = currentColors.primary;
   useEffect(() => {
@@ -113,6 +114,8 @@ const primaryColor = currentColors.primary;
     }
   }, [userPlan, messages]);
 
+
+  
   const loadChatHistory = async () => {
     try {
       const savedMessages = await AsyncStorage.getItem("aiChatHistory");
@@ -190,15 +193,14 @@ const checkRemainingMessages = async () => {
     const data = (await response.json()) as LimitResponse;
     
     if (data.success) {
-      const isUnlimited = data.unlimited === true || data.isUnlimited === true;
-      
-      if (isUnlimited) {
+      if (data.isUnlimited || data.plan === 'premium') {
         setMessageCount({ used: 0, total: 999, remaining: 999 });
       } else {
-        const remaining = data.aiMessagesRemaining || data.remaining || 10;
+        // ✅ Just use the exact value from backend
+        const remaining = data.aiMessagesRemaining ?? 10;
         setMessageCount({
-          used: (data.limit || 10) - remaining,
-          total: data.limit || 10,
+          used: 0,
+          total: remaining,
           remaining: remaining
         });
       }
@@ -207,14 +209,22 @@ const checkRemainingMessages = async () => {
     console.error("Error checking limits:", error);
   }
 };
+
   const handleUpgradePress = () => {
     router.push("/premium");
   };
 
 const sendMessage = async (questionText?: string) => {
+  console.log("📤 Sending message request at:", new Date().toISOString());
+  if (isSending) return;
+  setIsSending(true);
+  
   const textToSend = questionText || inputText;
   
-  if (!textToSend.trim() || isWaiting) return;
+  if (!textToSend.trim() || isWaiting) {
+    setIsSending(false);
+    return;
+  }
 
   if (userPlan === "free" && messageCount.remaining <= 0) {
     Alert.alert(
@@ -226,6 +236,7 @@ const sendMessage = async (questionText?: string) => {
         { text: "View Missions", onPress: () => router.push("/profile") },
       ]
     );
+    setIsSending(false);
     return;
   }
 
@@ -284,16 +295,18 @@ const sendMessage = async (questionText?: string) => {
       const messagesWithoutLast = updatedMessages.slice(0, -1);
       setMessages(messagesWithoutLast);
       saveChatHistory(messagesWithoutLast);
+      setIsSending(false);
       return;
     }
 
-    // Update remaining count
+    // Update remaining count - JUST USE THE VALUE FROM BACKEND
     if (useData.aiMessagesRemaining !== undefined) {
-      setMessageCount(prev => ({
-        ...prev,
-        remaining: useData.aiMessagesRemaining,
-        used: prev.total - useData.aiMessagesRemaining
-      }));
+      const remaining = useData.aiMessagesRemaining;
+      setMessageCount({
+        used: 0,
+        total: remaining,
+        remaining: remaining
+      });
     }
 
     // Now send the actual AI chat request
@@ -360,6 +373,7 @@ const sendMessage = async (questionText?: string) => {
     saveChatHistory(messagesWithoutLast);
   } finally {
     setIsWaiting(false);
+    setIsSending(false);
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -475,7 +489,7 @@ const sendMessage = async (questionText?: string) => {
             <View style={[styles.messageCounter, { backgroundColor: primaryColor + "20" }]}>
               <Ionicons name="chatbubble" size={16} color={primaryColor} />
               <Text style={[styles.counterText, { color: primaryColor }]}>
-                {messageCount.used}/{messageCount.total} messages today
+                {messageCount.remaining} messages available
               </Text>
             </View>
           </Animated.View>
@@ -597,7 +611,7 @@ const sendMessage = async (questionText?: string) => {
   {userPlan === "free" && (
     <View style={[styles.headerCounter, { backgroundColor: primaryColor + "20" }]}>
       <Text style={[styles.headerCounterText, { color: primaryColor }]}>
-        {messageCount.remaining}/{messageCount.total}
+        {messageCount.remaining} messages left
       </Text>
     </View>
   )}
