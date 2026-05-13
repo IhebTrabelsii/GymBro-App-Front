@@ -65,7 +65,23 @@
         {
           "microphonePermission": "Allow GymBro to access your microphone for video recording."
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0",
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "@stripe/stripe-react-native",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
