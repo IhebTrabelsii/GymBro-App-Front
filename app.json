@@ -80,7 +80,6 @@
           }
         }
       ],
-      "@stripe/stripe-react-native",
       "expo-web-browser"
     ],
     "experiments": {
