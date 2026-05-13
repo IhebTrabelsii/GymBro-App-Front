@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-gl-cpp/android/build.gradle b/node_modules/expo-gl-cpp/android/build.gradle
-index 025d491..b6f5bdf 100644
+index 025d491..7ed47ba 100644
 --- a/node_modules/expo-gl-cpp/android/build.gradle
 +++ b/node_modules/expo-gl-cpp/android/build.gradle
 @@ -50,8 +50,8 @@ buildscript {
@@ -13,11 +13,12 @@ index 025d491..b6f5bdf 100644
  }
  
  afterEvaluate {
-@@ -73,6 +73,7 @@ afterEvaluate {
- 
+@@ -74,6 +74,8 @@ afterEvaluate {
  android {
    compileSdkVersion safeExtGet("compileSdkVersion", 31)
-+  compileSdk 34
  
++  compileSdk 34
++
    compileOptions {
      sourceCompatibility JavaVersion.VERSION_11
+     targetCompatibility JavaVersion.VERSION_11
