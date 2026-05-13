@@ -183,3 +183,13 @@ dependencies {
         implementation jscFlavor
     }
 }
+configurations.all {
+    resolutionStrategy {
+        preferProjectModules()
+        eachDependency { details ->
+            if (details.requested.group == 'com.yqritc' && details.requested.name == 'android-scalablevideoview') {
+                details.useTarget group: 'com.github.jayshah123', name: 'Android-ScalableVideoView', version: 'v1.0.4'
+            }
+        }
+    }
+}
