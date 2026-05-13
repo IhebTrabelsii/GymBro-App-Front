@@ -1,24 +1,21 @@
 diff --git a/node_modules/expo-gl-cpp/android/build.gradle b/node_modules/expo-gl-cpp/android/build.gradle
-index 025d491..7ed47ba 100644
+index 025d491..d5bde51 100644
 --- a/node_modules/expo-gl-cpp/android/build.gradle
 +++ b/node_modules/expo-gl-cpp/android/build.gradle
-@@ -50,8 +50,8 @@ buildscript {
+@@ -50,7 +50,7 @@ buildscript {
  
  // Creating sources with comments
  task androidSourcesJar(type: Jar) {
 -  classifier = 'sources'
--  from android.sourceSets.main.java.srcDirs
-+    archiveClassifier.set('sources')
-+    from android.sourceSets.main.java.srcDirs
++  archiveClassifier.set('sources')
+   from android.sourceSets.main.java.srcDirs
  }
  
- afterEvaluate {
-@@ -74,6 +74,8 @@ afterEvaluate {
+@@ -72,6 +72,7 @@ afterEvaluate {
+ }
+ 
  android {
++  compileSdk 34 
    compileSdkVersion safeExtGet("compileSdkVersion", 31)
  
-+  compileSdk 34
-+
    compileOptions {
-     sourceCompatibility JavaVersion.VERSION_11
-     targetCompatibility JavaVersion.VERSION_11
