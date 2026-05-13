@@ -3,7 +3,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { notifyStreakUpdate,notifyMissionComplete  } from '../../services/notificationService';
 import { Linking } from 'react-native';
 import {
   ActivityIndicator,
@@ -355,9 +354,7 @@ if (data.success && data.activity) {
   const previousStreak = stats?.currentStreak || 0;
   const newStreak = data.activity.currentStreak || 0;
   
-  if (newStreak > previousStreak) {
-    await notifyStreakUpdate(newStreak);
-  }
+
 
   setMissions(data.activity.missions || []);
   setAchievements(data.activity.achievements || []);
@@ -904,44 +901,35 @@ useEffect(() => {
         </View>
 
         {}
-        <View style={styles.statsGrid}>
-          <AnimatedStatCard
-            icon="flame"
-            iconColor="#FF6B6B"
-            value={displayStats.currentStreak}
-            label="Streak"
-            colors={currentColors}
-            isDark={isDark}
-            delay={80}
-          />
-          <AnimatedStatCard
-            icon="barbell-outline"
-            iconColor="#FFC107"
-            value={displayStats.totalWorkouts}
-            label="Workouts"
-            colors={currentColors}
-            isDark={isDark}
-            delay={160}
-          />
-          <AnimatedStatCard
-            icon="trophy-outline"
-            iconColor={currentColors.primary}
-            value={displayStats.totalPRs}
-            label="PRs"
-            colors={currentColors}
-            isDark={isDark}
-            delay={240}
-          />
-          <AnimatedStatCard
-            icon="time-outline"
-            iconColor="#007AFF"
-            value={Math.floor(displayStats.totalMinutes / 60)}
-            label="Hours"
-            colors={currentColors}
-            isDark={isDark}
-            delay={320}
-          />
-        </View>
+<View style={styles.statsGrid}>
+  <AnimatedStatCard
+    icon="flame"
+    iconColor="#FF6B6B"
+    value={displayStats.currentStreak}
+    label="Streak"
+    colors={currentColors}
+    isDark={isDark}
+    delay={80}
+  />
+  <AnimatedStatCard
+    icon="barbell-outline"
+    iconColor="#FFC107"
+    value={displayStats.totalWorkouts}
+    label="Workouts"
+    colors={currentColors}
+    isDark={isDark}
+    delay={160}
+  />
+  <AnimatedStatCard
+    icon="trophy-outline"
+    iconColor={currentColors.primary}
+    value={displayStats.longestStreak}
+    label="Best Streak"
+    colors={currentColors}
+    isDark={isDark}
+    delay={240}
+  />
+</View>
 
         {}
         <View style={styles.checkInSection}>

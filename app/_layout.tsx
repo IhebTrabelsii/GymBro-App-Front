@@ -1,50 +1,17 @@
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React from "react";
 import { View } from "react-native";
-import * as Notifications from 'expo-notifications';
 import "react-native-reanimated";
+import { MusicProvider } from "../context/MusicContext";
 import { SimpleThemeProvider } from "../context/SimpleThemeContext";
 import { ThemeProvider } from "../context/ThemeContext";
-import { MusicProvider } from "../context/MusicContext";
-import { registerForPushNotificationsAsync } from "../services/notificationService";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-
-  useEffect(() => {
-    // Register for push notifications on app start
-    registerForPushNotificationsAsync();
-
-    // Listen for notifications while app is open
-    const notificationSub = Notifications.addNotificationReceivedListener(notification => {
-      console.log('🔔 Notification received:', notification);
-    });
-
-    // Listen for when user taps on notification
-    const responseSub = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
-      console.log('🔔 Notification tapped:', data);
-      
-      // Navigate based on notification type
-      if (data?.type === 'streak' || data?.type === 'mission_complete') {
-        router.push('/profile');
-      }
-    });
-
-    // Cleanup - use the subscription's remove method
-    return () => {
-      if (notificationSub) {
-        notificationSub.remove();
-      }
-      if (responseSub) {
-        responseSub.remove();
-      }
-    };
-  }, []);
 
   if (!loaded) {
     return null;
@@ -93,10 +60,7 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="+not-found" />
-              <Stack.Screen 
-                name="settings" 
-                options={{ headerShown: false }} 
-              />
+              <Stack.Screen name="settings" options={{ headerShown: false }} />
               <Stack.Screen
                 name="settings/privacy-policy"
                 options={{ headerShown: false }}
@@ -105,7 +69,27 @@ export default function RootLayout() {
                 name="settings/terms-of-service"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="settings/contact-support" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="sleep-mode"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="settings/contact-support"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="form-check"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="Hydration" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="config/schedule"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="config/progress"
+                options={{ headerShown: false }}
+              />
             </Stack>
             <StatusBar style="auto" />
           </View>

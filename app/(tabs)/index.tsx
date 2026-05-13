@@ -27,6 +27,19 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 
+// ========== Type definition for API response ==========
+type ActivityResponse = {
+  success: boolean;
+  activity?: {
+    currentStreak?: number;
+    longestStreak?: number;
+    weeklyProgress?: {
+      completedWorkouts?: number;
+    };
+  };
+};
+
+// GridBackground, FloatingParticles, QuoteCarousel, PulsingDot remain unchanged
 const GridBackground = ({ color }: { color: string }) => {
   const dots = [];
   const cols = 8;
@@ -54,12 +67,12 @@ const GridBackground = ({ color }: { color: string }) => {
 };
 
 const PARTICLE_CONFIG = [
-  { x: 28,  delay: 0,    size: 4, duration: 2800 },
-  { x: 82,  delay: 420,  size: 3, duration: 3100 },
-  { x: 138, delay: 200,  size: 5, duration: 2600 },
-  { x: 196, delay: 640,  size: 3, duration: 3300 },
-  { x: 252, delay: 100,  size: 4, duration: 2900 },
-  { x: 310, delay: 500,  size: 3, duration: 3000 },
+  { x: 28, delay: 0, size: 4, duration: 2800 },
+  { x: 82, delay: 420, size: 3, duration: 3100 },
+  { x: 138, delay: 200, size: 5, duration: 2600 },
+  { x: 196, delay: 640, size: 3, duration: 3300 },
+  { x: 252, delay: 100, size: 4, duration: 2900 },
+  { x: 310, delay: 500, size: 3, duration: 3000 },
 ];
 
 const FloatingParticles = ({ color }: { color: string }) => {
@@ -69,7 +82,6 @@ const FloatingParticles = ({ color }: { color: string }) => {
   const a3 = useRef(new Animated.Value(0)).current;
   const a4 = useRef(new Animated.Value(0)).current;
   const a5 = useRef(new Animated.Value(0)).current;
-
   const anims = [a0, a1, a2, a3, a4, a5];
 
   useEffect(() => {
@@ -202,8 +214,7 @@ const QuoteCarousel = ({
             style={[
               styles.quoteDot,
               {
-                backgroundColor:
-                  i === index ? color : isDark ? "#333" : "#ddd",
+                backgroundColor: i === index ? color : isDark ? "#333" : "#ddd",
                 width: i === index ? 18 : 6,
               },
             ]}
@@ -249,16 +260,7 @@ const PulsingDot = ({ color }: { color: string }) => {
   );
 };
 
-const focusOptions = [
-  { emoji: "💪", label: "Upper Body", color: "#FF6B6B" },
-  { emoji: "🦵", label: "Lower Body", color: "#FFC107" },
-  { emoji: "🔥", label: "Full Body",  color: "#FF9500" },
-  { emoji: "🧘", label: "Recovery",   color: "#34C759" },
-  { emoji: "🏃", label: "Cardio",     color: "#007AFF" },
-  { emoji: "🏋️", label: "Strength",  color: "#AF52DE" },
-];
-
-const gymBroLogo  = require("@/assets/images/sections/Icon_gym_bro.png");
+const gymBroLogo = require("@/assets/images/sections/Icon_gym_bro.png");
 const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
 
 export default function Home() {
@@ -266,20 +268,49 @@ export default function Home() {
   const currentColors = Colors[theme];
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [username, setUsername]     = useState("");
+  const [username, setUsername] = useState("");
   const isDark = theme === "dark";
+
+  // Dynamic stats
+  const [streak, setStreak] = useState(0);
+  const [workouts, setWorkouts] = useState(0);
+  const [prs, setPrs] = useState(0);
 
   const heroEntryAnim = useRef(new Animated.Value(0)).current;
 
   const [pulseAnim] = useState(new Animated.Value(1));
-  const [glowAnim]  = useState(new Animated.Value(0));
+  const [glowAnim] = useState(new Animated.Value(0));
 
-  const [stagger1] = useState(new Animated.Value(0));
   const [stagger2] = useState(new Animated.Value(0));
   const [stagger3] = useState(new Animated.Value(0));
+  // Note: stagger1 was used for Today's Focus, but we removed it; kept only needed animations
 
-  const [selectedFocus, setSelectedFocus] = useState(0);
   const { stopMusic } = useMusic();
+  const [longestStreak, setLongestStreak] = useState(0);
+
+  // Fetch user stats from backend
+  const fetchUserStats = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return;
+
+      const response = await fetch(
+        "http://192.168.100.143:3000/api/users/activity",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = (await response.json()) as ActivityResponse;
+
+      if (data.success && data.activity) {
+        setStreak(data.activity.currentStreak ?? 0);
+        setWorkouts(data.activity.weeklyProgress?.completedWorkouts ?? 0);
+        setLongestStreak(data.activity.longestStreak ?? 0); // ✅ add this
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
 
   useEffect(() => {
     const redirectIfNotLoggedIn = async () => {
@@ -291,6 +322,7 @@ export default function Home() {
           const storedUsername = await AsyncStorage.getItem("username");
           setIsLoggedIn(true);
           setUsername(storedUsername || "");
+          await fetchUserStats(); // fetch stats after login
         }
       } catch (error) {
         console.error("Error checking login status:", error);
@@ -309,7 +341,6 @@ export default function Home() {
     }).start();
 
     const staggerItems = [
-      { anim: stagger1, delay: 220 },
       { anim: stagger2, delay: 400 },
       { anim: stagger3, delay: 560 },
     ];
@@ -392,7 +423,7 @@ export default function Home() {
     <View
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* Top Bar */}
+      {/* Top Bar – unchanged */}
       <View
         style={[
           styles.topBar,
@@ -422,14 +453,22 @@ export default function Home() {
               >
                 <Image
                   source={gymBroLogo}
-                  style={{ width: 32, height: 32, tintColor: currentColors.primary }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    tintColor: currentColors.primary,
+                  }}
                   resizeMode="contain"
                 />
               </LinearGradient>
               <View>
                 <Image
                   source={gymBroLogoT}
-                  style={{ width: 85, height: 24, tintColor: currentColors.primary }}
+                  style={{
+                    width: 85,
+                    height: 24,
+                    tintColor: currentColors.primary,
+                  }}
                   resizeMode="contain"
                 />
                 <View
@@ -478,15 +517,25 @@ export default function Home() {
                   ]}
                   style={[
                     styles.avatarCircle,
-                    { borderColor: currentColors.primary + "60", borderWidth: 1.5 },
+                    {
+                      borderColor: currentColors.primary + "60",
+                      borderWidth: 1.5,
+                    },
                   ]}
                 >
-                  <Text style={[styles.avatarText, { color: currentColors.primary }]}>
+                  <Text
+                    style={[
+                      styles.avatarText,
+                      { color: currentColors.primary },
+                    ]}
+                  >
                     {username.charAt(0).toUpperCase() || "U"}
                   </Text>
                 </LinearGradient>
                 <View>
-                  <Text style={[styles.username, { color: currentColors.text }]}>
+                  <Text
+                    style={[styles.username, { color: currentColors.text }]}
+                  >
                     {username || "User"}
                   </Text>
                   <Text
@@ -527,7 +576,10 @@ export default function Home() {
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.loginButton, { backgroundColor: currentColors.primary }]}
+              style={[
+                styles.loginButton,
+                { backgroundColor: currentColors.primary },
+              ]}
               onPress={() => router.push("/login")}
               activeOpacity={0.85}
             >
@@ -591,7 +643,7 @@ export default function Home() {
           >
             <GridBackground color={currentColors.primary} />
             <FloatingParticles color={currentColors.primary} />
-            
+
             <View
               style={[
                 styles.heroCornerAccent,
@@ -655,7 +707,10 @@ export default function Home() {
                 >
                   <PulsingDot color={currentColors.primary} />
                   <Text
-                    style={[styles.heroTagTextCompact, { color: currentColors.primary }]}
+                    style={[
+                      styles.heroTagTextCompact,
+                      { color: currentColors.primary },
+                    ]}
                   >
                     TRACK · TRAIN · TRANSFORM
                   </Text>
@@ -663,173 +718,113 @@ export default function Home() {
               </View>
 
               {/* Compact Title */}
-              <Text style={[styles.heroTitleCompact, { color: currentColors.text }]}>
+              <Text
+                style={[styles.heroTitleCompact, { color: currentColors.text }]}
+              >
                 Your Fitness{" "}
-                <Text style={{ color: currentColors.primary }}>Journey</Text> Starts
+                <Text style={{ color: currentColors.primary }}>Journey</Text>{" "}
+                Starts
               </Text>
 
-              {/* Compact Stats Row - Horizontal layout */}
+              {/* Compact Stats Row – now dynamic */}
               <View style={styles.heroStatRowCompact}>
-                {[
-                  { icon: "flame", value: "0", label: "Streak", color: "#FF6B6B" },
-                  { icon: "barbell-outline", value: "0", label: "Workouts", color: "#FFC107" },
-                  { icon: "trophy-outline", value: "0", label: "PRs", color: currentColors.primary },
-                ].map((s, i) => (
-                  <View key={i} style={styles.heroStatItemCompact}>
-                    <Ionicons name={s.icon as any} size={14} color={s.color} />
-                    <Text style={[styles.heroStatValueCompact, { color: currentColors.text }]}>
-                      {s.value}
-                    </Text>
-                    <Text style={[styles.heroStatLabelCompact, { color: isDark ? "#666" : "#999" }]}>
-                      {s.label}
-                    </Text>
-                  </View>
-                ))}
+                <View style={styles.heroStatItemCompact}>
+                  <Ionicons name="flame" size={14} color="#FF6B6B" />
+                  <Text
+                    style={[
+                      styles.heroStatValueCompact,
+                      { color: currentColors.text },
+                    ]}
+                  >
+                    {streak}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.heroStatLabelCompact,
+                      { color: isDark ? "#666" : "#999" },
+                    ]}
+                  >
+                    Streak
+                  </Text>
+                </View>
+                <View style={styles.heroStatItemCompact}>
+                  <Ionicons name="barbell-outline" size={14} color="#FFC107" />
+                  <Text
+                    style={[
+                      styles.heroStatValueCompact,
+                      { color: currentColors.text },
+                    ]}
+                  >
+                    {workouts}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.heroStatLabelCompact,
+                      { color: isDark ? "#666" : "#999" },
+                    ]}
+                  >
+                    Workouts
+                  </Text>
+                </View>
+                <View style={styles.heroStatItemCompact}>
+                  <Ionicons
+                    name="trophy-outline"
+                    size={14}
+                    color={currentColors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.heroStatValueCompact,
+                      { color: currentColors.text },
+                    ]}
+                  >
+                    {longestStreak}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.heroStatLabelCompact,
+                      { color: isDark ? "#666" : "#999" },
+                    ]}
+                  >
+                    Best
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
 
           <MusicPlayer />
 
-          {/* Today's Focus - keep original */}
+          {/* Stats Grid – also dynamic */}
           <Animated.View
             style={{
-              opacity: stagger1,
-              transform: [
-                {
-                  scale: stagger1.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.95, 1],
-                  }),
-                },
-                {
-                  translateY: stagger1.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [16, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <View
-              style={[
-                styles.sectionCard,
-                {
-                  backgroundColor: isDark ? currentColors.card : "#fff",
-                  borderColor: isDark
-                    ? currentColors.primary + "20"
-                    : currentColors.primary + "12",
-                },
-              ]}
-            >
-              <View style={styles.sectionCardHeader}>
-                <View
-                  style={[
-                    styles.sectionIconBox,
-                    { backgroundColor: currentColors.primary + "15" },
-                  ]}
-                >
-                  <Ionicons
-                    name="today-outline"
-                    size={18}
-                    color={currentColors.primary}
-                  />
-                </View>
-                <View>
-                  <Text
-                    style={[styles.sectionCardTitle, { color: currentColors.text }]}
-                  >
-                    Today's Focus
-                  </Text>
-                  <Text
-                    style={[
-                      styles.sectionCardSub,
-                      { color: isDark ? "#555" : "#bbb" },
-                    ]}
-                  >
-                    Select your training goal
-                  </Text>
-                </View>
-              </View>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.focusScroll}
-                contentContainerStyle={{ gap: 10, paddingRight: 4 }}
-              >
-                {focusOptions.map((f, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    onPress={() => setSelectedFocus(i)}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.focusPill,
-                      {
-                        backgroundColor:
-                          selectedFocus === i
-                            ? f.color + "20"
-                            : isDark
-                            ? "#1a1a1a"
-                            : "#f5f5f5",
-                        borderColor:
-                          selectedFocus === i
-                            ? f.color
-                            : isDark
-                            ? "#2a2a2a"
-                            : "#e8e8e8",
-                        borderWidth: selectedFocus === i ? 1.5 : 1,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.focusEmoji}>{f.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.focusLabel,
-                        {
-                          color:
-                            selectedFocus === i
-                              ? f.color
-                              : isDark
-                              ? "#777"
-                              : "#999",
-                        },
-                      ]}
-                    >
-                      {f.label}
-                    </Text>
-                    {selectedFocus === i && (
-                      <View
-                        style={[styles.focusCheck, { backgroundColor: f.color }]}
-                      >
-                        <Ionicons name="checkmark" size={8} color="#fff" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </Animated.View>
-
-          {/* Stats Grid */}
-          <Animated.View
-            style={{
-              opacity: stagger1,
-              transform: [
-                {
-                  translateY: stagger1.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
+              opacity: 1, // keep original animation? We'll keep the same style but removed stagger1 dependency
+              transform: [{ translateY: 0 }],
             }}
           >
             <View style={styles.statsGrid}>
               {[
-                { icon: "flame", label: "Workouts", value: "0", color: "#FF6B6B", bg: "rgba(255,107,107,0.08)" },
-                { icon: "trophy", label: "Day Streak", value: "0", color: "#FFC107", bg: "rgba(255,193,7,0.08)" },
-                { icon: "barbell-outline" as any, label: "Total PRs", value: "0", color: currentColors.primary, bg: currentColors.primary + "10" },
+                {
+                  icon: "flame",
+                  label: "Workouts",
+                  value: workouts,
+                  color: "#FF6B6B",
+                  bg: "rgba(255,107,107,0.08)",
+                },
+                {
+                  icon: "trophy",
+                  label: "Day Streak",
+                  value: streak,
+                  color: "#FFC107",
+                  bg: "rgba(255,193,7,0.08)",
+                },
+                {
+                  icon: "barbell-outline" as any,
+                  label: "Total PRs",
+                  value: prs,
+                  color: currentColors.primary,
+                  bg: currentColors.primary + "10",
+                },
               ].map((s, i) => (
                 <TouchableOpacity
                   key={i}
@@ -846,20 +841,31 @@ export default function Home() {
                     style={[styles.statTopStrip, { backgroundColor: s.color }]}
                   />
                   <View
-                    style={[styles.statIconContainer, { backgroundColor: s.bg }]}
+                    style={[
+                      styles.statIconContainer,
+                      { backgroundColor: s.bg },
+                    ]}
                   >
                     <Ionicons name={s.icon as any} size={22} color={s.color} />
                   </View>
-                  <Text style={[styles.statNumber, { color: currentColors.text }]}>
+                  <Text
+                    style={[styles.statNumber, { color: currentColors.text }]}
+                  >
                     {s.value}
                   </Text>
                   <Text
-                    style={[styles.statLabel, { color: isDark ? "#666" : "#bbb" }]}
+                    style={[
+                      styles.statLabel,
+                      { color: isDark ? "#666" : "#bbb" },
+                    ]}
                   >
                     {s.label}
                   </Text>
                   <View
-                    style={[styles.statProgress, { backgroundColor: s.color + "20" }]}
+                    style={[
+                      styles.statProgress,
+                      { backgroundColor: s.color + "20" },
+                    ]}
                   >
                     <View
                       style={[
@@ -876,7 +882,10 @@ export default function Home() {
           {/* Start New Workout Button */}
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <TouchableOpacity
-              style={[styles.primaryButton, { shadowColor: currentColors.primary }]}
+              style={[
+                styles.primaryButton,
+                { shadowColor: currentColors.primary },
+              ]}
               onPress={() => router.push("/workout")}
               activeOpacity={0.85}
             >
@@ -898,7 +907,10 @@ export default function Home() {
                 ]}
               />
               <View
-                style={[styles.btnIconWrap, { backgroundColor: "rgba(0,0,0,0.15)" }]}
+                style={[
+                  styles.btnIconWrap,
+                  { backgroundColor: "rgba(0,0,0,0.15)" },
+                ]}
               >
                 <MaterialCommunityIcons
                   name="play-circle"
@@ -915,7 +927,10 @@ export default function Home() {
                 Start New Workout
               </Text>
               <View
-                style={[styles.btnArrowWrap, { backgroundColor: "rgba(0,0,0,0.12)" }]}
+                style={[
+                  styles.btnArrowWrap,
+                  { backgroundColor: "rgba(0,0,0,0.12)" },
+                ]}
               >
                 <Ionicons
                   name="arrow-forward"
@@ -926,55 +941,77 @@ export default function Home() {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Secondary Actions */}
-          <View style={styles.secondaryActions}>
-            {[
-              { icon: "calendar-outline", label: "Schedule", sublabel: "Plan ahead" },
-              { icon: "bar-chart-outline", label: "Progress", sublabel: "View stats" },
-            ].map((btn, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[
-                  styles.secondaryButton,
-                  {
-                    backgroundColor: isDark ? currentColors.card : "#fff",
-                    borderColor: isDark
-                      ? currentColors.primary + "25"
-                      : currentColors.primary + "15",
-                  },
-                ]}
-                activeOpacity={0.8}
-              >
-                <View
-                  style={[
-                    styles.secondaryIconWrapper,
-                    { backgroundColor: currentColors.primary + "12" },
-                  ]}
-                >
-                  <Ionicons
-                    name={btn.icon as any}
-                    size={20}
-                    color={currentColors.primary}
-                  />
-                </View>
-                <View>
-                  <Text
-                    style={[styles.secondaryButtonText, { color: currentColors.text }]}
-                  >
-                    {btn.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.secondaryButtonSub,
-                      { color: isDark ? "#555" : "#bbb" },
-                    ]}
-                  >
-                    {btn.sublabel}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+<View style={styles.secondaryActions}>
+  {/* Schedule Button */}
+  <TouchableOpacity
+    style={[
+      styles.secondaryButton,
+      {
+        backgroundColor: isDark ? currentColors.card : "#fff",
+        borderColor: isDark ? currentColors.primary + "25" : currentColors.primary + "15",
+      },
+    ]}
+    activeOpacity={0.8}
+    onPress={() => router.push("/config/schedule")}
+  >
+    <View
+      style={[
+        styles.secondaryIconWrapper,
+        { backgroundColor: currentColors.primary + "12" },
+      ]}
+    >
+      <Ionicons name="calendar-outline" size={20} color={currentColors.primary} />
+    </View>
+    <View>
+      <Text style={[styles.secondaryButtonText, { color: currentColors.text }]}>
+        Schedule
+      </Text>
+      <Text
+        style={[
+          styles.secondaryButtonSub,
+          { color: isDark ? "#555" : "#bbb" },
+        ]}
+      >
+        Plan ahead
+      </Text>
+    </View>
+  </TouchableOpacity>
+
+  {/* Progress Button */}
+  <TouchableOpacity
+    style={[
+      styles.secondaryButton,
+      {
+        backgroundColor: isDark ? currentColors.card : "#fff",
+        borderColor: isDark ? currentColors.primary + "25" : currentColors.primary + "15",
+      },
+    ]}
+    activeOpacity={0.8}
+    onPress={() => router.push("./profile")}
+  >
+    <View
+      style={[
+        styles.secondaryIconWrapper,
+        { backgroundColor: currentColors.primary + "12" },
+      ]}
+    >
+      <Ionicons name="bar-chart-outline" size={20} color={currentColors.primary} />
+    </View>
+    <View>
+      <Text style={[styles.secondaryButtonText, { color: currentColors.text }]}>
+        Progress
+      </Text>
+      <Text
+        style={[
+          styles.secondaryButtonSub,
+          { color: isDark ? "#555" : "#bbb" },
+        ]}
+      >
+        View stats
+      </Text>
+    </View>
+  </TouchableOpacity>
+</View>
 
           {/* Fuel the Mindset */}
           <Animated.View
@@ -1009,14 +1046,23 @@ export default function Home() {
                       { backgroundColor: currentColors.primary + "15" },
                     ]}
                   >
-                    <Ionicons name="flash" size={18} color={currentColors.primary} />
+                    <Ionicons
+                      name="flash"
+                      size={18}
+                      color={currentColors.primary}
+                    />
                   </View>
-                  <Text style={[styles.cardTitle, { color: currentColors.text }]}>
+                  <Text
+                    style={[styles.cardTitle, { color: currentColors.text }]}
+                  >
                     Fuel the Mindset
                   </Text>
                 </View>
                 <View
-                  style={[styles.liveDot, { backgroundColor: currentColors.primary }]}
+                  style={[
+                    styles.liveDot,
+                    { backgroundColor: currentColors.primary },
+                  ]}
                 />
               </View>
               <View
@@ -1076,7 +1122,9 @@ export default function Home() {
                       color={currentColors.primary}
                     />
                   </View>
-                  <Text style={[styles.cardTitle, { color: currentColors.text }]}>
+                  <Text
+                    style={[styles.cardTitle, { color: currentColors.text }]}
+                  >
                     Daily Mantras
                   </Text>
                 </View>
@@ -1105,7 +1153,10 @@ export default function Home() {
                   ]}
                 >
                   <Text
-                    style={[styles.mantraNumber, { color: currentColors.primary }]}
+                    style={[
+                      styles.mantraNumber,
+                      { color: currentColors.primary },
+                    ]}
                   >
                     0{i + 1}
                   </Text>
@@ -1150,10 +1201,30 @@ export default function Home() {
             </Text>
             <View style={styles.quickActionsGrid}>
               {[
-                { icon: "calculator", label: "Calculator", onPress: () => router.push("/calculator"), accent: "#007AFF" },
-                { icon: "water-outline", label: "Hydration", accent: "#34C759" },
-                { icon: "moon-outline", label: "Sleep", accent: "#AF52DE" },
-                { icon: "settings-outline", label: "Settings", onPress: () => router.push("/settings"), accent: "#FF9500" },
+                {
+                  icon: "calculator",
+                  label: "Calculator",
+                  onPress: () => router.push("/calculator"),
+                  accent: "#007AFF",
+                },
+                {
+                  icon: "water-outline",
+                  label: "Hydration",
+                  onPress: () => router.push("/config/hydration"),
+                  accent: "#34C759",
+                },
+                {
+                  icon: "moon-outline",
+                  label: "Sleep",
+                  onPress: () => router.push("/config/sleep-mode"),
+                  accent: "#AF52DE",
+                },
+                {
+                  icon: "settings-outline",
+                  label: "Settings",
+                  onPress: () => router.push("/settings"),
+                  accent: "#FF9500",
+                },
               ].map((item, i) => (
                 <TouchableOpacity
                   key={i}
@@ -1161,7 +1232,9 @@ export default function Home() {
                     styles.quickActionCard,
                     {
                       backgroundColor: isDark ? currentColors.card : "#fff",
-                      borderColor: isDark ? item.accent + "25" : item.accent + "14",
+                      borderColor: isDark
+                        ? item.accent + "25"
+                        : item.accent + "14",
                     },
                   ]}
                   onPress={item.onPress}
@@ -1176,10 +1249,17 @@ export default function Home() {
                       { backgroundColor: item.accent + "14" },
                     ]}
                   >
-                    <Ionicons name={item.icon as any} size={22} color={item.accent} />
+                    <Ionicons
+                      name={item.icon as any}
+                      size={22}
+                      color={item.accent}
+                    />
                   </View>
                   <Text
-                    style={[styles.quickActionText, { color: currentColors.text }]}
+                    style={[
+                      styles.quickActionText,
+                      { color: currentColors.text },
+                    ]}
                   >
                     {item.label}
                   </Text>
@@ -1286,7 +1366,7 @@ const styles = StyleSheet.create({
     }),
   },
   loggedInContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
-  userBadge:         { flexDirection: "row", alignItems: "center", gap: 7 },
+  userBadge: { flexDirection: "row", alignItems: "center", gap: 7 },
   avatarCircle: {
     width: 32,
     height: 32,
@@ -1294,9 +1374,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText:        { fontSize: 14, fontWeight: "800" },
-  username:          { fontSize: 13, fontWeight: "700", maxWidth: 72 },
-  usernameSubLabel:  { fontSize: 10, fontWeight: "500", marginTop: 0 },
+  avatarText: { fontSize: 14, fontWeight: "800" },
+  username: { fontSize: 13, fontWeight: "700", maxWidth: 72 },
+  usernameSubLabel: { fontSize: 10, fontWeight: "500", marginTop: 0 },
   loginButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1328,114 +1408,113 @@ const styles = StyleSheet.create({
 
   scrollContainer: { paddingTop: 20, paddingHorizontal: 18, paddingBottom: 40 },
 
-heroCardCompact: {
-  borderRadius: 24,
-  padding: 14,
-  marginBottom: 14,
-  borderWidth: 1.5,
-  position: "relative",
-  overflow: "hidden",
-  ...Platform.select({
-    ios: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.1,
-      shadowRadius: 16,
-    },
-    android: { elevation: 6 },
-  }),
-},
+  heroCardCompact: {
+    borderRadius: 24,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1.5,
+    position: "relative",
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 16,
+      },
+      android: { elevation: 6 },
+    }),
+  },
 
-heroGlow1Compact: {
-  position: "absolute",
-  width: 200,
-  height: 200,
-  borderRadius: 100,
-  top: -60,
-  right: -60,
-},
+  heroGlow1Compact: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    top: -60,
+    right: -60,
+  },
 
-heroContentCompact: {
-  alignItems: "center",
-  zIndex: 1,
-  paddingTop: 4,
-},
+  heroContentCompact: {
+    alignItems: "center",
+    zIndex: 1,
+    paddingTop: 4,
+  },
 
+  heroIconRingCompact: {
+    width: 80,
+    height: 80,
+    borderRadius: 50,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
 
-heroIconRingCompact: {
-  width: 80,    // Changed from 64
-  height: 80,   // Changed from 64
-  borderRadius: 50,
-  borderWidth: 1,
-  justifyContent: "center",
-  alignItems: "center",
-  marginBottom: 12,
-},
+  heroIconCoreCompact: {
+    width: 60,
+    height: 60,
+    borderRadius: 42,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-heroIconCoreCompact: {
-  width: 60,     // Changed from 52
-  height: 60,    // Changed from 52
-  borderRadius: 42,
-  justifyContent: "center",
-  alignItems: "center",
-},
+  heroTagRowCompact: {
+    marginBottom: 8,
+  },
 
-heroTagRowCompact: {
-  marginBottom: 8,
-},
+  heroTagCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
 
-heroTagCompact: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 6,
-  paddingHorizontal: 12,
-  paddingVertical: 4,
-  borderRadius: 16,
-  borderWidth: 1,
-},
+  heroTagTextCompact: {
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
 
-heroTagTextCompact: {
-  fontSize: 8,
-  fontWeight: "800",
-  letterSpacing: 1,
-},
+  heroTitleCompact: {
+    fontSize: 18,
+    fontWeight: "900",
+    textAlign: "center",
+    letterSpacing: 0.2,
+    lineHeight: 26,
+    marginBottom: 8,
+  },
 
-heroTitleCompact: {
-  fontSize: 18,
-  fontWeight: "900",
-  textAlign: "center",
-  letterSpacing: 0.2,
-  lineHeight: 26,
-  marginBottom: 8,
-},
+  heroStatRowCompact: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    width: "100%",
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    backgroundColor: "rgba(128,128,128,0.06)",
+  },
 
-heroStatRowCompact: {
-  flexDirection: "row",
-  justifyContent: "space-evenly",  // Changed from "center" to "space-evenly"
-  alignItems: "center",
-  width: "100%",                    // Add this
-  paddingVertical: 8,
-  paddingHorizontal: 8,
-  borderRadius: 16,
-  backgroundColor: "rgba(128,128,128,0.06)",
-},
+  heroStatItemCompact: {
+    alignItems: "center",
+    gap: 2,
+  },
 
-heroStatItemCompact: {
-  alignItems: "center",
-  gap: 2,
-},
+  heroStatValueCompact: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
 
-heroStatValueCompact: {
-  fontSize: 14,
-  fontWeight: "800",
-},
-
-heroStatLabelCompact: {
-  fontSize: 9,
-  fontWeight: "600",
-  textTransform: "uppercase",
-  letterSpacing: 0.4,
-},
+  heroStatLabelCompact: {
+    fontSize: 9,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
 
   heroCard: {
     borderRadius: 22,
@@ -1481,7 +1560,7 @@ heroStatLabelCompact: {
     bottom: -60,
     left: -60,
   },
-  heroContent:  { alignItems: "center", zIndex: 1, paddingTop: 8 },
+  heroContent: { alignItems: "center", zIndex: 1, paddingTop: 8 },
   heroIconRing: {
     width: 80,
     height: 80,
@@ -1540,7 +1619,7 @@ heroStatLabelCompact: {
     borderRadius: 18,
     backgroundColor: "rgba(128,128,128,0.07)",
   },
-  heroStatItem:  { alignItems: "center", gap: 3 },
+  heroStatItem: { alignItems: "center", gap: 3 },
   heroStatValue: { fontSize: 16, fontWeight: "800" },
   heroStatLabel: {
     fontSize: 10,
@@ -1578,8 +1657,8 @@ heroStatLabelCompact: {
     alignItems: "center",
   },
   sectionCardTitle: { fontSize: 16, fontWeight: "800" },
-  sectionCardSub:   { fontSize: 11, fontWeight: "500", marginTop: 1 },
-  focusScroll:      { marginTop: 2 },
+  sectionCardSub: { fontSize: 11, fontWeight: "500", marginTop: 1 },
+  focusScroll: { marginTop: 2 },
   focusPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -1651,7 +1730,12 @@ heroStatLabelCompact: {
     letterSpacing: 0.7,
     marginBottom: 10,
   },
-  statProgress:    { width: "75%", height: 4, borderRadius: 2, overflow: "hidden" },
+  statProgress: {
+    width: "75%",
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
   statProgressBar: { height: "100%", borderRadius: 2 },
 
   primaryButton: {
@@ -1726,7 +1810,7 @@ heroStatLabelCompact: {
     alignItems: "center",
   },
   secondaryButtonText: { fontSize: 14, fontWeight: "800" },
-  secondaryButtonSub:  { fontSize: 10, fontWeight: "500", marginTop: 1 },
+  secondaryButtonSub: { fontSize: 10, fontWeight: "500", marginTop: 1 },
 
   contentCard: {
     borderRadius: 22,
@@ -1757,9 +1841,9 @@ heroStatLabelCompact: {
     justifyContent: "center",
     alignItems: "center",
   },
-  cardTitle:   { fontSize: 17, fontWeight: "800", letterSpacing: 0.2 },
+  cardTitle: { fontSize: 17, fontWeight: "800", letterSpacing: 0.2 },
   cardDivider: { height: 1, borderRadius: 1, marginBottom: 16 },
-  liveDot:     { width: 8, height: 8, borderRadius: 4 },
+  liveDot: { width: 8, height: 8, borderRadius: 4 },
 
   quoteCarouselText: {
     fontSize: 17,
@@ -1788,7 +1872,7 @@ heroStatLabelCompact: {
     marginBottom: 8,
   },
   mantraNumber: { fontSize: 14, fontWeight: "900", minWidth: 22 },
-  mantraText:   { flex: 1, fontSize: 14, fontWeight: "500", lineHeight: 22 },
+  mantraText: { flex: 1, fontSize: 14, fontWeight: "500", lineHeight: 22 },
 
   gridSectionLabel: {
     fontSize: 10,

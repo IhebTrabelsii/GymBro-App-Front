@@ -23,6 +23,9 @@ import { BlurView } from 'expo-blur';
 import { useSimpleTheme } from "../context/SimpleThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const { width } = Dimensions.get("window");
+
+// --- Types (unchanged) ---
 type Exercise = {
   id: string;
   name: string;
@@ -58,7 +61,6 @@ type PlanData = {
   exercises: Exercise[];
 };
 
-const { width } = Dimensions.get("window");
 const API_BASE_URL = "http://192.168.100.143:3000";
 
 const hexToRgba = (hex: string, opacity: number) => {
@@ -68,6 +70,7 @@ const hexToRgba = (hex: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
+// --- Exercise Detail Modal (unchanged) ---
 const ExerciseDetailModal = ({ visible, exercise, onClose, theme, colors }: any) => {
   const isDark = theme === "dark";
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -101,7 +104,6 @@ const ExerciseDetailModal = ({ visible, exercise, onClose, theme, colors }: any)
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
             <Ionicons name="close" size={24} color={colors.text} />
@@ -111,7 +113,6 @@ const ExerciseDetailModal = ({ visible, exercise, onClose, theme, colors }: any)
             <Ionicons name="share-outline" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
-
         <ScrollView showsVerticalScrollIndicator={false}>
           <TouchableOpacity onPress={openYouTube} activeOpacity={0.9}>
             <View style={styles.modalMediaContainer}>
@@ -224,6 +225,7 @@ const ExerciseDetailModal = ({ visible, exercise, onClose, theme, colors }: any)
   );
 };
 
+// --- Main Screen ---
 export default function ExerciseDetailsScreen() {
   const router = useRouter();
   const { type } = useLocalSearchParams();
@@ -238,48 +240,37 @@ export default function ExerciseDetailsScreen() {
   const [error, setError] = useState<string | null>(null);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     fetchPlanExercises();
   }, [type]);
 
- const fetchPlanExercises = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    const token = await AsyncStorage.getItem("userToken");
-    
-    const response = await fetch(`${API_BASE_URL}/api/plans/${encodeURIComponent(type as string)}/exercises`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    const data = (await response.json()) as { 
-      success: boolean; 
-      plan: PlanData; 
-      error?: string;
-    };
-
-    if (response.ok && data.success) {
-      setPlanData(data.plan);
-    } else {
-      setError(data.error || "Failed to load exercises");
+  const fetchPlanExercises = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = await AsyncStorage.getItem("userToken");
+      const response = await fetch(`${API_BASE_URL}/api/plans/${encodeURIComponent(type as string)}/exercises`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const data = (await response.json()) as { success: boolean; plan: PlanData; error?: string };
+      if (response.ok && data.success) {
+        setPlanData(data.plan);
+      } else {
+        setError(data.error || "Failed to load exercises");
+      }
+    } catch (error) {
+      console.error("Error fetching exercises:", error);
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error fetching exercises:", error);
-    setError("Network error. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
     ]).start();
   }, []);
@@ -314,22 +305,26 @@ export default function ExerciseDetailsScreen() {
     );
   }
 
+  const planColor = planData.color;
+
   return (
     <SafeAreaView style={[styles.safeContainer, { backgroundColor: currentColors.background }]}>
       <View style={[styles.container, { backgroundColor: currentColors.background }]}>
-        {}
-        <LinearGradient colors={isDark ? ['#0a0a0a', '#000000'] : ['#ffffff', '#f8f9fa']} style={styles.header}>
+        {/* --- Header (redesigned: lower height, softer look) --- */}
+        <LinearGradient
+          colors={isDark ? [currentColors.card, currentColors.background] : ['#ffffff', '#f8f9fa']}
+          style={styles.header}
+        >
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <Ionicons name="arrow-back" size={24} color={currentColors.text} />
             </TouchableOpacity>
-            
             <View style={styles.headerCenter}>
-              <LinearGradient colors={[planData.color + '30', planData.color + '10']} style={styles.headerIcon}>
+              <View style={[styles.headerIcon, { backgroundColor: planColor + '15' }]}>
                 <Text style={styles.headerEmoji}>{planData.emoji}</Text>
-              </LinearGradient>
-              <View style={styles.headerTextContainer}>
-                <Text style={[styles.headerTitle, { color: planData.color }]} numberOfLines={1}>
+              </View>
+              <View>
+                <Text style={[styles.headerTitle, { color: currentColors.text }]} numberOfLines={1}>
                   {type} Plan
                 </Text>
                 <Text style={[styles.headerSubtitle, { color: isDark ? '#aaa' : '#666' }]} numberOfLines={1}>
@@ -337,125 +332,130 @@ export default function ExerciseDetailsScreen() {
                 </Text>
               </View>
             </View>
-
-            <TouchableOpacity onPress={toggleTheme} style={[styles.themeBtn, { backgroundColor: planData.color + '15' }]}>
-              <Ionicons name={isDark ? "sunny" : "moon"} size={20} color={planData.color} />
+            <TouchableOpacity onPress={toggleTheme} style={[styles.themeBtn, { backgroundColor: planColor + '15' }]}>
+              <Ionicons name={isDark ? "sunny" : "moon"} size={20} color={planColor} />
             </TouchableOpacity>
           </View>
         </LinearGradient>
 
-        
-        <LinearGradient colors={[planData.color + '15', planData.color + '05']} style={styles.heroStats}>
+        {/* --- Stats row (softer colors, better spacing) --- */}
+        <View style={[styles.heroStats, { backgroundColor: isDark ? currentColors.card : '#fff', borderColor: planColor + '20' }]}>
           <View style={styles.heroStatItem}>
-            <Ionicons name="barbell-outline" size={20} color={planData.color} />
+            <Ionicons name="barbell-outline" size={20} color={planColor} />
             <Text style={[styles.heroStatValue, { color: currentColors.text }]}>{planData.stats.totalExercises}</Text>
             <Text style={[styles.heroStatLabel, { color: isDark ? '#aaa' : '#666' }]}>Exercises</Text>
           </View>
-          <View style={[styles.heroStatDivider, { backgroundColor: planData.color + '30' }]} />
+          <View style={[styles.heroStatDivider, { backgroundColor: planColor + '30' }]} />
           <View style={styles.heroStatItem}>
-            <Ionicons name="time-outline" size={20} color={planData.color} />
+            <Ionicons name="time-outline" size={20} color={planColor} />
             <Text style={[styles.heroStatValue, { color: currentColors.text }]}>{planData.stats.avgDuration}</Text>
             <Text style={[styles.heroStatLabel, { color: isDark ? '#aaa' : '#666' }]}>Avg Time</Text>
           </View>
-          <View style={[styles.heroStatDivider, { backgroundColor: planData.color + '30' }]} />
+          <View style={[styles.heroStatDivider, { backgroundColor: planColor + '30' }]} />
           <View style={styles.heroStatItem}>
-            <Ionicons name="flame-outline" size={20} color={planData.color} />
+            <Ionicons name="flame-outline" size={20} color={planColor} />
             <Text style={[styles.heroStatValue, { color: currentColors.text }]}>{planData.stats.caloriesBurn}</Text>
             <Text style={[styles.heroStatLabel, { color: isDark ? '#aaa' : '#666' }]}>Calories</Text>
           </View>
-        </LinearGradient>
-
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionLine, { backgroundColor: planData.color + '30' }]} />
-              <Text style={[styles.sectionTitle, { color: currentColors.text }]}>ALL EXERCISES</Text>
-              <View style={[styles.sectionLine, { backgroundColor: planData.color + '30' }]} />
-            </View>
-
-{planData.exercises.map((exercise: Exercise, index: number) => (
-  <Animated.View
-    key={exercise.id}
-    style={{
-      transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 30], outputRange: [0, 10 * (index + 1)] }) }],
-    }}
-  >
-    <TouchableOpacity activeOpacity={0.9}>
-      <LinearGradient
-        colors={isDark ? ['#0e0e0e', '#080808'] : ['#ffffff', '#f8f8f8']}
-        style={[styles.exerciseCard, { borderColor: planData.color + '30' }]}
-      >
-        <LinearGradient colors={[planData.color + '15', 'transparent']} style={styles.exerciseCardAccent} />
-        
-        <View style={styles.exerciseCardContent}>
-          <TouchableOpacity onPress={() => openExerciseDetails(exercise)} style={styles.exerciseImageContainer}>
-            <Image source={{ uri: exercise.imageUrl }} style={styles.exerciseImage} resizeMode="cover" />
-            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.exerciseImageOverlay} />
-            <View style={[styles.exerciseBadge, { backgroundColor: planData.color }]}>
-              <Ionicons name="play" size={12} color="#000" />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.exerciseInfo}>
-            <TouchableOpacity onPress={() => openExerciseDetails(exercise)}>
-              <Text style={[styles.exerciseName, { color: currentColors.text }]} numberOfLines={1}>
-                {exercise.name}
-              </Text>
-            </TouchableOpacity>
-            
-            <View style={styles.exerciseMetaRow}>
-              <View style={styles.exerciseMetaItem}>
-                <Ionicons name="repeat" size={12} color={planData.color} />
-                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.sets} sets</Text>
-              </View>
-              <View style={styles.exerciseMetaItem}>
-                <Ionicons name="barbell" size={12} color={planData.color} />
-                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.reps}</Text>
-              </View>
-              <View style={styles.exerciseMetaItem}>
-                <Ionicons name="timer" size={12} color={planData.color} />
-                <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.rest}</Text>
-              </View>
-            </View>
-
-            <View style={styles.exerciseBottomRow}>
-              <View style={styles.difficultyBadge}>
-                <View style={[styles.difficultyDot, { 
-                  backgroundColor: exercise.difficulty === 'Beginner' ? '#4CAF50' : 
-                                exercise.difficulty === 'Intermediate' ? '#FF9800' : '#F44336'
-                }]} />
-                <Text style={[styles.difficultyText, { color: isDark ? '#aaa' : '#666' }]}>{exercise.difficulty}</Text>
-              </View>
-
-              {/* ✅ NEW: Form Check Button */}
-              <TouchableOpacity
-                style={[styles.formCheckBtn, { backgroundColor: planData.color + '15' }]}
-                onPress={() => router.push({
-                  pathname: "/form-check",
-                  params: { exercise: exercise.name, planTitle: type }
-                })}
-              >
-                <Ionicons name="scan" size={12} color={planData.color} />
-                <Text style={[styles.formCheckBtnText, { color: planData.color }]}>Check Form</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity 
-            style={[styles.exerciseArrow, { backgroundColor: planData.color + '15' }]}
-            onPress={() => openExerciseDetails(exercise)}
-          >
-            <Ionicons name="chevron-forward" size={20} color={planData.color} />
-          </TouchableOpacity>
         </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  </Animated.View>
-))}
+
+        {/* --- Exercise list --- */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionLine, { backgroundColor: planColor + '30' }]} />
+              <Text style={[styles.sectionTitle, { color: currentColors.text }]}>EXERCISES</Text>
+              <View style={[styles.sectionLine, { backgroundColor: planColor + '30' }]} />
+            </View>
+
+            {planData.exercises.map((exercise: Exercise, index: number) => (
+              <Animated.View
+                key={exercise.id}
+                style={{
+                  transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 30], outputRange: [0, 6 * (index + 1) ] }) }],
+                }}
+              >
+                <TouchableOpacity activeOpacity={0.9}>
+                  <View
+                    style={[
+                      styles.exerciseCard,
+                      {
+                        backgroundColor: isDark ? currentColors.card : "#fff",
+                        borderColor: planColor + '20',
+                      },
+                    ]}
+                  >
+                    <View style={[styles.exerciseCardAccent, { backgroundColor: planColor }]} />
+                    <View style={styles.exerciseCardContent}>
+                      {/* Image */}
+                      <TouchableOpacity onPress={() => openExerciseDetails(exercise)} style={styles.exerciseImageContainer}>
+                        <Image source={{ uri: exercise.imageUrl }} style={styles.exerciseImage} resizeMode="cover" />
+                        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.exerciseImageOverlay} />
+                        <View style={[styles.exerciseBadge, { backgroundColor: planColor }]}>
+                          <Ionicons name="play" size={12} color="#000" />
+                        </View>
+                      </TouchableOpacity>
+
+                      {/* Info */}
+                      <View style={styles.exerciseInfo}>
+                        <TouchableOpacity onPress={() => openExerciseDetails(exercise)}>
+                          <Text style={[styles.exerciseName, { color: currentColors.text }]} numberOfLines={1}>
+                            {exercise.name}
+                          </Text>
+                        </TouchableOpacity>
+                        <View style={styles.exerciseMetaRow}>
+                          <View style={styles.exerciseMetaItem}>
+                            <Ionicons name="repeat" size={12} color={planColor} />
+                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.sets} sets</Text>
+                          </View>
+                          <View style={styles.exerciseMetaItem}>
+                            <Ionicons name="barbell" size={12} color={planColor} />
+                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.reps}</Text>
+                          </View>
+                          <View style={styles.exerciseMetaItem}>
+                            <Ionicons name="timer" size={12} color={planColor} />
+                            <Text style={[styles.exerciseMetaText, { color: currentColors.text }]}>{exercise.rest}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.exerciseBottomRow}>
+                          <View style={styles.difficultyBadge}>
+                            <View style={[styles.difficultyDot, {
+                              backgroundColor: exercise.difficulty === 'Beginner' ? '#4CAF50' :
+                                            exercise.difficulty === 'Intermediate' ? '#FF9800' : '#F44336'
+                            }]} />
+                            <Text style={[styles.difficultyText, { color: isDark ? '#aaa' : '#666' }]}>{exercise.difficulty}</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={[styles.formCheckBtn, { backgroundColor: planColor + '15' }]}
+                            onPress={() => router.push({
+                              pathname: "/form-check",
+                              params: { exercise: exercise.name, planTitle: type }
+                            })}
+                          >
+                            <Ionicons name="scan" size={12} color={planColor} />
+                            <Text style={[styles.formCheckBtnText, { color: planColor }]}>Check Form</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity
+                        style={[styles.exerciseArrow, { backgroundColor: planColor + '15' }]}
+                        onPress={() => openExerciseDetails(exercise)}
+                      >
+                        <Ionicons name="chevron-forward" size={20} color={planColor} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
           </Animated.View>
         </ScrollView>
 
+        {/* Modal (unchanged) */}
         <ExerciseDetailModal
           visible={modalVisible}
           exercise={selectedExercise}
@@ -469,56 +469,27 @@ export default function ExerciseDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 16,
-    marginBottom: 20,
-  },
-  retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  retryButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#000",
-  },
+  safeContainer: { flex: 1 },
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 16, fontSize: 16, fontWeight: "600" },
+  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
+  errorText: { fontSize: 16, textAlign: "center", marginTop: 16, marginBottom: 20 },
+  retryButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  retryButtonText: { fontSize: 14, fontWeight: "700", color: "#000" },
 
+  // Header (lower, softer)
   header: {
-    paddingTop: Platform.OS === "ios" ? 12 : 12,
-    paddingBottom: 12,
+    paddingTop: Platform.OS === "ios" ? 8 : 8,
+    paddingBottom: 8,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.05)",
   },
   headerContent: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   backBtn: {
     width: 40,
@@ -528,35 +499,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerCenter: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    marginHorizontal: 8,
+    gap: 12,
   },
   headerIcon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
-  headerEmoji: {
-    fontSize: 22,
-  },
-  headerTextContainer: {
-    flexShrink: 1,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    fontWeight: "500",
-    marginTop: 2,
-  },
+  headerEmoji: { fontSize: 22 },
+  headerTitle: { fontSize: 16, fontWeight: "700" },
+  headerSubtitle: { fontSize: 11, fontWeight: "500", marginTop: 2 },
   themeBtn: {
     width: 40,
     height: 40,
@@ -565,150 +521,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  // Stats row (card‑like)
   heroStats: {
     flexDirection: "row",
     marginHorizontal: 16,
     marginTop: 16,
-    marginBottom: 8,
-    paddingVertical: 14,
+    marginBottom: 12,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 20,
+    borderWidth: 1,
     gap: 12,
   },
-  heroStatItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  heroStatValue: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  heroStatLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    textTransform: "uppercase",
-  },
-  heroStatDivider: {
-    width: 1,
-    height: 30,
-  },
+  heroStatItem: { flex: 1, alignItems: "center", gap: 4 },
+  heroStatValue: { fontSize: 18, fontWeight: "800" },
+  heroStatLabel: { fontSize: 10, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
+  heroStatDivider: { width: 1, height: 30 },
 
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 8,
-  },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40, paddingTop: 4 },
 
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 10,
-  },
-  sectionLine: {
-    flex: 1,
-    height: 1,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-  },
+  sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 },
+  sectionLine: { flex: 1, height: 1 },
+  sectionTitle: { fontSize: 11, fontWeight: "800", letterSpacing: 1 },
 
   exerciseCard: {
-    borderRadius: 18,
+    borderRadius: 20,
     marginBottom: 12,
     overflow: "hidden",
-    borderWidth: 1.5,
-    ...Platform.select({ ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8 }, android: { elevation: 3 } }),
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  exerciseCardAccent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-  },
-  exerciseCardContent: {
-    flexDirection: "row",
-    padding: 12,
-    alignItems: "center",
-  },
-  exerciseImageContainer: {
-    width: 65,
-    height: 65,
-    borderRadius: 14,
-    overflow: "hidden",
-    position: "relative",
-  },
-  exerciseImage: {
-    width: "100%",
-    height: "100%",
-  },
-  exerciseImageOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  exerciseBadge: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  exerciseInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  exerciseName: {
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  exerciseMetaRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 4,
-  },
-  exerciseMetaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  exerciseMetaText: {
-    fontSize: 10,
-    fontWeight: "500",
-  },
-  difficultyBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  difficultyDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  difficultyText: {
-    fontSize: 10,
-    fontWeight: "500",
-  },
-  exerciseArrow: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
+  exerciseCardAccent: { position: "absolute", top: 0, left: 0, right: 0, height: 3 },
+  exerciseCardContent: { flexDirection: "row", padding: 12, alignItems: "center", gap: 12 },
+  exerciseImageContainer: { width: 65, height: 65, borderRadius: 16, overflow: "hidden", position: "relative" },
+  exerciseImage: { width: "100%", height: "100%" },
+  exerciseImageOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  exerciseBadge: { position: "absolute", top: 5, right: 5, width: 20, height: 20, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+  exerciseInfo: { flex: 1 },
+  exerciseName: { fontSize: 15, fontWeight: "700", marginBottom: 4 },
+  exerciseMetaRow: { flexDirection: "row", gap: 10, marginBottom: 4 },
+  exerciseMetaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
+  exerciseMetaText: { fontSize: 10, fontWeight: "500" },
+  exerciseBottomRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 },
+  difficultyBadge: { flexDirection: "row", alignItems: "center", gap: 5 },
+  difficultyDot: { width: 6, height: 6, borderRadius: 3 },
+  difficultyText: { fontSize: 10, fontWeight: "500" },
+  formCheckBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  formCheckBtnText: { fontSize: 10, fontWeight: "700" },
+  exerciseArrow: { width: 30, height: 30, borderRadius: 15, justifyContent: "center", alignItems: "center" },
 
+  // Modal styles (unchanged)
   modalBackdrop: { flex: 1 },
   modalContent: { position: "absolute", bottom: 0, left: 0, right: 0, borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: "90%", overflow: "hidden" },
   modalGradient: { position: "absolute", top: 0, left: 0, right: 0, height: 200 },
@@ -747,22 +613,4 @@ const styles = StyleSheet.create({
   expertTipContent: { flex: 1 },
   expertTipLabel: { fontSize: 12, fontWeight: "700", marginBottom: 4, textTransform: "uppercase" },
   expertTipText: { fontSize: 14, lineHeight: 20 },
-  exerciseBottomRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginTop: 6,
-},
-formCheckBtn: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 4,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  borderRadius: 12,
-},
-formCheckBtnText: {
-  fontSize: 10,
-  fontWeight: "700",
-},
 });
