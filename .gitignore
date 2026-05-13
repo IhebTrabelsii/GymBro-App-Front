@@ -8,5 +8,4 @@ node_modules
 nul
 
 # Native folders (should not be committed)
-/android
 /ios
