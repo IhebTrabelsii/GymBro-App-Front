@@ -1,20 +1,48 @@
-diff --git a/android/build.gradle b/android/build.gradle
-index 1234567..abcdefg 100644
---- a/android/build.gradle
-+++ b/android/build.gradle
-@@ -150,6 +150,15 @@ task extractReactNativeAARRelease {
-     doLast {
-         extractReactNativeAAR('Release')
-     }
-+    enabled = false
-+    doFirst {
-+        println "Skipping AAR extraction - using modern React Native structure"
-+    }
-+}
+diff --git a/node_modules/expo-gl-cpp/android/build.gradle b/node_modules/expo-gl-cpp/android/build.gradle
+index 025d491..f7eb6fd 100644
+--- a/node_modules/expo-gl-cpp/android/build.gradle
++++ b/node_modules/expo-gl-cpp/android/build.gradle
+@@ -49,9 +49,10 @@ buildscript {
+ }
+ 
+ // Creating sources with comments
 +
-+task extractReactNativeAARDebug {
-+    enabled = false
-+    doFirst {
+ task androidSourcesJar(type: Jar) {
+-  classifier = 'sources'
+-  from android.sourceSets.main.java.srcDirs
++    archiveClassifier.set('sources')
++    from android.sourceSets.main.java.srcDirs
+ }
+ 
+ afterEvaluate {
+@@ -72,6 +73,8 @@ afterEvaluate {
+ }
+ 
+ android {
++
++  compileSdk 34
+   compileSdkVersion safeExtGet("compileSdkVersion", 31)
+ 
+   compileOptions {
+@@ -162,15 +165,15 @@ def extractReactNativeAAR = { buildType ->
+ }
+ 
+ task extractReactNativeAARRelease {
+-  doLast {
+-    extractReactNativeAAR('Release')
+-  }
++    doLast {
 +        println "Skipping AAR extraction - using modern React Native structure"
 +    }
  }
+ 
+ task extractReactNativeAARDebug {
+-  doLast {
+-    extractReactNativeAAR('Debug')
+-  }
++    doLast {
++        println "Skipping AAR extraction - using modern React Native structure"
++    }
+ }
+ 
+ task extractJNIFiles {
