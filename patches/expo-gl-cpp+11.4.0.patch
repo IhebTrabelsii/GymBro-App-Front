@@ -46,3 +46,24 @@ index 025d491..f7eb6fd 100644
  }
  
  task extractJNIFiles {
+diff --git a/node_modules/expo-gl-cpp/cpp/CMakeLists.txt b/node_modules/expo-gl-cpp/cpp/CMakeLists.txt
+index 2c69484..49b6a2f 100644
+--- a/node_modules/expo-gl-cpp/cpp/CMakeLists.txt
++++ b/node_modules/expo-gl-cpp/cpp/CMakeLists.txt
+@@ -1,5 +1,7 @@
+ cmake_minimum_required(VERSION 3.4.1)
+ 
++set(JSI_LIB "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi.cpp")
++
+ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ set(CMAKE_ANDROID_STL_TYPE c++_shared)
+ set(CMAKE_VERBOSE_MAKEFILE ON)
+@@ -8,6 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
+ set(PACKAGE_NAME "expo-gl")
+ set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+ 
++include_directories("${REACT_NATIVE_DIR}/ReactCommon")
++
+ add_library(
+     ${PACKAGE_NAME} SHARED
+     ./UEXGL.cpp
