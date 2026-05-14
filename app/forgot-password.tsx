@@ -62,7 +62,7 @@ const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.100.143:3000/api/users/forgot-password', {
+      const response = await fetch('https://gymbro-api-sn0e.onrender.com/api/users/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

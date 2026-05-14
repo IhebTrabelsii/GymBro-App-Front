@@ -22,7 +22,7 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width } = Dimensions.get("window");
 
-const API_BASE_URL = "http://192.168.100.143:3000";
+const API_BASE_URL = "https://gymbro-api-sn0e.onrender.com";
 
 interface UserProfile {
   _id: string;
@@ -277,7 +277,7 @@ useEffect(() => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       if (token) {
-        await fetch("http://192.168.100.143:3000/api/users/ensure-missions", {
+        await fetch("https://gymbro-api-sn0e.onrender.com/api/users/ensure-missions", {
           headers: { Authorization: `Bearer ${token}` }
         });
       }

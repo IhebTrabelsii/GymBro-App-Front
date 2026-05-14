@@ -154,7 +154,7 @@ const primaryColor = currentColors.primary;
       if (token) {
         // Check plan
         const planResponse = await fetch(
-          "http://192.168.100.143:3000/api/users/plan",
+          "https://gymbro-api-sn0e.onrender.com/api/users/plan",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -186,7 +186,7 @@ const checkRemainingMessages = async () => {
     const token = await AsyncStorage.getItem("userToken");
     if (!token) return;
 
-    const response = await fetch("http://192.168.100.143:3000/api/users/ai-messages", {
+    const response = await fetch("https://gymbro-api-sn0e.onrender.com/api/users/ai-messages", {
       headers: { Authorization: `Bearer ${token}` }
     });
     
@@ -268,7 +268,7 @@ const sendMessage = async (questionText?: string) => {
       return;
     }
 
-    const useResponse = await fetch("http://192.168.100.143:3000/api/users/use-ai-message", {
+    const useResponse = await fetch("https://gymbro-api-sn0e.onrender.com/api/users/use-ai-message", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -310,7 +310,7 @@ const sendMessage = async (questionText?: string) => {
     }
 
     // Now send the actual AI chat request
-    const chatResponse = await fetch("http://192.168.100.143:3000/api/ai-coach/chat", {
+    const chatResponse = await fetch("https://gymbro-api-sn0e.onrender.com/api/ai-coach/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

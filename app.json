@@ -80,7 +80,9 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

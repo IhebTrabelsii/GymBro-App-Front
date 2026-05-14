@@ -163,8 +163,8 @@ const gymBroLogoT = require("@/assets/images/sections/gym_bro_khw.png");
     try {
       const isAdminLogin = email.includes("admin") || email.endsWith("@gymbro.app");
       const endpoint = isAdminLogin
-        ? "http://192.168.100.143:3000/api/admin/login"
-        : "http://192.168.100.143:3000/api/users/login";
+        ? "https://gymbro-api-sn0e.onrender.com/api/admin/login"
+        : "https://gymbro-api-sn0e.onrender.com/api/users/login";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

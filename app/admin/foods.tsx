@@ -18,7 +18,7 @@ import { Colors } from "@/constants/Colors";
 import { useSimpleTheme } from "../../context/SimpleThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_BASE_URL = "http://192.168.100.143:3000";
+const API_BASE_URL = "https://gymbro-api-sn0e.onrender.com";
 
 const categories = ["Protein", "Carbs", "Fats", "Fruit", "Vegetables"];
 

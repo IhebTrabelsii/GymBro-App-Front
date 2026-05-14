@@ -190,7 +190,7 @@ export default function PremiumScreen() {
       const token = await AsyncStorage.getItem("userToken");
 
       const response = await fetch(
-        "http://192.168.100.143:3000/api/users/upgrade",
+        "https://gymbro-api-sn0e.onrender.com/api/users/upgrade",
         {
           method: "POST",
           headers: {

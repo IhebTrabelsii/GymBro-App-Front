@@ -19,7 +19,7 @@ import { useSimpleTheme } from "../../context/SimpleThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
-const API_BASE_URL = "http://192.168.100.143:3000";
+const API_BASE_URL = "https://gymbro-api-sn0e.onrender.com";
 
 type Plan = {
   _id: string;

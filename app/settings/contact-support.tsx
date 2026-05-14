@@ -76,7 +76,7 @@ export default function ContactSupportScreen() {
         return;
       }
 
-      const response = await fetch("http://192.168.100.143:3000/api/users/contact-support", {
+      const response = await fetch("https://gymbro-api-sn0e.onrender.com/api/users/contact-support", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

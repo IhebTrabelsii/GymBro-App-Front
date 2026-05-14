@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
-const API_BASE_URL = "http://192.168.100.143:3000";
+const API_BASE_URL = "https://gymbro-api-sn0e.onrender.com";
 
 interface ChangePasswordResponse {
   success: boolean;

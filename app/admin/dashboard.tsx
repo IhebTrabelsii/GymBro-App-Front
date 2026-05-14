@@ -218,8 +218,8 @@ export default function AdminDashboard() {
 
       const apiUrl =
         Platform.OS === "web"
-          ? "http://localhost:3000/api/admin/dashboard"
-          : "http://192.168.100.143:3000/api/admin/dashboard";
+          ? "https://gymbro-api-sn0e.onrender.com/api/admin/dashboard"
+          : "https://gymbro-api-sn0e.onrender.com/api/admin/dashboard";
 
       const response = await fetch(apiUrl, {
         headers: {

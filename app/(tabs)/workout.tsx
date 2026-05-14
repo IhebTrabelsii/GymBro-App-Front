@@ -325,7 +325,7 @@ export default function WorkoutScreen() {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch("http://192.168.100.143:3000/api/plans");
+      const response = await fetch("https://gymbro-api-sn0e.onrender.com/api/plans");
       const data = (await response.json()) as PlansResponse;
       if (response.ok && data.success) {
         setPlans(data.data);
@@ -377,7 +377,7 @@ export default function WorkoutScreen() {
         return;
       }
       const response = await fetch(
-        "http://192.168.100.143:3000/api/users/set-body-type",
+        "https://gymbro-api-sn0e.onrender.com/api/users/set-body-type",
         {
           method: "POST",
           headers: {
@@ -411,7 +411,7 @@ export default function WorkoutScreen() {
         return;
       }
       const response = await fetch(
-        "http://192.168.100.143:3000/api/users/log-workout",
+        "https://gymbro-api-sn0e.onrender.com/api/users/log-workout",
         {
           method: "POST",
           headers: {

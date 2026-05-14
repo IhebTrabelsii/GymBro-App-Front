@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
-import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { useSimpleTheme } from "../context/SimpleThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -345,7 +345,7 @@ return () => {
     // Place a soft chime / gentle bell at: @/assets/sounds/alarm.mp3
     try {
       const { sound: alarmS } = await Audio.Sound.createAsync(
-        require("@/assets/sounds/alarm.mp3"),
+        require("../assets/sounds/alarm.mp3"),
         { isLooping: true, volume: 0.5 },
       );
       alarmSoundRef.current = alarmS;
@@ -414,9 +414,9 @@ return () => {
       setSound(null);
     }
     const map = {
-      rain: require("@/assets/sounds/rain.mp3"),
-      waves: require("@/assets/sounds/waves.mp3"),
-      fireplace: require("@/assets/sounds/fireplace.mp3"),
+      rain: require("../assets/sounds/rain.mp3"),
+      waves: require("../assets/sounds/waves.mp3"),
+      fireplace: require("../assets/sounds/fireplace.mp3"),
     };
     try {
       const { sound: s } = await Audio.Sound.createAsync(map[name], {
@@ -514,7 +514,7 @@ return () => {
             >
               <Video
                 ref={fireplaceVideoRef}
-                source={require("@/assets/videos/fire.mp4")}
+                source={require("../assets/videos/fire.mp4")}
                 style={StyleSheet.absoluteFill}
                 shouldPlay={false}
                 isLooping
@@ -533,7 +533,7 @@ return () => {
             >
               <Video
                 ref={rainVideoRef}
-                source={require("@/assets/videos/rain.mp4")}
+                source={require("../assets/videos/rain.mp4")}
                 style={StyleSheet.absoluteFill}
                 shouldPlay={false}
                 isLooping
@@ -552,7 +552,7 @@ return () => {
             >
               <Video
                 ref={wavesVideoRef}
-                source={require("@/assets/videos/ocean.mp4")} // your file name
+                source={require("../assets/videos/ocean.mp4")} // your file name
                 style={StyleSheet.absoluteFill}
                 shouldPlay={false}
                 isLooping

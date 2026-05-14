@@ -115,7 +115,7 @@ export default function AdminWorkouts() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      const response = await fetch("http://192.168.100.143:3000/api/plans", {
+      const response = await fetch("https://gymbro-api-sn0e.onrender.com/api/plans", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -182,7 +182,7 @@ export default function AdminWorkouts() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      const response = await fetch(`http://192.168.100.143:3000/api/plans/${selectedPlan._id}`, {
+      const response = await fetch(`https://gymbro-api-sn0e.onrender.com/api/plans/${selectedPlan._id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -238,8 +238,8 @@ export default function AdminWorkouts() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       const url = formMode === 'add' 
-        ? "http://192.168.100.143:3000/api/plans"
-        : `http://192.168.100.143:3000/api/plans/${selectedPlan?._id}`;
+        ? "https://gymbro-api-sn0e.onrender.com/api/plans"
+        : `https://gymbro-api-sn0e.onrender.com/api/plans/${selectedPlan?._id}`;
       
       const method = formMode === 'add' ? 'POST' : 'PUT';
 

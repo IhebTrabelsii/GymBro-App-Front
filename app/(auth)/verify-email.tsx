@@ -47,7 +47,7 @@ export default function VerifyEmailScreen() {
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch(`http://192.168.100.143:3000/api/users/verify-email/${token}`);
+      const response = await fetch(`https://gymbro-api-sn0e.onrender.com/api/users/verify-email/${token}`);
       const data = await response.json() as VerifyEmailResponse;
 
       if (response.ok && data.success) {

@@ -84,7 +84,7 @@ export default function AdminUsers() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      const response = await fetch("http://192.168.100.143:3000/api/admin/users", {
+      const response = await fetch("https://gymbro-api-sn0e.onrender.com/api/admin/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -122,7 +122,7 @@ export default function AdminUsers() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      const response = await fetch(`http://192.168.100.143:3000/api/admin/users/${selectedUser._id}`, {
+      const response = await fetch(`https://gymbro-api-sn0e.onrender.com/api/admin/users/${selectedUser._id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -158,7 +158,7 @@ export default function AdminUsers() {
     try {
       const token = await AsyncStorage.getItem("userToken");
       
-      const response = await fetch(`http://192.168.100.143:3000/api/admin/users/${selectedUser._id}`, {
+      const response = await fetch(`https://gymbro-api-sn0e.onrender.com/api/admin/users/${selectedUser._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
