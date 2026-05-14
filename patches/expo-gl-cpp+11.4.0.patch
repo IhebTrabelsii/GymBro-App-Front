@@ -1,21 +1,20 @@
-diff --git a/node_modules/expo-gl-cpp/android/build.gradle b/node_modules/expo-gl-cpp/android/build.gradle
-index 025d491..d5bde51 100644
---- a/node_modules/expo-gl-cpp/android/build.gradle
-+++ b/node_modules/expo-gl-cpp/android/build.gradle
-@@ -50,7 +50,7 @@ buildscript {
- 
- // Creating sources with comments
- task androidSourcesJar(type: Jar) {
--  classifier = 'sources'
-+  archiveClassifier.set('sources')
-   from android.sourceSets.main.java.srcDirs
+diff --git a/android/build.gradle b/android/build.gradle
+index 1234567..abcdefg 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -150,6 +150,15 @@ task extractReactNativeAARRelease {
+     doLast {
+         extractReactNativeAAR('Release')
+     }
++    enabled = false
++    doFirst {
++        println "Skipping AAR extraction - using modern React Native structure"
++    }
++}
++
++task extractReactNativeAARDebug {
++    enabled = false
++    doFirst {
++        println "Skipping AAR extraction - using modern React Native structure"
++    }
  }
- 
-@@ -72,6 +72,7 @@ afterEvaluate {
- }
- 
- android {
-+  compileSdk 34 
-   compileSdkVersion safeExtGet("compileSdkVersion", 31)
- 
-   compileOptions {
