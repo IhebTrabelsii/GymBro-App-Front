@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-video-processing/android/build.gradle b/node_modules/react-native-video-processing/android/build.gradle
-index cefdf52..c580495 100644
+index cefdf52..1e00711 100644
 --- a/node_modules/react-native-video-processing/android/build.gradle
 +++ b/node_modules/react-native-video-processing/android/build.gradle
 @@ -29,7 +29,7 @@ configurations.all {
@@ -11,3 +11,51 @@ index cefdf52..c580495 100644
    implementation 'com.googlecode.mp4parser:isoparser:1.1.20'
    implementation 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
    // implementation "com.google.android.gms:play-services-gcm:12.+"
+@@ -38,6 +38,5 @@ dependencies {
+ allprojects {
+   repositories {
+     mavenLocal()
+-    jcenter()
+   }
+ }
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/incremental/mergeReleaseJniLibFolders/merger.xml b/node_modules/react-native-video-processing/android/build/intermediates/incremental/mergeReleaseJniLibFolders/merger.xml
+new file mode 100644
+index 0000000..8f07dc8
+--- /dev/null
++++ b/node_modules/react-native-video-processing/android/build/intermediates/incremental/mergeReleaseJniLibFolders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\main\jniLibs"><file name="arm64-v8a/libffmpeg.so" path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\main\jniLibs\arm64-v8a\libffmpeg.so"/><file name="armeabi-v7a/libffmpeg.so" path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\main\jniLibs\armeabi-v7a\libffmpeg.so"/><file name="x86/libffmpeg.so" path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\main\jniLibs\x86\libffmpeg.so"/><file name="x86_64/libffmpeg.so" path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\main\jniLibs\x86_64\libffmpeg.so"/></source></dataSet><dataSet config="release" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\HP\GymBro\node_modules\react-native-video-processing\android\src\release\jniLibs"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/arm64-v8a/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/arm64-v8a/libffmpeg.so
+new file mode 100644
+index 0000000..b26864d
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/arm64-v8a/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/armeabi-v7a/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/armeabi-v7a/libffmpeg.so
+new file mode 100644
+index 0000000..7e64a71
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/armeabi-v7a/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86/libffmpeg.so
+new file mode 100644
+index 0000000..691fa13
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86_64/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86_64/libffmpeg.so
+new file mode 100644
+index 0000000..1a28efd
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_jni_libs/release/mergeReleaseJniLibFolders/out/x86_64/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/arm64-v8a/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/arm64-v8a/libffmpeg.so
+new file mode 100644
+index 0000000..b26864d
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/arm64-v8a/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/armeabi-v7a/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/armeabi-v7a/libffmpeg.so
+new file mode 100644
+index 0000000..7e64a71
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/armeabi-v7a/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86/libffmpeg.so
+new file mode 100644
+index 0000000..691fa13
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86/libffmpeg.so differ
+diff --git a/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86_64/libffmpeg.so b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86_64/libffmpeg.so
+new file mode 100644
+index 0000000..1a28efd
+Binary files /dev/null and b/node_modules/react-native-video-processing/android/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib/x86_64/libffmpeg.so differ
