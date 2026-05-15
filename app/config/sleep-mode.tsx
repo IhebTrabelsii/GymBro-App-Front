@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
-import { useSimpleTheme } from "../context/SimpleThemeContext";
+import { useSimpleTheme } from "../../context/SimpleThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -138,7 +138,7 @@ export default function SleepModeScreen() {
   const phaseAnim = useRef<Animated.CompositeAnimation | null>(null);
 
   // ── Timer ─────────────────────────────────────────────────────────────────
-  const [timerMinutes, setTimerMinutes] = useState(0.1);
+  const [timerMinutes, setTimerMinutes] = useState(30);
   const [timerActive, setTimerActive] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(30 * 60);
 
@@ -160,35 +160,31 @@ export default function SleepModeScreen() {
   // Derived: current theme config + accent color
   const activeTheme = THEMES[selectedSound];
   const ACCENT = activeTheme.accent;
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
+    if (!videoLoaded) return; // ✅ bail out early
+
     const isFireplace = selectedSound === "fireplace";
     const isRain = selectedSound === "rain";
     const isWaves = selectedSound === "waves";
 
-    if (isFireplace && videoLoaded && fireplaceVideoRef.current) {
-      fireplaceVideoRef.current.playAsync();
-    } else if (!isFireplace && fireplaceVideoRef.current) {
-      fireplaceVideoRef.current.pauseAsync();
-    }
-
-    if (isRain && videoLoaded && rainVideoRef.current) {
-      rainVideoRef.current.playAsync();
-    } else if (!isRain && rainVideoRef.current) {
-      rainVideoRef.current.pauseAsync();
-    }
-
-    if (isWaves && videoLoaded && wavesVideoRef.current) {
-      wavesVideoRef.current.playAsync();
-    } else if (!isWaves && wavesVideoRef.current) {
-      wavesVideoRef.current.pauseAsync();
-    }
+    fireplaceVideoRef.current?.[isFireplace ? "playAsync" : "pauseAsync"]();
+    rainVideoRef.current?.[isRain ? "playAsync" : "pauseAsync"]();
+    wavesVideoRef.current?.[isWaves ? "playAsync" : "pauseAsync"]();
   }, [selectedSound, videoLoaded]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Init: screen fade, star twinkle, ambient glow loop
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: true,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    });
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1200,
@@ -230,14 +226,14 @@ export default function SleepModeScreen() {
       ]),
     ).start();
 
-return () => {
-  sound?.unloadAsync();
-  alarmSoundRef.current?.unloadAsync();
-  fireplaceVideoRef.current?.unloadAsync();
-  rainVideoRef.current?.unloadAsync();
-  wavesVideoRef.current?.unloadAsync();
-  Vibration.cancel();
-};
+    return () => {
+      soundRef.current?.unloadAsync();
+      alarmSoundRef.current?.unloadAsync();
+      fireplaceVideoRef.current?.unloadAsync();
+      rainVideoRef.current?.unloadAsync();
+      wavesVideoRef.current?.unloadAsync();
+      Vibration.cancel();
+    };
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -330,13 +326,12 @@ return () => {
   // ─────────────────────────────────────────────────────────────────────────
   // Alarm: calm, non-jarring wake-up sequence
   // ─────────────────────────────────────────────────────────────────────────
-  const triggerAlarm = async () => {
-    // Gracefully stop ambient sound
-    if (sound) {
-      try {
-        await sound.stopAsync();
-      } catch (_) {}
-    }
+const triggerAlarm = async () => {
+  if (soundRef.current) {   // ← was: if (sound)
+    try {
+      await soundRef.current.stopAsync();
+    } catch (_) {}
+  }
 
     // Gentle repeating vibration pattern (soft pulses, not harsh buzz)
     Vibration.vibrate([0, 700, 900, 700, 900, 700], true);
@@ -423,6 +418,7 @@ return () => {
         isLooping: true,
         volume: 0.6,
       });
+      soundRef.current = s;
       setSound(s);
       setSelectedSound(name);
       await s.playAsync();
@@ -432,11 +428,12 @@ return () => {
   };
 
   const stopSound = async () => {
-    if (sound) {
+    if (soundRef.current) {
       try {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
       } catch (_) {}
+      soundRef.current = null;
       setSound(null);
       setSelectedSound("none");
     }
@@ -466,7 +463,7 @@ return () => {
   const timerProgress = 1 - remainingSeconds / (timerMinutes * 60);
 
   const exitSleepMode = () => {
-    sound?.stopAsync().then(() => sound.unloadAsync());
+    soundRef.current?.stopAsync().then(() => soundRef.current?.unloadAsync());
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 600,

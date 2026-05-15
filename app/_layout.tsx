@@ -40,12 +40,12 @@ export default function RootLayout() {
             <Stack.Screen name="settings" />
             <Stack.Screen name="settings/privacy-policy" />
             <Stack.Screen name="settings/terms-of-service" />
-            <Stack.Screen name="sleep" />{" "}
             <Stack.Screen name="settings/contact-support" />
             <Stack.Screen name="form-check" />
             <Stack.Screen name="Hydration" />
             <Stack.Screen name="config/schedule" />
             <Stack.Screen name="config/progress" />
+            <Stack.Screen name="config/sleep-mode" />
             <Stack.Screen name="config/test" />
           </Stack>
           <StatusBar style="auto" />

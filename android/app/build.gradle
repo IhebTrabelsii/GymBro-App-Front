@@ -83,17 +83,14 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
     compileSdk 36
-    ndkVersion "30.0.14904198"
 
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
 
     namespace 'com.anonymous.GymBro'
     defaultConfig {
-        targetSdk 36
         applicationId 'com.anonymous.GymBro'
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        targetSdkVersion 36
         versionCode 1
         versionName "1.0.0"
 

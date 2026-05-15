@@ -1105,7 +1105,7 @@ export default function Home() {
               {
                 icon: "moon-outline",
                 label: "Sleep Mode",
-                onPress: () => router.push("./sleep"),
+                onPress: () => router.push("/config/sleep-mode"),
                 accent: "#AF52DE",
               },
               {
@@ -1155,37 +1155,7 @@ export default function Home() {
               </TouchableOpacity>
             ))}
           </View>
-          {/* Sleep Mode Section - Dedicated Button */}
-          <TouchableOpacity
-            style={[
-              styles.sleepButton,
-              {
-                backgroundColor: isDark ? "#1a1a2e" : "#f5f0ff",
-                borderColor: isDark ? "#AF52DE" : "#AF52DE",
-              },
-            ]}
-            onPress={() => router.push("/sleep")}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={["#AF52DE20", "#AF52DE05"]}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            />
-            <View style={styles.sleepIconWrapper}>
-              <Ionicons name="moon" size={28} color="#AF52DE" />
-            </View>
-            <View style={styles.sleepTextContainer}>
-              <Text style={[styles.sleepTitle, { color: currentColors.text }]}>
-                Sleep Mode
-              </Text>
-              <Text style={[styles.sleepSubtitle, { color: isDark ? "#888" : "#999" }]}>
-                Breathing exercises • Sleep timer • Ambient sounds
-              </Text>
-            </View>
-            <Ionicons name="arrow-forward" size={20} color="#AF52DE" />
-          </TouchableOpacity>
+
           
           {/* Bottom Banner */}
           <View
