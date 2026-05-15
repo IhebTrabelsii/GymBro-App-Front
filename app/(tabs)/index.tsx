@@ -1105,7 +1105,7 @@ export default function Home() {
               {
                 icon: "moon-outline",
                 label: "Sleep Mode",
-                onPress: () => router.push("/config/sleep-mode"),
+                onPress: () => router.push("/sleep"),
                 accent: "#AF52DE",
               },
               {

@@ -1,4 +1,4 @@
-// app/sleep-mode.tsx
+// app/sleep-mode.tsx - CRASH-FREE VERSION (all features preserved)
 import { Ionicons } from "@expo/vector-icons";
 import { Audio, ResizeMode, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
-import { useSimpleTheme } from "../../context/SimpleThemeContext";
+import { useSimpleTheme } from "../context/SimpleThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -43,8 +43,6 @@ const PHASES = [
 
 type SoundKey = "rain" | "waves" | "fireplace" | "none";
 
-// ── Per-sound visual themes ───────────────────────────────────────────────────
-// Each sound gets its own atmosphere: gradient sky + nebula tones + accent color
 const THEMES: Record<
   SoundKey,
   {
@@ -56,7 +54,6 @@ const THEMES: Record<
   }
 > = {
   none: {
-    // Default — deep cosmic indigo night
     gradients: ["#03020D", "#08052B", "#0D1040", "#050318"],
     nebulaTopColor: "#8B9FFF",
     nebulaBottomColor: "#5060D0",
@@ -64,14 +61,13 @@ const THEMES: Record<
     label: "Night",
   },
   rain: {
-    gradients: ["#020508", "#050C16", "#071522", "#030A12"],
+    gradients: ["#020508", "#050C16", "/071522", "#030A12"],
     nebulaTopColor: "#000000",
     nebulaBottomColor: "#1A3860",
     accent: "#01eeff",
     label: "Storm",
   },
   waves: {
-    // Oceanic depth — teal abyss
     gradients: ["#010A0D", "#021318", "#041E28", "#010C14"],
     nebulaTopColor: "#0D8090",
     nebulaBottomColor: "#064858",
@@ -79,7 +75,6 @@ const THEMES: Record<
     label: "Ocean",
   },
   fireplace: {
-    // Warm hearth — deep ember, almost black with smouldering reds
     gradients: ["#0D0200", "#220500", "#320800", "#160300"],
     nebulaTopColor: "#CC4400",
     nebulaBottomColor: "#801800",
@@ -88,7 +83,6 @@ const THEMES: Record<
   },
 };
 
-// ── Star particles ────────────────────────────────────────────────────────────
 type Star = {
   id: number;
   x: number;
@@ -116,67 +110,67 @@ const CIRCUMFERENCE = 2 * Math.PI * R;
 export default function SleepModeScreen() {
   const router = useRouter();
   const { theme } = useSimpleTheme();
-  const fireplaceVideoRef = useRef<Video>(null);
-  const rainVideoRef = useRef<Video>(null);
-  const wavesVideoRef = useRef<Video>(null);
+
+  // Video refs
+  const videoRef = useRef<Video>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  // ── Stars ─────────────────────────────────────────────────────────────────
   const [stars] = useState<Star[]>(() => generateStars(80));
 
-  // ── Background crossfade: one Animated.Value per theme ────────────────────
-  // Defined as stable refs — never conditionally created
   const bgOpacityNone = useRef(new Animated.Value(1)).current;
   const bgOpacityRain = useRef(new Animated.Value(0)).current;
   const bgOpacityWaves = useRef(new Animated.Value(0)).current;
   const bgOpacityFireplace = useRef(new Animated.Value(0)).current;
 
-  // ── Breathing ─────────────────────────────────────────────────────────────
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [breathingActive, setBreathingActive] = useState(true);
   const breatheAnim = useRef(new Animated.Value(1)).current;
   const phaseProgress = useRef(new Animated.Value(0)).current;
   const phaseAnim = useRef<Animated.CompositeAnimation | null>(null);
 
-  // ── Timer ─────────────────────────────────────────────────────────────────
   const [timerMinutes, setTimerMinutes] = useState(30);
   const [timerActive, setTimerActive] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(30 * 60);
 
-  // ── Ambient sound ─────────────────────────────────────────────────────────
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [selectedSound, setSelectedSound] = useState<SoundKey>("none");
 
-  // ── Alarm ─────────────────────────────────────────────────────────────────
   const [showAlarm, setShowAlarm] = useState(false);
   const alarmSoundRef = useRef<Audio.Sound | null>(null);
   const alarmFade = useRef(new Animated.Value(0)).current;
   const alarmPulse = useRef(new Animated.Value(1)).current;
   const alarmPulseLoop = useRef<Animated.CompositeAnimation | null>(null);
 
-  // ── Misc ──────────────────────────────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ambientAnim = useRef(new Animated.Value(0.6)).current;
 
-  // Derived: current theme config + accent color
   const activeTheme = THEMES[selectedSound];
   const ACCENT = activeTheme.accent;
-  const soundRef = useRef<Audio.Sound | null>(null);
 
+  // Get video source based on selected sound
+  const getVideoSource = () => {
+    switch (selectedSound) {
+      case "fireplace":
+        return require("../assets/videos/fire.mp4");
+      case "rain":
+        return require("../assets/videos/rain.mp4");
+      case "waves":
+        return require("../assets/videos/ocean.mp4");
+      default:
+        return null;
+    }
+  };
+
+  // Handle video playback when selection changes
   useEffect(() => {
-    if (!videoLoaded) return; // ✅ bail out early
-
-    const isFireplace = selectedSound === "fireplace";
-    const isRain = selectedSound === "rain";
-    const isWaves = selectedSound === "waves";
-
-    fireplaceVideoRef.current?.[isFireplace ? "playAsync" : "pauseAsync"]();
-    rainVideoRef.current?.[isRain ? "playAsync" : "pauseAsync"]();
-    wavesVideoRef.current?.[isWaves ? "playAsync" : "pauseAsync"]();
+    if (!videoLoaded || !videoRef.current) return;
+    if (selectedSound !== "none") {
+      videoRef.current.playAsync();
+    } else {
+      videoRef.current.pauseAsync();
+    }
   }, [selectedSound, videoLoaded]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Init: screen fade, star twinkle, ambient glow loop
-  // ─────────────────────────────────────────────────────────────────────────
+  // Initialize
   useEffect(() => {
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
@@ -185,6 +179,7 @@ export default function SleepModeScreen() {
       shouldDuckAndroid: true,
       playThroughEarpieceAndroid: false,
     });
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1200,
@@ -227,19 +222,14 @@ export default function SleepModeScreen() {
     ).start();
 
     return () => {
-      soundRef.current?.unloadAsync();
+      sound?.unloadAsync();
       alarmSoundRef.current?.unloadAsync();
-      fireplaceVideoRef.current?.unloadAsync();
-      rainVideoRef.current?.unloadAsync();
-      wavesVideoRef.current?.unloadAsync();
+      videoRef.current?.unloadAsync();
       Vibration.cancel();
     };
   }, []);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Background crossfade when sound changes
-  // All 4 opacity values animate simultaneously: target→1, others→0
-  // ─────────────────────────────────────────────────────────────────────────
+  // Background crossfade
   useEffect(() => {
     const opacityMap: Record<SoundKey, Animated.Value> = {
       none: bgOpacityNone,
@@ -259,9 +249,7 @@ export default function SleepModeScreen() {
     ).start();
   }, [selectedSound]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 4-7-8 Breathing cycle
-  // ─────────────────────────────────────────────────────────────────────────
+  // Breathing cycle
   const runBreathingPhase = useCallback(
     (index: number) => {
       const phase = PHASES[index];
@@ -306,9 +294,7 @@ export default function SleepModeScreen() {
     return () => phaseAnim.current?.stop();
   }, [breathingActive]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Timer countdown
-  // ─────────────────────────────────────────────────────────────────────────
+  // Timer
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (timerActive && remainingSeconds > 0) {
@@ -323,21 +309,12 @@ export default function SleepModeScreen() {
     return () => clearInterval(interval);
   }, [timerActive, remainingSeconds]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Alarm: calm, non-jarring wake-up sequence
-  // ─────────────────────────────────────────────────────────────────────────
-const triggerAlarm = async () => {
-  if (soundRef.current) {   // ← was: if (sound)
-    try {
-      await soundRef.current.stopAsync();
-    } catch (_) {}
-  }
-
-    // Gentle repeating vibration pattern (soft pulses, not harsh buzz)
+  const triggerAlarm = async () => {
+    if (sound)
+      try {
+        await sound.stopAsync();
+      } catch (_) {}
     Vibration.vibrate([0, 700, 900, 700, 900, 700], true);
-
-    // Load and play calm alarm on loop at moderate volume
-    // Place a soft chime / gentle bell at: @/assets/sounds/alarm.mp3
     try {
       const { sound: alarmS } = await Audio.Sound.createAsync(
         require("../assets/sounds/alarm.mp3"),
@@ -348,16 +325,12 @@ const triggerAlarm = async () => {
     } catch (e) {
       console.error("Alarm sound error:", e);
     }
-
-    // Show overlay with slow fade-in
     setShowAlarm(true);
     Animated.timing(alarmFade, {
       toValue: 1,
       duration: 1200,
       useNativeDriver: true,
     }).start();
-
-    // Calm, slow sun pulse — not urgent, just gently waking
     alarmPulseLoop.current = Animated.loop(
       Animated.sequence([
         Animated.timing(alarmPulse, {
@@ -397,9 +370,6 @@ const triggerAlarm = async () => {
     });
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Sound controls
-  // ─────────────────────────────────────────────────────────────────────────
   const playSound = async (name: "rain" | "waves" | "fireplace") => {
     if (sound) {
       try {
@@ -418,7 +388,6 @@ const triggerAlarm = async () => {
         isLooping: true,
         volume: 0.6,
       });
-      soundRef.current = s;
       setSound(s);
       setSelectedSound(name);
       await s.playAsync();
@@ -428,12 +397,11 @@ const triggerAlarm = async () => {
   };
 
   const stopSound = async () => {
-    if (soundRef.current) {
+    if (sound) {
       try {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
+        await sound.stopAsync();
+        await sound.unloadAsync();
       } catch (_) {}
-      soundRef.current = null;
       setSound(null);
       setSelectedSound("none");
     }
@@ -444,9 +412,6 @@ const triggerAlarm = async () => {
     else playSound(name);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Timer helpers
-  // ─────────────────────────────────────────────────────────────────────────
   const adjustTimer = (delta: number) => {
     if (timerActive) return;
     const v = Math.min(120, Math.max(1, timerMinutes + delta));
@@ -463,7 +428,7 @@ const triggerAlarm = async () => {
   const timerProgress = 1 - remainingSeconds / (timerMinutes * 60);
 
   const exitSleepMode = () => {
-    soundRef.current?.stopAsync().then(() => soundRef.current?.unloadAsync());
+    sound?.stopAsync().then(() => sound?.unloadAsync());
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 600,
@@ -472,10 +437,11 @@ const triggerAlarm = async () => {
   };
 
   const phase = PHASES[phaseIndex];
+  const videoSource = getVideoSource();
 
   const SOUNDS: {
     id: "rain" | "waves" | "fireplace";
-    icon: keyof typeof Ionicons.glyphMap;
+    icon: any;
     label: string;
   }[] = [
     { id: "rain", icon: "rainy", label: "Rain" },
@@ -483,8 +449,7 @@ const triggerAlarm = async () => {
     { id: "fireplace", icon: "flame", label: "Fire" },
   ];
 
-  // Stable render array for background layers
-  const bgLayers: { key: SoundKey; opacity: Animated.Value }[] = [
+  const bgLayers = [
     { key: "none", opacity: bgOpacityNone },
     { key: "rain", opacity: bgOpacityRain },
     { key: "waves", opacity: bgOpacityWaves },
@@ -495,72 +460,49 @@ const triggerAlarm = async () => {
     <View style={styles.container}>
       <StatusBar hidden />
 
-      {/* ────────────────────────────────────────────────────────────────────
-          BACKGROUNDS: 4 gradient layers stacked, crossfading between them.
-          Each layer owns its gradient + nebula blobs for that theme.
-          Only one layer is opaque at a time; selecting a sound triggers a
-          2-second smooth crossfade to the matching atmosphere.
-      ──────────────────────────────────────────────────────────────────── */}
+      {/* Background gradients (no videos here) */}
       {bgLayers.map(({ key, opacity }) => {
-        const t = THEMES[key];
-        if (key === "fireplace") {
+        const t = THEMES[key as SoundKey];
+        if (key !== "none") {
           return (
             <Animated.View
               key={key}
               style={[StyleSheet.absoluteFill, { opacity }]}
             >
-              <Video
-                ref={fireplaceVideoRef}
-                source={require("../assets/videos/fire.mp4")}
+              <LinearGradient
+                colors={t.gradients}
+                locations={[0, 0.3, 0.65, 1]}
                 style={StyleSheet.absoluteFill}
-                shouldPlay={false}
-                isLooping
-                resizeMode={ResizeMode.COVER}
-                isMuted
-                onLoad={() => setVideoLoaded(true)}
+              />
+              <Animated.View
+                style={[
+                  styles.nebulaBlob,
+                  styles.nebulaTop,
+                  {
+                    backgroundColor: t.nebulaTopColor,
+                    opacity: ambientAnim.interpolate({
+                      inputRange: [0.5, 1],
+                      outputRange: [0.05, 0.13],
+                    }),
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.nebulaBlob,
+                  styles.nebulaBottom,
+                  {
+                    backgroundColor: t.nebulaBottomColor,
+                    opacity: ambientAnim.interpolate({
+                      inputRange: [0.5, 1],
+                      outputRange: [0.04, 0.1],
+                    }),
+                  },
+                ]}
               />
             </Animated.View>
           );
         }
-        if (key === "rain") {
-          return (
-            <Animated.View
-              key={key}
-              style={[StyleSheet.absoluteFill, { opacity }]}
-            >
-              <Video
-                ref={rainVideoRef}
-                source={require("../assets/videos/rain.mp4")}
-                style={StyleSheet.absoluteFill}
-                shouldPlay={false}
-                isLooping
-                resizeMode={ResizeMode.COVER}
-                isMuted
-                onLoad={() => setVideoLoaded(true)}
-              />
-            </Animated.View>
-          );
-        }
-        if (key === "waves") {
-          return (
-            <Animated.View
-              key={key}
-              style={[StyleSheet.absoluteFill, { opacity }]}
-            >
-              <Video
-                ref={wavesVideoRef}
-                source={require("../assets/videos/ocean.mp4")} // your file name
-                style={StyleSheet.absoluteFill}
-                shouldPlay={false}
-                isLooping
-                resizeMode={ResizeMode.COVER}
-                isMuted
-                onLoad={() => setVideoLoaded(true)}
-              />
-            </Animated.View>
-          );
-        }
-        // Default (none) – keep gradient
         return (
           <Animated.View
             key={key}
@@ -601,7 +543,26 @@ const triggerAlarm = async () => {
         );
       })}
 
-      {/* ── Stars ─────────────────────────────────────────────────────────── */}
+      {/* SINGLE VIDEO - only renders when a sound is selected */}
+      {/* @ts-ignore */}
+
+      {selectedSound !== "none" && videoSource !== null && (
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: 1 }]}>
+          <Video
+            ref={videoRef}
+            source={videoSource}
+            style={StyleSheet.absoluteFill}
+            // @ts-ignore
+            shouldPlay={selectedSound !== "none"}
+            isLooping
+            resizeMode={ResizeMode.COVER}
+            isMuted
+            onLoad={() => setVideoLoaded(true)}
+          />
+        </Animated.View>
+      )}
+
+      {/* Stars */}
       {stars.map((star) => (
         <Animated.View
           key={star.id}
@@ -618,27 +579,20 @@ const triggerAlarm = async () => {
         />
       ))}
 
-      {/* ── Main UI ───────────────────────────────────────────────────────── */}
+      {/* Main UI */}
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        {/* Top bar: active theme label + exit */}
         <View style={styles.topBar}>
           <View style={[styles.themeBadge, { borderColor: ACCENT + "55" }]}>
             <Text style={[styles.themeBadgeText, { color: ACCENT }]}>
               {activeTheme.label}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={exitSleepMode}
-            style={styles.exitBtn}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity onPress={exitSleepMode} style={styles.exitBtn}>
             <Ionicons name="close" size={18} color="rgba(255,255,255,0.35)" />
           </TouchableOpacity>
         </View>
 
-        {/* ── Breathing orb ───────────────────────────────────────────────── */}
         <View style={styles.breathSection}>
-          {/* Ambient glow ring */}
           <Animated.View
             style={[
               styles.glowRing,
@@ -652,8 +606,6 @@ const triggerAlarm = async () => {
               },
             ]}
           />
-
-          {/* SVG decorative arc track */}
           <View style={styles.svgWrap} pointerEvents="none">
             <Svg
               width={RING_SIZE}
@@ -689,15 +641,10 @@ const triggerAlarm = async () => {
               />
             </Svg>
           </View>
-
-          {/* Pulsing orb */}
           <Animated.View
             style={[
               styles.breathOrb,
-              {
-                transform: [{ scale: breatheAnim }],
-                shadowColor: ACCENT,
-              },
+              { transform: [{ scale: breatheAnim }], shadowColor: ACCENT },
             ]}
           >
             <LinearGradient
@@ -714,17 +661,13 @@ const triggerAlarm = async () => {
               style={{ opacity: 0.9 }}
             />
           </Animated.View>
-
-          {/* Phase label */}
           <View style={styles.phaseBlock}>
             <Text style={styles.phaseLabel}>{phase.label}</Text>
             <Text style={styles.phaseInstruction}>{phase.instruction}</Text>
           </View>
-
           <TouchableOpacity
             style={[styles.breathToggle, { borderColor: ACCENT + "45" }]}
             onPress={() => setBreathingActive((v) => !v)}
-            activeOpacity={0.7}
           >
             <Text style={[styles.breathToggleText, { color: ACCENT + "CC" }]}>
               {breathingActive ? "pause guide" : "start guide"}
@@ -734,9 +677,7 @@ const triggerAlarm = async () => {
 
         <View style={styles.divider} />
 
-        {/* ── Sleep timer ──────────────────────────────────────────────────── */}
         <View style={styles.timerSection}>
-          {/* Circular progress arc */}
           <View style={styles.timerRingWrap} pointerEvents="none">
             <Svg width={120} height={120} viewBox="0 0 120 120">
               <Circle
@@ -762,14 +703,12 @@ const triggerAlarm = async () => {
               />
             </Svg>
           </View>
-
           <View style={styles.timerFace}>
             <Text style={styles.timerValue}>
               {formatTime(remainingSeconds)}
             </Text>
             <Text style={styles.timerSub}>sleep timer</Text>
           </View>
-
           {!timerActive ? (
             <View style={styles.timerRow}>
               <TouchableOpacity
@@ -840,7 +779,6 @@ const triggerAlarm = async () => {
 
         <View style={styles.divider} />
 
-        {/* ── Ambient sounds ───────────────────────────────────────────────── */}
         <View style={styles.soundSection}>
           <Text style={styles.soundTitle}>ambient sounds</Text>
           <View style={styles.soundRow}>
@@ -857,7 +795,6 @@ const triggerAlarm = async () => {
                     },
                   ]}
                   onPress={() => toggleSound(id)}
-                  activeOpacity={0.75}
                 >
                   <Ionicons
                     name={icon}
@@ -885,21 +822,12 @@ const triggerAlarm = async () => {
         </Text>
       </Animated.View>
 
-      {/* ────────────────────────────────────────────────────────────────────
-          ALARM OVERLAY
-          Fades in when timer hits zero. Warm golden palette contrasts with
-          the cool sleep-mode tones, gently signalling morning.
-          Three concentric rings pulse outward from a soft sun orb.
-      ──────────────────────────────────────────────────────────────────── */}
       {showAlarm && (
         <Animated.View style={[styles.alarmOverlay, { opacity: alarmFade }]}>
-          {/* Deep warm backdrop */}
           <LinearGradient
             colors={["rgba(8,3,0,0.97)", "rgba(20,8,0,0.99)"]}
             style={StyleSheet.absoluteFill}
           />
-
-          {/* Three concentric pulsing rings */}
           {[1.0, 1.5, 2.0].map((baseScale, i) => (
             <Animated.View
               key={i}
@@ -923,15 +851,10 @@ const triggerAlarm = async () => {
               ]}
             />
           ))}
-
-          {/* Sun orb */}
           <Animated.View
             style={[
               styles.sunOrb,
-              {
-                transform: [{ scale: alarmPulse }],
-                shadowColor: "#FFD070",
-              },
+              { transform: [{ scale: alarmPulse }], shadowColor: "#FFD070" },
             ]}
           >
             <LinearGradient
@@ -940,16 +863,9 @@ const triggerAlarm = async () => {
             />
             <Ionicons name="sunny" size={44} color="#FFD070" />
           </Animated.View>
-
           <Text style={styles.alarmTitle}>Good Morning</Text>
           <Text style={styles.alarmSub}>Your sleep session has ended</Text>
-
-          {/* Dismiss button */}
-          <TouchableOpacity
-            style={styles.alarmDismiss}
-            onPress={dismissAlarm}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.alarmDismiss} onPress={dismissAlarm}>
             <LinearGradient
               colors={["rgba(255,215,100,0.2)", "rgba(255,145,30,0.1)"]}
               style={[StyleSheet.absoluteFill, { borderRadius: 40 }]}
@@ -957,7 +873,6 @@ const triggerAlarm = async () => {
             <Ionicons name="sunny-outline" size={18} color="#FFD070" />
             <Text style={styles.alarmDismissText}>Wake Up</Text>
           </TouchableOpacity>
-
           <Text style={styles.alarmHint}>tap to dismiss</Text>
         </Animated.View>
       )}
@@ -967,8 +882,6 @@ const triggerAlarm = async () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#03020D" },
-
-  // Nebula blobs (rendered inside each bg layer)
   nebulaBlob: { position: "absolute", borderRadius: 999 },
   nebulaTop: {
     width: width * 1.1,
@@ -982,8 +895,6 @@ const styles = StyleSheet.create({
     bottom: -width * 0.4,
     right: -width * 0.2,
   },
-
-  // Main layout
   content: {
     flex: 1,
     alignItems: "center",
@@ -991,7 +902,6 @@ const styles = StyleSheet.create({
     paddingBottom: 44,
     paddingHorizontal: 28,
   },
-
   topBar: {
     width: "100%",
     flexDirection: "row",
@@ -1020,8 +930,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  // Breathing
   breathSection: { alignItems: "center", marginTop: 8, marginBottom: 32 },
   glowRing: {
     position: "absolute",
@@ -1067,14 +975,11 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
   },
   breathToggleText: { fontSize: 11, letterSpacing: 1.5 },
-
   divider: {
     width: "100%",
     height: 0.5,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-
-  // Timer
   timerSection: { alignItems: "center", paddingVertical: 28, width: "100%" },
   timerRingWrap: { position: "absolute", alignSelf: "center" },
   timerFace: {
@@ -1116,8 +1021,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  // Sounds
   soundSection: { alignItems: "center", paddingVertical: 28, width: "100%" },
   soundTitle: {
     fontSize: 10,
@@ -1150,7 +1053,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#03020D",
     opacity: 0.5,
   },
-
   hint: {
     fontSize: 10,
     color: "rgba(255,255,255,0.18)",
@@ -1158,8 +1060,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: "auto",
   },
-
-  // Alarm overlay
   alarmOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",

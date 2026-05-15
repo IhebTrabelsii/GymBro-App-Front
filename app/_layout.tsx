@@ -44,6 +44,7 @@ export default function RootLayout() {
             <Stack.Screen name="form-check" />
             <Stack.Screen name="Hydration" />
             <Stack.Screen name="config/schedule" />
+            <Stack.Screen name="sleep" />
             <Stack.Screen name="config/progress" />
             <Stack.Screen name="config/sleep-mode" />
             <Stack.Screen name="config/test" />
